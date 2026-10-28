@@ -462,6 +462,8 @@ export class Stack {
       NEXTMOVE_SKIP_SMOKE: "1",
       // Never reach the live model from this suite: any accidental call fails as UNAVAILABLE instead.
       NEXTMOVE_CLAUDE_BIN: path.join(this.dataDir, "claude-disabled-in-tests"),
+      // Suites fire hundreds of requests a second from one address; tests/integration/rate-limit.test.ts sets 1.
+      NEXTMOVE_RATE_LIMIT_SCALE: "1000",
       ...extra,
     } as NodeJS.ProcessEnv;
   }
@@ -662,6 +664,8 @@ function createBankServer(stack: Stack) {
         const k = req.rawHeaders[i].toLowerCase();
         if (!HOP_BY_HOP.has(k)) headers.append(k, req.rawHeaders[i + 1]);
       }
+      // As Next.js does: the socket address only when the client sent no X-Forwarded-For of its own.
+      if (!headers.has("x-forwarded-for") && req.socket.remoteAddress) headers.set("x-forwarded-for", req.socket.remoteAddress);
       const method = req.method ?? "GET";
       const request = new Request(url, { method, headers, body: method === "GET" || method === "HEAD" ? undefined : Buffer.concat(chunks), signal: ac.signal });
       // Same segments Next.js hands the catch-all route: decoded path parts after /api/.

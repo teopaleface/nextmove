@@ -11,6 +11,8 @@ import { HttpError } from "../auth/session";
 // their owner through an authenticated route with a fixed content type.
 
 export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+export const MAX_TENANT_UPLOADS = 200;
+export const MAX_TENANT_UPLOAD_BYTES = 100 * 1024 * 1024;
 export const MAX_DIMENSION = 4096;
 export type ImageMime = "image/png" | "image/jpeg" | "image/webp";
 
@@ -54,6 +56,9 @@ function uploadDir() {
 
 export function saveUpload(db: DatabaseSync, s: { tenantId: string; contextId: string; userId: string }, buf: Buffer, label: string | null, taskId: string | null) {
   if (buf.length > MAX_UPLOAD_BYTES) throw new HttpError(413, "TOO_LARGE", "Images must be 4 MB or smaller");
+  // Per-tenant storage: the request limits bound how fast images arrive, this bounds how much one tenant keeps.
+  const used = one<any>(db, "SELECT COUNT(*) n, COALESCE(SUM(bytes), 0) b FROM uploads WHERE tenant_id=?", s.tenantId);
+  if ((used?.n ?? 0) >= MAX_TENANT_UPLOADS || (used?.b ?? 0) + buf.length > MAX_TENANT_UPLOAD_BYTES) throw new HttpError(413, "QUOTA", "Upload space for this demo is full");
   const info = sniffImage(buf);
   if (!info.width || !info.height || info.width > MAX_DIMENSION || info.height > MAX_DIMENSION) throw new HttpError(400, "BAD_DIMENSIONS", `Images must be at most ${MAX_DIMENSION} px per side`);
   const id = opaqueId("upl");

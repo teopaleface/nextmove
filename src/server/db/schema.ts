@@ -616,6 +616,7 @@ CREATE TABLE IF NOT EXISTS model_calls (
   error TEXT,
   created_at TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS model_calls_created ON model_calls(created_at);
 CREATE TABLE IF NOT EXISTS system_status (
   key TEXT PRIMARY KEY,
   value_json TEXT NOT NULL,

@@ -49,6 +49,18 @@ export const config = {
   get modelMaxBudgetUsd() {
     return env("NEXTMOVE_MODEL_MAX_BUDGET_USD", "0.50");
   },
+  /** Live-model calls allowed in any 24 hours, across every tenant. */
+  get modelDailyCalls() {
+    return Number(env("NEXTMOVE_MODEL_DAILY_CALLS", "300"));
+  },
+  /** Live-model spend allowed in any 24 hours, in USD; a call that reported no cost counts at its per-call maximum. */
+  get modelDailyUsd() {
+    return Number(env("NEXTMOVE_MODEL_DAILY_USD", "15"));
+  },
+  /** Live-model calls one tenant may start in any 24 hours. */
+  get modelTenantDailyCalls() {
+    return Number(env("NEXTMOVE_MODEL_TENANT_DAILY_CALLS", "60"));
+  },
   get mode(): RunMode {
     return env("NEXTMOVE_MODE", "labs") === "bank-demo" ? "bank-demo" : "labs";
   },

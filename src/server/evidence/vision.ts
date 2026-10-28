@@ -116,7 +116,7 @@ export async function extractFromUpload(db: DatabaseSync, s: { tenantId: string;
     // The CLI's own error text stays in the server log and model_calls (shown only on /dev/status); the customer and
     // the evidence list get a generic message with the call id to match them up.
     console.warn(`[vision] ${res.callId} ${res.status}: ${res.error}`);
-    const error = res.status === "TIMEOUT" ? "The model took too long to read this image" : res.status === "UNAVAILABLE" ? "The model is not available right now" : "The model could not read this image";
+    const error = res.status === "TIMEOUT" ? "The model took too long to read this image" : res.status === "UNAVAILABLE" ? "The model is not available right now" : res.status === "BUDGET" ? "Today's limit for reading images is used up; enter the details by hand" : "The model could not read this image";
     run(db, "INSERT INTO extractions(id, tenant_id, context_id, upload_id, task_id, mode, model, status, fields_json, created_at) VALUES (?,?,?,?,?, 'LIVE_MODEL', ?, 'FAILED', ?, ?)", id, s.tenantId, s.contextId, uploadId, taskId, null, JSON.stringify({ kind, error, status: res.status, callId: res.callId }), new Date().toISOString());
     return { extractionId: id, ok: false as const, error, status: res.status, callId: res.callId };
   }

@@ -395,7 +395,7 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
             run(db, "UPDATE tasks SET model=?, planner_mode='LIVE' WHERE id=?", res.model, task.id);
           } else taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: "planner", label: "The model's choice failed validation; using the deterministic planner", evidence: "SIMULATED_PLANNER" });
         } else {
-          taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: "planner", label: `Live model unavailable (${res.status.toLowerCase()}); continuing with the labelled deterministic planner`, evidence: "SIMULATED_PLANNER" });
+          taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: "planner", label: res.status === "BUDGET" ? `${res.error}; continuing with the labelled deterministic planner` : `Live model unavailable (${res.status.toLowerCase()}); continuing with the labelled deterministic planner`, evidence: "SIMULATED_PLANNER" });
         }
         if (!d) {
           if (config.planner === "live") throw new Error("Live planner required but unavailable");

@@ -6,7 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // only adds the per-session CSRF token to state-changing requests.
 
 export class ApiError extends Error {
-  constructor(public status: number, public code: string, message: string) {
+  /** Seconds the server asked us to wait (429 Retry-After), else 0. */
+  constructor(public status: number, public code: string, message: string, public retryAfter = 0) {
     super(message);
   }
 }
@@ -30,7 +31,7 @@ export async function api<T = any>(path: string, opts: { method?: "GET" | "POST"
   });
   const type = res.headers.get("content-type") ?? "";
   const data = type.includes("application/json") ? await res.json().catch(() => null) : await res.text();
-  if (!res.ok) throw new ApiError(res.status, (data as any)?.error ?? "ERROR", (data as any)?.message ?? `Request failed (${res.status})`);
+  if (!res.ok) throw new ApiError(res.status, (data as any)?.error ?? "ERROR", (data as any)?.message ?? `Request failed (${res.status})`, Math.min(3600, Math.max(0, Number(res.headers.get("retry-after")) || 0)));
   return data as T;
 }
 
@@ -62,7 +63,8 @@ export function useApi<T = any>(path: string | null, opts: { poll?: Poll<T>; epo
       if (mine !== seq.current) return;
       setError(e instanceof ApiError ? e : new ApiError(0, "NETWORK", "Could not reach NextMove. Check that the local server is running."));
       const p = pollRef.current;
-      if (p) timer.current = setTimeout(load, 3000);
+      // A rate-limited poll waits as long as the server asked instead of knocking every 3 seconds.
+      if (p) timer.current = setTimeout(load, Math.max(3000, (e instanceof ApiError ? e.retryAfter : 0) * 1000));
     } finally {
       if (mine === seq.current) setLoading(false);
     }

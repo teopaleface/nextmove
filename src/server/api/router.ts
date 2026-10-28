@@ -48,6 +48,7 @@ import { merchantAdmin } from "../merchant-client";
 import { MAX_MINOR, formatMoney } from "../../shared/money";
 import { inWindow } from "../../shared/time";
 import { EXTENSIONS, runExtLabs } from "../extensions/registry";
+import { OPEN_TASKS, RateLimitError, charge, checkPenalty, classify, clientIp, openStream, penalize, type Who } from "./rate-limit";
 
 // One server-side router for every /api route. The session (tenant, user, active context) is derived from the
 // HttpOnly cookie on each request; mutations require same-origin and the per-session CSRF token. Object access
@@ -60,6 +61,8 @@ interface Ctx {
   session: Session | null;
   params: Record<string, string>;
   body: () => Promise<any>;
+  /** Client IP and account, the keys every rate limit is charged to. */
+  who: Who;
 }
 type Handler = (c: Ctx) => Promise<unknown> | unknown;
 interface Route {
@@ -94,8 +97,11 @@ function buildHash() {
 }
 
 /* ------------------------------------------------------------------------------------------- health */
+// The merchant check is shared for two seconds, so polling health cannot be turned into a flood of merchant calls.
+let merchantHealth: { at: number; value: Promise<any> } | null = null;
 get("/health", async ({ db }) => {
-  const merchant = await merchantAdmin.health();
+  if (!merchantHealth || Date.now() - merchantHealth.at > 2000) merchantHealth = { at: Date.now(), value: merchantAdmin.health() };
+  const merchant = await merchantHealth.value;
   const w = workerStatus(db);
   return { ok: true, bank: { ok: true, port: config.bankPort }, merchant: merchant ? { ok: true, ...merchant } : { ok: false }, worker: { live: w.live.length, pids: w.live.map((x) => x.pid) }, model: lastModelStatus(db), mode: config.mode, build: buildHash(), at: new Date().toISOString() };
 }, false);
@@ -120,7 +126,8 @@ get("/session", ({ db, session }) => {
   };
 }, false);
 
-post("/session/demo", async ({ db, req, body }) => {
+post("/session/demo", async (c) => {
+  const { db, req, body } = c;
   // Login CSRF: only same-origin pages may start a demo session.
   const site = req.headers.get("sec-fetch-site");
   if (site && site !== "same-origin" && site !== "none") throw new HttpError(403, "CROSS_SITE", "Cross-site request refused");
@@ -129,6 +136,8 @@ post("/session/demo", async ({ db, req, body }) => {
   if (!customer) throw new HttpError(400, "BAD_CUSTOMER", "Choose a demo customer");
   let tenantId: string = customer;
   if (b?.isolated) {
+    // Each isolated copy seeds a whole tenant on disk: its own, tighter budget per IP and overall.
+    charge("isolated", c.who);
     tenantId = `iso-${customer}-${shortId("t").slice(2, 10).toLowerCase()}`;
     await seedTenant(db, tenantId, customer, { isolated: true });
   } else if (!tenantExists(db, tenantId)) {
@@ -407,6 +416,9 @@ get("/tasks", (c) => {
 post("/tasks", async (c) => {
   // Only text is a request: a number or object would otherwise become "42" or "[object Object]".
   const text = (await c.body())?.text;
+  const ses = s(c);
+  const open = one<any>(c.db, "SELECT COUNT(*) n FROM tasks WHERE tenant_id=? AND user_id=? AND state IN ('QUEUED','RUNNING','WAITING_USER')", ses.tenantId, ses.userId)?.n ?? 0;
+  if (open >= OPEN_TASKS) throw new RateLimitError(30, "TOO_MANY_OPEN_TASKS", `You already have ${open} requests in progress. Finish or stop one first.`);
   return createAgentTask(c.db, s(c), typeof text === "string" ? text : "");
 });
 
@@ -434,7 +446,10 @@ get("/tasks/:id/stream", (c) => {
   taskView(db, ses, c.params.id, Number.MAX_SAFE_INTEGER);
   let cursor = Number(c.url.searchParams.get("after") ?? 0);
   const enc = new TextEncoder();
+  // Each open view polls the database: a few per account and per IP, released however the stream ends.
+  const release = openStream(c.who);
   const stream = new ReadableStream({
+    cancel: () => release(),
     start(controller) {
       let closed = false;
       const send = (event: string, data: unknown) => !closed && controller.enqueue(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
@@ -455,6 +470,7 @@ get("/tasks/:id/stream", (c) => {
         if (closed) return;
         closed = true;
         clearInterval(timer);
+        release();
         try {
           controller.close();
         } catch {
@@ -762,10 +778,20 @@ export async function handleApi(req: Request, segments: string[]): Promise<Respo
   const candidates = routes.filter((r) => r.method === method).map((r) => ({ r, p: match(r.pattern, pathName), exact: !r.pattern.includes(":") })).filter((x) => x.p);
   candidates.sort((x, y) => Number(y.exact) - Number(x.exact) || y.r.pattern.split(":").length - x.r.pattern.split(":").length);
   const hit = candidates.sort((x, y) => x.r.pattern.split(":").length - y.r.pattern.split(":").length)[0];
-  if (!hit) return Response.json({ error: "NOT_FOUND", message: "Not found" }, { status: 404 });
+  let who: Who = { ip: clientIp(req.headers), account: null };
+  if (!hit) {
+    // Scanning for routes spends the same probe budget as failed sign-ins.
+    penalize("probe", who);
+    return Response.json({ error: "NOT_FOUND", message: "Not found" }, { status: 404 });
+  }
+  const parameterized = hit.r.pattern.includes(":");
   try {
+    checkPenalty("probe", who);
     const db = bankDb();
     const session = sessionFromToken(db, readCookie(req.headers.get("cookie"), SESSION_COOKIE));
+    if (session) who = { ip: who.ip, account: `${session.tenantId}|${session.userId}` };
+    if (parameterized) checkPenalty("miss", who);
+    charge(classify(method, hit.r.pattern), who);
     if (hit.r.auth !== false && !session) throw new HttpError(401, "UNAUTHENTICATED", "Sign in first");
     if (method !== "GET" && hit.r.auth !== false && session) assertCsrf(req, session);
     let cached: any;
@@ -779,11 +805,18 @@ export async function handleApi(req: Request, segments: string[]): Promise<Respo
       }
       return cached;
     };
-    const out = await hit.r.fn({ req, url, db, session, params: hit.p!, body });
+    const out = await hit.r.fn({ req, url, db, session, params: hit.p!, body, who });
     if (out instanceof Response) return out;
     return Response.json(out ?? { ok: true }, { headers: { "cache-control": "no-store" } });
   } catch (e: any) {
-    if (e instanceof HttpError) return Response.json({ error: e.code, message: e.message }, { status: e.status, headers: { "cache-control": "no-store" } });
+    if (e instanceof HttpError) {
+      // Failures that look like probing spend penalty budgets: sign-in and CSRF failures per IP, misses on ids per account.
+      if (e.status === 401 || (e.status === 403 && ["CROSS_SITE", "BAD_ORIGIN", "CSRF", "BAD_SIGNATURE"].includes(e.code))) penalize("probe", who);
+      if (e.status === 404 && parameterized) penalize("miss", who);
+      const headers: Record<string, string> = { "cache-control": "no-store" };
+      if (e instanceof RateLimitError) headers["retry-after"] = String(e.retryAfter);
+      return Response.json({ error: e.code, message: e.message }, { status: e.status, headers });
+    }
     console.error(`[api] ${method} ${pathName.split("/").slice(0, 3).join("/")} failed: ${String(e?.message ?? e).slice(0, 200)}`);
     return Response.json({ error: "INTERNAL", message: "Something went wrong. Nothing was changed by this request." }, { status: 500 });
   }

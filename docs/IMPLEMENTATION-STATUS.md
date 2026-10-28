@@ -309,3 +309,64 @@ Still open (judged acceptable):
 - `formatPct` uses a hyphen for negatives (no caller passes one).
 
 **Checks:** `npx tsc --noEmit`: pass. `npm test`: **378 tests passed in 46 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.
+
+### Rate limits and abuse checks (2026-10-28)
+
+There was no request limiting before this pass. `src/server/api/rate-limit.ts` adds in-memory token buckets in the bank server process; `handleApi` charges each request before any auth check or work.
+
+- **Keys.** Every request is charged to its client IP. Once signed in, it is also charged to its account (tenant + user). The costly routes also draw on one global ceiling.
+  - Next.js fills `X-Forwarded-For` only when the request has none, so a client talking to the server directly can forge it and rotate its IP key. It cannot rotate past a per-account limit or a global ceiling.
+  - `NEXTMOVE_TRUSTED_PROXY_HOPS` (0–5, default 0) tells the server how many proxies to trust. Behind them, the client is the entry the outermost trusted proxy appended, and forged entries further left are ignored.
+  - IPv6 is keyed by /64. Ports, `::ffff:` and zones are stripped. Anything that is not an address shares one `invalid` key.
+- **Budgets (per minute unless stated).** Requests are classed by route pattern, so changing the id in a path never changes the budget.
+
+  | Class | Per IP | Per account | Global |
+  |---|---|---|---|
+  | Reads | 1200 | 600 | — |
+  | Writes | 300 | 120 | — |
+  | Approvals, declines, stops, revokes | 60 | 20, and 300 a day | — |
+  | Agent requests and answers | 30 | 8, and 120 a day | 600 an hour |
+  | Uploads | 60 an hour | 30 an hour | — |
+  | Image reading (live model) | 20 an hour | 10 an hour | 100 an hour |
+  | Labs | 300 | 120 | — |
+  | Labs reset | 20 per 10 min | 10 per 10 min | — |
+  | Sign-ins | 30 per 10 min | — | 300 per 10 min |
+  | Isolated demo copies | 20 an hour | — | 300 a day |
+  | Merchant inbox | 600 | — | — |
+  | Health | 120 | — | — |
+
+  Merchant `/health` results are cached for 2 s, so health polling never fans out to the merchant.
+- **Penalties.** These budgets are checked before any work is done.
+  - Probing, per IP: 60 a minute. It counts 401s, CSRF, origin and signature 403s, and unknown `/api` routes. Once it is spent, that IP is refused everywhere, even with a valid session.
+  - Guessing ids, per account: 200 per 10 minutes. It counts 404s on routes that take an id. Once it is spent, only id routes are refused.
+- **Concurrency.**
+  - Live event streams: 16 per IP and 4 per account. A slot is freed when the stream ends or the client disconnects.
+  - Open agent requests (queued, running or waiting for an answer): at most 10 per account (`TOO_MANY_OPEN_TASKS`).
+- **Storage.** A tenant may hold at most 200 uploads or 100 MB of uploads; past that, uploads get 413 `QUOTA`. Request bodies were already capped (256 KB JSON, 64 KB events, 5 MB uploads).
+- **Live-model spend.** Before each CLI call, `modelBudgetProblem` checks the last 24 hours.
+  - The limits are `NEXTMOVE_MODEL_DAILY_CALLS` (300), `NEXTMOVE_MODEL_DAILY_USD` (15) and `NEXTMOVE_MODEL_TENANT_DAILY_CALLS` (60 per customer).
+  - It counts only calls that reached the CLI. It skips calls that provably cost nothing: a reported cost of 0, or the CLI's account-level "You've hit your … limit" refusal. A call with no reported cost counts at its per-call maximum. An invalid setting fails closed.
+  - Failed calls now record the cost the CLI reports, not just successful ones.
+  - Over a limit, the agent continues with the labelled deterministic planner, and image reading asks for the details by hand.
+- **Responses.** A refusal is 429 with `Retry-After` and a body of exactly `{error, message}`. A refused request spends nothing from the other buckets and creates nothing. The UI's polling now waits as long as `Retry-After` asks instead of retrying every 3 s.
+- **Tests.** `tests/unit/rate-limit.test.ts` covers the bucket arithmetic on a fake clock, address parsing and route classes. `tests/integration/rate-limit.test.ts` (13 tests) drives the real router at real scale and covers:
+  - account, IP and global budgets;
+  - proxy-hop handling;
+  - both penalties;
+  - stream slots;
+  - the open-request cap;
+  - the upload quota;
+  - the model budget, including that the CLI is never started over budget.
+
+  With the limiter call commented out of the router, 6 of the 13 integration tests fail. The harness runs the other suites at scale 1000.
+
+Found while checking this pass:
+- On 2026-10-28 the Claude account behind the CLI hit its monthly spend limit at about 17:17 UTC. All 215 live-model calls after that failed in about 0.5 s with that message, and the planner fell back to the labelled deterministic one. Counted naively, those refusals would have blocked the live model until the next afternoon, even once the limit was raised; they are now skipped (see above).
+- A stale Turbopack dev cache (`.next/dev`) made every fresh page load reload forever ("HMR hash mismatch"). Moving the cache aside and restarting fixed it. If pages keep reloading after a restart, stop the stack and remove `.next/dev`.
+
+Known limits (demo scope):
+- The counts live in one process's memory. They reset on restart and are not shared across several server processes.
+- The fake merchant server (port 3211) is not limited. Its sign-in has no password, so there is nothing to brute-force.
+- In direct mode the per-IP key can be forged. The per-account limits and global ceilings are the backstop.
+
+**Checks:** `npx tsc --noEmit`: pass. `npm test`: **404 tests passed in 48 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.

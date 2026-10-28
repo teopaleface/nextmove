@@ -32,7 +32,7 @@ export interface ModelRequest {
 
 export type ModelResult =
   | { ok: true; output: unknown; model: string; durationMs: number; costUsd: number | null; callId: string }
-  | { ok: false; status: "ERROR" | "TIMEOUT" | "UNAVAILABLE"; error: string; callId: string };
+  | { ok: false; status: "ERROR" | "TIMEOUT" | "UNAVAILABLE" | "BUDGET"; error: string; callId: string; costUsd?: number | null };
 
 const MAX_OUTPUT_BYTES = 512 * 1024;
 const MAX_CONCURRENCY = 2;
@@ -128,6 +128,30 @@ function logCall(db: DatabaseSync | null, row: { id: string; tenantId?: string |
   }
 }
 
+/**
+ * Why no further live call may start now, or null. Calls that reached the CLI in the last 24 hours count (a call
+ * that could not start spent nothing); one with no reported cost counts at its per-call maximum, since a timeout may
+ * have spent all of it. A bad setting fails closed: no live calls.
+ */
+export function modelBudgetProblem(db: DatabaseSync, tenantId?: string | null): string | null {
+  const since = new Date(Date.now() - 24 * 3_600_000).toISOString();
+  // A call counts unless it provably cost nothing: the CLI reported a cost of 0, or it refused at the account level
+  // ("You've hit your monthly spend limit") before reaching the model. Such refusals arrive in a burst while the
+  // account is capped and would otherwise use up the day's budget for the hours after the cap is lifted.
+  const counted = "created_at > ? AND (status IN ('OK','TIMEOUT') OR (status = 'ERROR' AND COALESCE(cost_usd, -1) <> 0 AND COALESCE(error, '') NOT LIKE 'You''ve hit your %limit%'))";
+  const perCall = Number(config.modelMaxBudgetUsd);
+  const caps = { calls: config.modelDailyCalls, usd: config.modelDailyUsd, tenant: config.modelTenantDailyCalls };
+  if (![caps.calls, caps.usd, caps.tenant].every((n) => Number.isFinite(n) && n >= 0)) return "The live-model budget settings are invalid";
+  const used = one<any>(db, `SELECT COUNT(*) n, COALESCE(SUM(COALESCE(cost_usd, ?)), 0) usd FROM model_calls WHERE ${counted}`, Number.isFinite(perCall) ? perCall : 0, since);
+  if ((used?.n ?? 0) >= caps.calls) return `Daily live-model call limit reached (${caps.calls})`;
+  if ((used?.usd ?? 0) >= caps.usd) return `Daily live-model spend limit reached (${caps.usd} USD)`;
+  if (tenantId) {
+    const mine = one<any>(db, `SELECT COUNT(*) n FROM model_calls WHERE tenant_id=? AND ${counted}`, tenantId, since);
+    if ((mine?.n ?? 0) >= caps.tenant) return `Daily live-model limit for this customer reached (${caps.tenant})`;
+  }
+  return null;
+}
+
 export async function callModel(db: DatabaseSync | null, req: ModelRequest): Promise<ModelResult> {
   const callId = shortId("mc");
   const model = config.model;
@@ -139,6 +163,9 @@ export async function callModel(db: DatabaseSync | null, req: ModelRequest): Pro
   const meta = { id: callId, tenantId: req.tenantId, taskId: req.taskId, purpose: req.purpose, model, inputChars: req.text.length, imageCount: req.images?.length ?? 0 };
   await acquire();
   try {
+    // Checked after the slot is taken, so calls queued behind each other cannot all pass on the same count.
+    const over = db ? modelBudgetProblem(db, req.tenantId) : null;
+    if (over) return { ok: false, status: "BUDGET", error: over, callId };
     const result = await new Promise<ModelResult>((resolve) => {
       let child;
       try {
@@ -189,7 +216,8 @@ export async function callModel(db: DatabaseSync | null, req: ModelRequest): Pro
           .filter((x) => x && x.type === "result")
           .pop();
         if (!resultLine) return done({ ok: false, status: "ERROR", error: sanitizeError(errText || `CLI exited with code ${code} without a result`), callId });
-        if (resultLine.is_error || resultLine.subtype !== "success") return done({ ok: false, status: "ERROR", error: sanitizeError(String(resultLine.result ?? resultLine.subtype ?? "model error")), callId });
+        const costUsd = typeof resultLine.total_cost_usd === "number" ? resultLine.total_cost_usd : null;
+        if (resultLine.is_error || resultLine.subtype !== "success") return done({ ok: false, status: "ERROR", error: sanitizeError(String(resultLine.result ?? resultLine.subtype ?? "model error")), callId, costUsd });
         let output = resultLine.structured_output;
         if (output === undefined && typeof resultLine.result === "string") {
           try {
@@ -198,9 +226,9 @@ export async function callModel(db: DatabaseSync | null, req: ModelRequest): Pro
             output = undefined;
           }
         }
-        if (output === undefined) return done({ ok: false, status: "ERROR", error: "The model did not return structured output", callId });
+        if (output === undefined) return done({ ok: false, status: "ERROR", error: "The model did not return structured output", callId, costUsd });
         const usedModel = Object.keys(resultLine.modelUsage ?? {})[0] ?? model;
-        done({ ok: true, output: sanitizeValue(output), model: usedModel, durationMs: Date.now() - started, costUsd: typeof resultLine.total_cost_usd === "number" ? resultLine.total_cost_usd : null, callId });
+        done({ ok: true, output: sanitizeValue(output), model: usedModel, durationMs: Date.now() - started, costUsd, callId });
       });
       child.stdin.on("error", () => undefined);
       child.stdin.end(line);
@@ -211,7 +239,7 @@ export async function callModel(db: DatabaseSync | null, req: ModelRequest): Pro
       status: result.ok ? "OK" : result.status,
       durationMs: Date.now() - started,
       outputChars: result.ok ? JSON.stringify(result.output).length : 0,
-      costUsd: result.ok ? result.costUsd : null,
+      costUsd: result.costUsd ?? null,
       error: result.ok ? null : result.error.slice(0, 300),
     });
     if (db) {
