@@ -472,13 +472,14 @@ post("/facts", async (c) => {
   run(c.db, "INSERT INTO facts(id, tenant_id, context_id, key, value_json, provenance, source_ref, revision, created_at) VALUES (?,?,?,?,?, 'YOU_ENTERED', 'app', ?, ?)", shortId("fact"), ses.tenantId, ses.contextId, key, JSON.stringify({ value }), (prev?.r ?? 0) + 1, new Date().toISOString());
   return { ok: true };
 });
-const PREF_KEYS = new Set(["hotspot_required", "protected_benefits"]);
+const PREF_KEYS = new Set(["hotspot_required", "protected_benefits", "simple_mode"]);
 post("/preferences", async (c) => {
   const ses = s(c);
   const b = await c.body();
   const key = String(b?.key ?? "");
   if (!PREF_KEYS.has(key)) throw new HttpError(400, "BAD_KEY", "Unsupported preference");
-  const value = key === "hotspot_required" ? b.value === true || b.value === "true" : Array.isArray(b.value) ? b.value.map(String).filter((x: string) => ["offline_playback", "tv_access"].includes(x)) : [];
+  if (key === "simple_mode" && typeof b.value !== "boolean") throw new HttpError(400, "BAD_VALUE", "Simple mode must be on or off");
+  const value = key === "simple_mode" ? b.value : key === "hotspot_required" ? b.value === true || b.value === "true" : Array.isArray(b.value) ? b.value.map(String).filter((x: string) => ["offline_playback", "tv_access"].includes(x)) : [];
   run(c.db, `INSERT INTO preferences(id, tenant_id, context_id, key, value_json, source, revision, updated_at) VALUES (?,?,?,?,?, 'USER_CONFIRMED', 1, ?)
     ON CONFLICT(tenant_id, context_id, key) DO UPDATE SET value_json=excluded.value_json, revision=preferences.revision+1, updated_at=excluded.updated_at`, shortId("pref"), ses.tenantId, ses.contextId, key, JSON.stringify(value), new Date().toISOString());
   return { ok: true, value };

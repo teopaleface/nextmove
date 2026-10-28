@@ -6,6 +6,7 @@ import { useSession } from "@/ui/session";
 import { ErrorBox, Group, KV, PageHead, Row, Section, StateLine, useAction } from "@/ui/kit";
 import { Icon } from "@/ui/icons";
 import { dayTime } from "@/ui/format";
+import { SimpleModeSettings } from "@/ui/simple-mode";
 
 const FEATURE: Record<string, string> = {
   "execution.merchant": "Act with simulated providers",
@@ -45,6 +46,8 @@ export default function ProfilePage() {
   return (
     <>
       <PageHead back title={session.user?.displayName ?? "Profile"} sub={session.isolated ? `Separate demo copy ${session.tenantRef}. Nothing here affects other sessions.` : "Shared demo data for this customer."} />
+
+      <SimpleModeSettings />
 
       <Section title="Contexts" id="contexts">
         <Group>

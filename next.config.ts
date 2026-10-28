@@ -33,7 +33,8 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: csp },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "same-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // Optional dictation starts only after the customer's own button press and browser permission.
+          { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=()" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
         ],
       },

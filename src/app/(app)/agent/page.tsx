@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, useApi } from "@/ui/api";
 import { useSession } from "@/ui/session";
 import { ErrorBox, Group, Row, Section, TaskStatus, useAction, Empty } from "@/ui/kit";
 import { Icon } from "@/ui/icons";
+import { VoiceDraft, useVoice } from "@/ui/voice-tools";
 
 const SUGGESTIONS: Record<string, string[]> = {
   "alex:PERSONAL": ["Can you stop the FitFlow trial before it charges me?", "Did anything try to charge me after a free trial?", "Am I paying for a gym I don't use?", "Is DashEats Plus still worth paying for?", "Is the student bundle worth it for me?", "Am I paying twice for cloud storage?", "Can I buy a 6,000 RON phone and still reach my home goal?", "What if I get a 10% raise?", "What if I invest what NextMove saves me?", "A 900 RON dental bill just came in. Am I still on track for the home?"],
@@ -15,7 +16,15 @@ const SUGGESTIONS: Record<string, string[]> = {
 
 export default function AgentPage() {
   const router = useRouter();
-  const { epoch, session } = useSession();
+  const { epoch, session, simpleMode } = useSession();
+  const voice = useVoice();
+  const askRef = useRef<HTMLTextAreaElement | null>(null);
+  const [voiceDraft, setVoiceDraft] = useState(false);
+  const active = useRef(true);
+  useEffect(() => {
+    active.current = true;
+    return () => { active.current = false; };
+  }, []);
   const tasks = useApi<any>("/tasks", { epoch, poll: (d: any) => (d?.tasks?.some((t: any) => ["QUEUED", "RUNNING"].includes(t.state)) ? 2000 : 15000) });
   const caps = useApi<any>("/capabilities", { epoch });
   const upcoming = useApi<any>("/upcoming", { epoch });
@@ -26,8 +35,11 @@ export default function AgentPage() {
 
   const send = (value: string) =>
     run(async () => {
+      voice.stop();
       const t = await api<any>("/tasks", { body: { text: value } });
+      if (!active.current) return;
       setText("");
+      setVoiceDraft(false);
       router.push(`/agent/tasks/${t.taskId}`);
     });
 
@@ -52,25 +64,27 @@ export default function AgentPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (text.trim()) void send(text.trim());
+          if (!busy && text.trim()) void send(text.trim());
         }}
       >
         <div className="composer">
           <label htmlFor="ask" className="sr-only">
             Ask NextMove
           </label>
-          <textarea id="ask" rows={2} value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder={business ? "Ask about orders, suppliers or cash" : "Ask about a charge, a plan or a goal"} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (text.trim()) void send(text.trim()); } }} />
-          <button type="submit" className="send-btn" disabled={busy || !text.trim()} aria-label="Send">
-            <Icon.arrowUp />
+          <textarea ref={askRef} id="ask" rows={simpleMode ? 3 : 2} value={text} maxLength={600} onChange={(e) => { voice.stop(); setText(e.target.value); }} placeholder={business ? "Ask about orders, suppliers or cash" : "Ask about a charge, a plan or a goal"} aria-describedby={voiceDraft ? "voice-draft-help" : undefined} onKeyDown={(e) => { if (!simpleMode && !voiceDraft && e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (!busy && text.trim()) void send(text.trim()); } }} />
+          <button type="submit" className="send-btn" disabled={busy || !text.trim()} aria-label="Send question">
+            {simpleMode ? <span>Send</span> : <Icon.arrowUp />}
           </button>
         </div>
       </form>
+      {voiceDraft ? <p className="small" id="voice-draft-help" role="status">Voice draft only. Check names, amounts and dates, edit anything, then press Send. Sending a question does not approve a commitment.</p> : null}
+      <VoiceDraft text={text} disabled={busy} onDraft={(draft) => { setText(draft); setVoiceDraft(true); }} />
       <p className="caption" style={{ margin: "8px 0 0" }}>
         {plannerLine}
       </p>
       <div className="chips" style={{ marginTop: 12 }}>
         {(SUGGESTIONS[key] ?? []).map((s) => (
-          <button key={s} type="button" className="chip" style={{ fontWeight: 500, textAlign: "left", height: "auto", paddingTop: 10, paddingBottom: 10, borderRadius: 16 }} onClick={() => send(s)} disabled={busy}>
+          <button key={s} type="button" className="chip" style={{ fontWeight: 500, textAlign: "left", height: "auto", paddingTop: 10, paddingBottom: 10, borderRadius: 16 }} onClick={() => { voice.stop(); if (simpleMode) { setText(s); setVoiceDraft(false); askRef.current?.focus(); } else void send(s); }} disabled={busy}>
             {s}
           </button>
         ))}

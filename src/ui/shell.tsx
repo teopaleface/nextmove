@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Icon, NMark } from "./icons";
 import { SessionProvider, useSession } from "./session";
+import { SimpleOrientation } from "./simple-mode";
+import { ReadAloud, VoiceProvider } from "./voice-tools";
 
 const TABS = [
   { href: "/home", label: "Home", icon: Icon.home, match: ["/home", "/business"] },
@@ -23,7 +25,8 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
 
 function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
-  const { session, switchContext } = useSession();
+  const { session, switchContext, epoch, contextChanging, simpleMode } = useSession();
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const [menu, setMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -55,7 +58,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   const ctx = session?.context;
   const multi = (session?.contexts?.length ?? 0) > 1;
   return (
-    <div className="app">
+    <VoiceProvider key={`${epoch}:${Boolean(session?.authenticated)}:${contextChanging}:${pathname}`}><div className="app" data-simple-mode={simpleMode ? "true" : undefined}>
       <header className={`header${scrolled ? " scrolled" : ""}`}>
         <Link href="/home" className="brand" aria-label="NextMove home">
           <NMark />
@@ -112,7 +115,9 @@ function Shell({ children }: { children: React.ReactNode }) {
         </Link>
       </header>
       <main className={`main${hideTabs ? " no-tabs" : ""}`} id="main">
-        {session?.authenticated ? children : <ShellLoading />}
+        {session?.authenticated && !contextChanging && simpleMode ? <SimpleOrientation pathname={pathname} context={ctx?.name} /> : null}
+        {session?.authenticated && !contextChanging && simpleMode ? <ReadAloud content={contentRef} /> : null}
+        <div ref={contentRef}>{session?.authenticated && !contextChanging ? children : <ShellLoading />}</div>
       </main>
       {hideTabs ? null : (
         <nav className="tabbar" aria-label="Main">
@@ -128,7 +133,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
       )}
-    </div>
+    </div></VoiceProvider>
   );
 }
 

@@ -1391,3 +1391,253 @@ details.group[open] > summary {
     padding-right: 16px;
   }
 }
+
+/* Keep long, exact confirmation labels inside the 360px review action area. */
+.sheet-actions {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sheet-actions > .btn {
+  min-width: 0;
+  max-width: 100%;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.composer textarea {
+  min-width: 0;
+}
+
+/* Simple mode changes reading and orientation, never financial content or authority. */
+.simple-orientation {
+  margin: 8px 0 16px;
+  padding: 16px 0 16px 12px;
+  border-left: 3px solid var(--yellow);
+}
+
+.simple-orientation p {
+  margin: 6px 0 8px;
+}
+
+.voice-panel {
+  margin: 12px 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.voice-panel > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.voice-panel > summary::before {
+  content: "+";
+  margin-right: 10px;
+}
+
+.voice-panel[open] > summary::before {
+  content: "−";
+}
+
+.voice-panel p {
+  margin: 8px 0;
+}
+
+.voice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.voice-actions .btn {
+  max-width: 100%;
+  padding: 12px 16px;
+}
+
+.app[data-simple-mode="true"] {
+  --header-h: 72px;
+  --tabs-h: 76px;
+  font-size: 20px;
+  line-height: 30px;
+}
+
+.app[data-simple-mode="true"] :is(.title, .heading, .opportunity h2) {
+  font-size: 30px;
+  line-height: 38px;
+}
+
+.app[data-simple-mode="true"] .section-title {
+  font-size: 24px;
+  line-height: 32px;
+}
+
+.app[data-simple-mode="true"] :is(.row-title, .row-amount, .btn, .input, .select, .textarea, .composer textarea, .account-tile .amt, .kv dd) {
+  font-size: 20px;
+  line-height: 30px;
+}
+
+.app[data-simple-mode="true"] :is(.label, .small, .row-sub, .kv dt, .field label, .notice, .timeline .t-text) {
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.app[data-simple-mode="true"] :is(.caption, .state, .tab, .link, .section-head a, .quick a, .agent-sig, .field .help, .browser-bar, .browser-steps button, .chip, .seg button, .dev summary) {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.app[data-simple-mode="true"] :is(.btn, .input, .select, .textarea, .chip, .seg button, .voice-panel > summary) {
+  min-height: 56px;
+}
+
+.app[data-simple-mode="true"] .btn {
+  padding: 12px 16px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.app[data-simple-mode="true"] :is(.icon-btn, .send-btn) {
+  min-width: 52px;
+  width: 52px;
+  height: 52px;
+}
+
+.app[data-simple-mode="true"] .send-btn {
+  min-width: 68px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.app[data-simple-mode="true"] .header {
+  height: auto;
+  min-height: calc(var(--header-h) + var(--safe-top));
+  gap: 4px;
+  padding-left: 12px;
+}
+
+.app[data-simple-mode="true"] .header > .header-spacer {
+  display: none;
+}
+
+.app[data-simple-mode="true"] .context-btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 56px;
+  font-size: 18px;
+  line-height: 24px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.app[data-simple-mode="true"] .env-label {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.app[data-simple-mode="true"] .section-head {
+  flex-wrap: wrap;
+}
+
+.app[data-simple-mode="true"] .section-head a {
+  min-height: 52px;
+  margin: 0;
+}
+
+.app[data-simple-mode="true"] :is(.accounts, .split) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app[data-simple-mode="true"] .quick {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  row-gap: 16px;
+}
+
+.app[data-simple-mode="true"] .row {
+  flex-wrap: wrap;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.app[data-simple-mode="true"] .row-main {
+  flex: 1 1 140px;
+}
+
+.app[data-simple-mode="true"] .row-end {
+  flex: 1 1 100%;
+  min-width: 0;
+  text-align: left;
+}
+
+.app[data-simple-mode="true"] .row-amount {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.app[data-simple-mode="true"] .row > .chev {
+  margin-left: auto;
+}
+
+.app[data-simple-mode="true"] .kv {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+.app[data-simple-mode="true"] .kv dd {
+  text-align: left;
+}
+
+.app[data-simple-mode="true"] .check-row input {
+  width: 28px;
+  height: 28px;
+}
+
+.app[data-simple-mode="true"] .balance {
+  font-size: 40px;
+  line-height: 48px;
+  overflow-wrap: anywhere;
+}
+
+.app[data-simple-mode="true"] .seg {
+  flex-wrap: wrap;
+}
+
+.app[data-simple-mode="true"] .table {
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.app[data-simple-mode="true"] .table th {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.app[data-simple-mode="true"] .sheet-actions {
+  position: static;
+}
+
+.app[data-simple-mode="true"] .main.no-tabs {
+  padding-bottom: calc(var(--safe-bottom) + 32px);
+}
+
+.voice-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.app[data-simple-mode="true"] .input-wrap .suffix {
+  font-size: 18px;
+}
+
+.simple-toast {
+  bottom: calc(76px + var(--safe-bottom) + 16px);
+  font-size: 18px;
+  line-height: 28px;
+}
