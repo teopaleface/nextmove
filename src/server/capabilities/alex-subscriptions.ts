@@ -120,7 +120,7 @@ const T2: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["trial", "fitflow", "free trial", "cancel", "stop", "renewal"],
+  keywords: ["trial", "fitflow", "free trial", "cancel", "stop", "renewal", "perioada de proba", "proba gratuita", "anuleaza", "anulez", "opreste"],
   async analyze(env) {
     const sub = subscription(env, "fitflow");
     const { contract, status } = await liveContract(env, sub);
@@ -294,7 +294,7 @@ const A1: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["duplicate", "storage", "cloudbox", "overlap", "twice", "cloud"],
+  keywords: ["duplicate", "storage", "cloudbox", "overlap", "twice", "cloud", "stocare"],
   async analyze(env) {
     const c = await comparison(env);
     const storage = c.result.options.find((o) => o.id === "remove-duplicate-storage");
@@ -424,7 +424,7 @@ const A3: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["annual", "yearly", "monthly", "break-even", "commitment"],
+  keywords: ["annual", "yearly", "monthly", "break-even", "commitment", "studyplus", "go annual", "annual plan"],
   async analyze(env) {
     const sub = subscription(env, "studyplus");
     const live = (await liveContract(env, sub)).contract;
@@ -493,7 +493,7 @@ const A4: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["price increase", "price went up", "more expensive", "streamly", "price change"],
+  keywords: ["price increase", "price went up", "more expensive", "streamly", "price change", "raised the price", "raised its price", "price hike", "costs more", "went up", "price rose"],
   async analyze(env) {
     const sub = subscription(env, "streamly");
     const live = (await liveContract(env, sub)).contract;
@@ -566,7 +566,7 @@ const A5: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["show", "series", "content", "cinemax", "schedule", "rotate", "watch"],
+  keywords: ["shows", "tv show", "series", "content", "cinemax", "schedule", "rotate", "watch"],
   async analyze(env) {
     const cat = fixture("demo/capability-scenarios.json").alex.contentCatalog;
     const wanted = [

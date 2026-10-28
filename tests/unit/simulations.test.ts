@@ -13,7 +13,7 @@ import {
   makeLoanSimulation,
   monthLabel,
 } from "../../src/shared/simulations";
-import { ensureSimulation, simulatedSimulationDecision, simulationIntent, valuesFromText } from "../../src/server/agent/simulations";
+import { ensureSimulation, numbersIn, simulatedSimulationDecision, simulationIntent, valuesFromText } from "../../src/server/agent/simulations";
 
 const p = cases.phoneAndHome;
 const ASOF = "2026-10-28T07:41:00.000Z";
@@ -172,5 +172,12 @@ describe("planner routing for what-if questions", () => {
     expect(ensureSimulation(fin, "What if I get a 10% raise?", [{ tool: "show_simulation", result: {} }], true)).toBe(fin);
     expect(ensureSimulation(fin, "Am I paying twice for cloud storage?", [], true)).toBe(fin);
     expect(ensureSimulation(fin, "What if I get a 10% raise?", [], false)).toBe(fin);
+  });
+
+  it("reads Romanian and space-grouped amounts as the customer meant them", () => {
+    expect([...numbersIn("1.500 lei")]).toEqual([1500]);
+    expect([...numbersIn("12,50 lei")]).toEqual([12.5]);
+    expect(valuesFromText("a 5 000 RON phone").amountRon).toBe(5000);
+    expect(valuesFromText("un telefon de 1.500,50 lei").amountRon).toBe(1500.5);
   });
 });

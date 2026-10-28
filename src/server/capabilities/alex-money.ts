@@ -142,7 +142,7 @@ const A7: CapabilityDef = {
   group: "Money back",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["refund", "money back", "studiomart", "return"],
+  keywords: ["refund", "money back", "studiomart", "return", "banii inapoi", "rambursare"],
   async analyze(env) {
     const recs = all<any>(env.db, "SELECT * FROM recoveries WHERE tenant_id=? AND context_id=? ORDER BY updated_at DESC", env.tenantId, env.contextId);
     const r = recs.find((x) => x.kind === "REFUND");
@@ -206,7 +206,7 @@ const A8: CapabilityDef = {
   group: "Money back",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["twice", "double", "duplicate payment", "charged twice", "techbits", "dispute"],
+  keywords: ["twice", "double", "duplicate payment", "charged twice", "techbits", "dispute", "taxat de doua ori", "repeated payment"],
   async analyze(env) {
     const txns = all<any>(env.db, "SELECT * FROM transactions WHERE tenant_id=? AND context_id=? AND status IN ('POSTED','PENDING') ORDER BY booked_at", env.tenantId, env.contextId).map((t) => ({ id: t.id, merchantName: t.merchant_name, amountMinor: t.amount_minor, status: t.status, bookedAt: t.booked_at, orderRef: t.order_ref, authId: json<any>(t.data_json, {}).authId ?? null, merchantId: t.merchant_id }));
     const r = classifyPossibleDuplicates(txns as any);
@@ -350,7 +350,7 @@ const A10: CapabilityDef = {
   group: "Purchases",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["total cost", "tco", "phone", "buy", "worth", "accessories", "protection"],
+  keywords: ["total cost", "tco", "phone", "buy", "worth", "accessories", "protection", "true cost", "real cost"],
   async analyze(env) {
     const g = goalInputs(env, "phone");
     const tco = g?.inputs.tco ?? fixture("demo/capability-scenarios.json").alex.phoneTco;
@@ -453,7 +453,7 @@ const A14: CapabilityDef = {
   group: "Travel",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["travel", "trip", "barcelona", "roaming", "esim", "currency", "fx", "abroad"],
+  keywords: ["travel", "trip", "barcelona", "roaming", "esim", "currency", "fx", "abroad", "calatorie"],
   async analyze(env) {
     const t = goalInputs(env, "trip")!.inputs;
     const mn = fixture("demo/capability-scenarios.json").alex.mobileNet;

@@ -17,7 +17,7 @@ export const O9: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["financial airbag", "airbag", "pause optional spending", "stop optional spending", "pause nonessential", "spending emergency", "emergency spending"],
+  keywords: ["financial airbag", "airbag", "pause optional spending", "stop optional spending", "pause nonessential", "spending emergency", "emergency spending", "optional"],
   async analyze(env): Promise<Analysis> {
     const window = { startInclusive: env.now, endExclusive: toLocalIso(env.nowMs + 30 * 86_400_000) };
     // The 200-payment bulk demonstration is a separate Labs scenario, not the customer's connected finances.

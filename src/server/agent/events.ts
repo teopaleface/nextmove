@@ -5,6 +5,9 @@ import { shortId } from "../canonical";
 // Durable task timeline, blocks and notifications. Chat text is never the record: every step, approval,
 // attempt and receipt is persisted here and in the authority/execution tables.
 
+/** At most n UTF-16 units, never ending on half of an emoji (SQLite would store the lone half as U+FFFD). */
+export const cut = (s: string, n: number) => (s.length > n && /[\uD800-\uDBFF]/.test(s[n - 1]) ? s.slice(0, n - 1) : s.slice(0, n));
+
 export type EvidenceLevel =
   | "DETERMINISTIC_CALCULATION"
   | "BANK_RECORD"
@@ -28,7 +31,7 @@ export function taskEvent(db: DatabaseSync, e: { taskId: string | null; tenantId
     e.taskId,
     e.tenantId,
     e.kind,
-    e.label.slice(0, 400),
+    cut(e.label, 400),
     e.evidence ?? null,
     e.payload === undefined ? null : JSON.stringify(e.payload),
     new Date().toISOString(),

@@ -215,6 +215,9 @@ a {
 
 .main {
   padding: 4px 20px calc(var(--tabs-h) + var(--safe-bottom) + 32px);
+  /* Customer and model text (titles, questions, answers) can hold a long URL or an unbroken string: wrap it
+     instead of widening the page. break-word leaves min-content sizing, and so flex layouts, unchanged. */
+  overflow-wrap: break-word;
 }
 
 .main.no-tabs {

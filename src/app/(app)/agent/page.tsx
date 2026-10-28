@@ -14,6 +14,9 @@ const SUGGESTIONS: Record<string, string[]> = {
   "laziz:PERSONAL": ["Will my bills clear before the owner transfer arrives?"],
 };
 
+/** GET /api/tasks returns at most this many, newest first. */
+const TASK_LIST_LIMIT = 30;
+
 export default function AgentPage() {
   const router = useRouter();
   const { epoch, session, simpleMode } = useSession();
@@ -92,13 +95,25 @@ export default function AgentPage() {
       <ErrorBox error={error} />
 
       <Section title="Tasks" id="tasks">
-        <Group>
-          {tasks.data?.tasks?.length ? (
-            tasks.data.tasks.map((t: any) => <Row key={t.id} href={`/agent/tasks/${t.id}`} title={t.title} sub={<TaskStatus state={t.state} />} />)
-          ) : (
-            <Empty>Nothing needs your approval. Ask a question or start from a suggestion.</Empty>
-          )}
-        </Group>
+        {/* The list is not empty just because it could not load: say so instead of "Nothing needs your approval". */}
+        {!tasks.data && tasks.error ? (
+          <ErrorBox error={tasks.error} onRetry={() => void tasks.reload()} />
+        ) : (
+          <Group>
+            {tasks.data?.tasks?.length ? (
+              tasks.data.tasks.map((t: any) => <Row key={t.id} href={`/agent/tasks/${t.id}`} title={t.title || "Untitled request"} sub={<TaskStatus state={t.state} />} />)
+            ) : tasks.data ? (
+              <Empty>Nothing needs your approval. Ask a question or start from a suggestion.</Empty>
+            ) : (
+              <Empty>Loading your tasks…</Empty>
+            )}
+          </Group>
+        )}
+        {(tasks.data?.tasks?.length ?? 0) >= TASK_LIST_LIMIT ? (
+          <p className="caption" style={{ margin: "8px 0 0" }}>
+            Showing your {TASK_LIST_LIMIT} most recent tasks.
+          </p>
+        ) : null}
       </Section>
 
       <Section title="Tools" id="tools">

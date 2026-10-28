@@ -117,7 +117,7 @@ export const E8: CapabilityDef = {
   group: "Evidence",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["certificate", "proof of cancellation", "proof i cancelled", "cancellation proof", "collections", "they say i didn't cancel"],
+  keywords: ["certificate", "proof of cancellation", "proof i cancelled", "cancellation proof", "collections", "they say i didn't cancel", "proof", "proof that i cancel"],
   analyze: analyzeE8,
 };
 

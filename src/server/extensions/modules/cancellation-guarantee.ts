@@ -152,7 +152,7 @@ export const E1: CapabilityDef = {
   group: "Money back",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["charged after cancel", "cancelled but charged", "still charging", "dispute", "chargeback", "charged again", "cancellation guarantee", "charged me after", "after i cancelled", "after i canceled", "after cancelling", "after i stopped", "still charged"],
+  keywords: ["charged after cancel", "cancelled but charged", "still charging", "dispute", "chargeback", "charged again", "cancellation guarantee", "charged me after", "after i cancelled", "after i canceled", "after cancelling", "after i stopped", "still charged", "charged after", "charged me again"],
   analyze: analyzeE1,
 };
 

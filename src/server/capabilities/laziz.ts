@@ -97,7 +97,7 @@ const O2: CapabilityDef = {
   group: "Business",
   customer: "laziz",
   contextKind: "BUSINESS",
-  keywords: ["stock", "inventory", "supplier", "ingredients", "order stock", "millco", "dobrogea", "purchase"],
+  keywords: ["stock", "inventory", "supplier", "ingredients", "order stock", "millco", "dobrogea", "purchase", "stock for", "flour", "furnizor", "faina"],
   async analyze(env) {
     const inv = record(env, "INVENTORY")!;
     const need = inventoryNeed(inv.data);
@@ -238,7 +238,7 @@ const O4: CapabilityDef = {
   group: "Business",
   customer: "laziz",
   contextKind: "BUSINESS",
-  keywords: ["invoice", "receivable", "customer owes", "reminder", "cafe aurora", "late payment", "collect"],
+  keywords: ["invoice", "receivable", "customer owes", "reminder", "cafe aurora", "late payment", "collect", "owes us", "owe us", "owe you", "customers owe", "owed", "unpaid", "slow to pay", "hasn't paid", "haven't paid", "datoreaza", "facturi"],
   async analyze(env) {
     const rec = record(env, "RECEIVABLES")!;
     const scen = record(env, "SCENARIOS")!.data;
@@ -310,7 +310,7 @@ const O5: CapabilityDef = {
   group: "Business",
   customer: "laziz",
   contextKind: "BUSINESS",
-  keywords: ["loan", "funding", "credit line", "bridge", "financing", "borrow"],
+  keywords: ["loan", "funding", "credit line", "bridge", "financing", "borrow", "imprumut", "short-term"],
   async analyze(env) {
     const scen = record(env, "SCENARIOS")!.data;
     const fund = record(env, "FUNDING_OFFERS")!.data;
@@ -375,7 +375,7 @@ const A11: CapabilityDef = {
   group: "Bills",
   customer: "laziz",
   contextKind: "PERSONAL",
-  keywords: ["billing date", "due date", "move bill", "electricity", "electracasa", "payment fail"],
+  keywords: ["billing date", "due date", "move bill", "electricity", "electracasa", "payment fail", "bill date", "bill's date", "move a bill", "owner transfer", "bills clear", "clear"],
   async analyze(env) {
     const sub = subscription(env, "electracasa");
     const live = (await liveContract(env, sub)).contract;

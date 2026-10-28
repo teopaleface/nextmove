@@ -10,7 +10,7 @@ import type { Block } from "../capabilities/core";
 import { analyzeCapability, capabilitiesFor, proposeFromCapability, CAPABILITIES, customerOf, contextKindOf } from "../capabilities/registry";
 import { accountsFor } from "../bank/ledger";
 import { subscriptionWindowTotal } from "../bank/forecast";
-import { setBlock, setTaskState, taskEvent } from "./events";
+import { cut, setBlock, setTaskState, taskEvent } from "./events";
 import { revokeMandate } from "../authority/authority";
 import { formatMoney } from "../../shared/money";
 import { roadblocksFromText } from "../finance/route";
@@ -18,6 +18,10 @@ import type { WorkerCtx } from "../execution/executor";
 import { ensureSimulation, showSimulation, simulatedSimulationDecision } from "./simulations";
 import { acceptPlannerInputs, answerKey, plannerRule, settableInputs, showInputs, type CustomerSaid } from "./planner-inputs";
 import { SIMULATION_KINDS } from "../../shared/simulations";
+import { routeRequest, smallTalk } from "./routing";
+import { fromTools, plainText, textProblem } from "./guards";
+
+export { checkClaims, checkNumbers } from "./guards";
 
 // Agent tasks. Each step the planner chooses exactly one typed tool; arguments are validated by code and every
 // tool runs server-side under the task owner's session scope. Tools can read, calculate, ask and prepare a
@@ -81,8 +85,6 @@ interface Step {
   result: any;
 }
 
-/** At most n UTF-16 units, never ending on half of an emoji (SQLite would store the lone half as U+FFFD). */
-const cut = (s: string, n: number) => (s.length > n && /[\uD800-\uDBFF]/.test(s[n - 1]) ? s.slice(0, n - 1) : s.slice(0, n));
 
 export function createAgentTask(db: DatabaseSync, session: Session, text: string, opts: { kind?: string; title?: string } = {}) {
   const clean = cut(String(text ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim(), 600);
@@ -125,15 +127,15 @@ function sessionFor(db: DatabaseSync, task: any): Session {
   return { id: "worker", tenantId: task.tenant_id, userId: task.user_id, contextId: task.context_id, contextKind: ctx.kind, csrfToken: "", displayName: user.display_name, initials: user.initials };
 }
 
-function rank(db: DatabaseSync, session: Session, text: string) {
-  const t = text.toLowerCase();
+/** Whole-word keyword routing over this context's capabilities (routing.ts); negated clauses do not count. */
+function route(db: DatabaseSync, session: Session, text: string) {
   const customer = customerOf(db, session.tenantId);
   const kind = contextKindOf(db, session.contextId);
-  return CAPABILITIES.filter((c) => c.customer === customer && c.contextKind === kind)
-    .map((c) => ({ c, score: c.keywords.reduce((s, k) => s + (t.includes(k) ? k.length : 0), 0) + (t.includes(c.id.toLowerCase() + " ") ? 20 : 0) }))
-    .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map((x) => ({ id: x.c.id, title: x.c.title, short: x.c.short }));
+  return routeRequest(text, CAPABILITIES.filter((c) => c.customer === customer && c.contextKind === kind));
+}
+
+function rank(db: DatabaseSync, session: Session, text: string) {
+  return route(db, session, text).matches.map((x) => ({ id: x.c.id, title: x.c.title, short: x.c.short }));
 }
 
 function compactAnalysis(a: any) {
@@ -181,12 +183,24 @@ async function askForInput(db: DatabaseSync, task: any, session: Session, capabi
   const question = block ? { text: block.text, choices: block.options } : field ? { text: `What should NextMove prepare for ${field.label}?`, choices: field.options! } : null;
   if (!question) return { result: { error: "This capability has no open question for that input" } };
   const qid = shortId("q");
-  run(db, "INSERT INTO task_questions(id, task_id, tenant_id, question_key, text, options_json, status, created_at) VALUES (?,?,?,?,?,?, 'OPEN', ?)", qid, task.id, task.tenant_id, key, question.text.slice(0, 300), JSON.stringify(question.choices.map((c) => c.label).slice(0, 6)), new Date().toISOString());
+  run(db, "INSERT INTO task_questions(id, task_id, tenant_id, question_key, text, options_json, status, created_at) VALUES (?,?,?,?,?,?, 'OPEN', ?)", qid, task.id, task.tenant_id, key, cut(question.text, 300), JSON.stringify(question.choices.map((c) => c.label).slice(0, 6)), new Date().toISOString());
   setBlock(db, task.id, `question:${qid}`, 20, "question", { questionId: qid, capabilityId, inputKey, choices: question.choices.slice(0, 6) });
   return { result: { asked: question.text, questionId: qid }, stop: "ASK" };
 }
 
-async function runTool(db: DatabaseSync, task: any, session: Session, d: DecisionT): Promise<{ result: any; stop?: "ASK" | "PROPOSAL" | "DONE" }> {
+/** Merchant and payee names come from providers, not from NextMove, so they never vouch for the planner's text. */
+function untrustedNames(db: DatabaseSync, tenantId: string) {
+  return all<any>(db, "SELECT merchant_name AS n FROM subscriptions WHERE tenant_id=? UNION SELECT merchant_name FROM transactions WHERE tenant_id=? UNION SELECT merchant_name FROM recoveries WHERE tenant_id=?", tenantId, tenantId, tenantId).map((r) => String(r.n));
+}
+
+/** The planner's own question as the customer sees it: one line each, no blanks, no repeats; one option alone is no choice. */
+function plannerQuestion(question: unknown, options: unknown[]) {
+  const line = (x: unknown) => plainText(String(x ?? "")).replace(/\s+/g, " ").trim();
+  const opts = [...new Set(options.map(line).filter(Boolean).map((o) => cut(o, 80)))].slice(0, 6);
+  return { text: cut(line(question), 300) || "Could you tell me more?", options: opts.length >= 2 ? opts : [] };
+}
+
+async function runTool(db: DatabaseSync, task: any, session: Session, d: DecisionT, steps: Step[] = []): Promise<{ result: any; stop?: "ASK" | "PROPOSAL" | "DONE" }> {
   switch (d.tool) {
     case "overview": {
       const accts = accountsFor(db, session.tenantId, session.contextId);
@@ -207,10 +221,14 @@ async function runTool(db: DatabaseSync, task: any, session: Session, d: Decisio
     }
     case "ask_user": {
       if (d.capabilityId && d.inputKey) return askForInput(db, task, session, d.capabilityId, d.inputKey);
+      // The model's own question reaches the customer word for word, so it passes the same checks as an answer.
+      const q = plannerQuestion(d.question, d.options ?? []);
+      const problem = textProblem([q.text, ...q.options].join("\n"), steps, customerSaid(db, task).text, untrustedNames(db, task.tenant_id));
+      if (problem) return { result: { error: problem.replace(/^Withheld a model sentence/, "Question withheld:") } };
       const qid = shortId("q");
-      run(db, "INSERT INTO task_questions(id, task_id, tenant_id, question_key, text, options_json, status, created_at) VALUES (?,?,?,?,?,?, 'OPEN', ?)", qid, task.id, task.tenant_id, qid, String(d.question ?? "Could you tell me more?").slice(0, 300), JSON.stringify((d.options ?? []).slice(0, 6)), new Date().toISOString());
+      run(db, "INSERT INTO task_questions(id, task_id, tenant_id, question_key, text, options_json, status, created_at) VALUES (?,?,?,?,?,?, 'OPEN', ?)", qid, task.id, task.tenant_id, qid, q.text, JSON.stringify(q.options), new Date().toISOString());
       setBlock(db, task.id, `question:${qid}`, 20, "question", { questionId: qid });
-      return { result: { asked: d.question, questionId: qid }, stop: "ASK" };
+      return { result: { asked: q.text, questionId: qid }, stop: "ASK" };
     }
     case "prepare_proposal": {
       // Re-run with the inputs of this task's last analysis of the same capability, so the proposal matches what was analysed.
@@ -230,75 +248,6 @@ async function runTool(db: DatabaseSync, task: any, session: Session, d: Decisio
     case "final_answer":
       return { result: { text: d.text ?? "" }, stop: "DONE" };
   }
-}
-
-/** Numbers the planner may cite: everything tools returned, plus numbers the customer wrote. */
-/** Steps whose result NextMove produced. final_answer and ask_user echo the model's own text, so they never vouch for it. */
-const fromTools = (s: { tool?: string }) => s.tool !== "final_answer" && s.tool !== "ask_user";
-
-function allowedNumbers(steps: Step[], request: string) {
-  const out = new Set<string>();
-  const addMinor = (v: number) => {
-    out.add(String(v));
-    if (Number.isInteger(v)) {
-      out.add(String(v / 100));
-      out.add((v / 100).toFixed(2));
-      out.add(String(Math.abs(v / 100)));
-      out.add(Math.abs(v / 100).toFixed(2));
-    }
-  };
-  const walk = (x: any) => {
-    if (typeof x === "number") addMinor(x);
-    else if (typeof x === "string") for (const m of x.matchAll(/\d[\d,]*(?:\.\d+)?/g)) out.add(m[0].replace(/,/g, ""));
-    else if (Array.isArray(x)) x.forEach(walk);
-    else if (x && typeof x === "object") Object.values(x).forEach(walk);
-  };
-  steps.filter(fromTools).forEach((s) => walk(s.result));
-  for (const m of request.matchAll(/\d[\d,]*(?:\.\d+)?/g)) out.add(m[0].replace(/,/g, ""));
-  return out;
-}
-
-export function checkNumbers(text: string, allowed: Set<string>) {
-  const bad: string[] = [];
-  for (const m of text.matchAll(/(\d(?:[\d.,]*\d)?)(\s?[kK]\b)?/g)) {
-    const raw = m[1];
-    const thousands = Boolean(m[2]);
-    const after = text.slice(m.index! + m[0].length, m.index! + m[0].length + 5);
-    const before = text.slice(Math.max(0, m.index! - 5), m.index!);
-    const money = /^\s?(ron|lei|eur|€)/i.test(after) || /(ron|lei|eur|€)\s?$/i.test(before);
-    // Read the token both ways: 2,050.5 (English) and 2.050,5 (Romanian). It passes if either reading is a NextMove number.
-    const readings = [raw.replace(/,/g, ""), raw.replace(/\./g, "").replace(/,/g, ".")].map((n) => (thousands ? String(Number(n) * 1000) : n));
-    if (readings.some((n) => allowed.has(n) || allowed.has(n.replace(/\.00$/, "")) || allowed.has(Number(n).toFixed(2)))) continue;
-    // Day numbers and years are fine in prose, but never as an amount.
-    if (!money && !thousands && /^\d+$/.test(raw) && (Number(raw) <= 31 || /^20\d\d$/.test(raw))) continue;
-    bad.push(m[0].trim());
-  }
-  return bad;
-}
-
-// First-person or passive past-tense claims that something was carried out ("I cancelled it", "has been paid", "is now
-// paused"). The planner can only read, calculate, ask and prepare, so such a claim is false unless a tool said it.
-const OUTCOME = "cancell?ed|paid|stopped|paused|frozen|transferred|moved|sent|submitted|turned off|switched off|activated|blocked|refunded|approved|executed|disputed|booked|ordered|renewed|ended|closed|off";
-const CLAIM = new RegExp(
-  `\\b(?:(?:i|we|nextmove)(?:'ve|\\s+have|\\s+has)?|(?:has|have)\\s+been|(?:is|are)\\s+now)\\s+(?:already\\s+|now\\s+|just\\s+|successfully\\s+)?(?:${OUTCOME})\\b`,
-  "gi",
-);
-
-/** Outcome claims in the planner's text that no tool result contains. */
-export function checkClaims(text: string, steps: { tool?: string; result: any }[]) {
-  const said: string[] = [];
-  const walk = (x: any) => {
-    if (typeof x === "string") said.push(x.toLowerCase());
-    else if (Array.isArray(x)) x.forEach(walk);
-    else if (x && typeof x === "object") Object.values(x).forEach(walk);
-  };
-  steps.filter(fromTools).forEach((s) => walk(s.result));
-  const out: string[] = [];
-  for (const m of text.replace(/[’‘]/g, "'").matchAll(CLAIM)) {
-    const phrase = m[0].replace(/\s+/g, " ");
-    if (!said.some((t) => t.includes(phrase.toLowerCase()))) out.push(phrase);
-  }
-  return out;
 }
 
 /** One sentence with exactly one final full stop. */
@@ -325,11 +274,13 @@ function simulatedDecision(db: DatabaseSync, session: Session, task: any, steps:
   if (sim) return sim;
   const last = steps[steps.length - 1];
   if (!last) {
-    const m = rank(db, session, task.request_text)[0];
+    // A balance question ("Hold on, what's my balance?") gets the overview unless a capability matches more strongly.
+    const r = route(db, session, task.request_text);
+    const m = r.matches[0] && r.matches[0].score > r.overview ? r.matches[0].c : undefined;
     const roadblocks = m?.id === "O6" ? roadblocksFromText(task.request_text) : [];
     return m ? { tool: "analyze", capabilityId: m.id, inputs: roadblocks.length ? [{ key: "roadblocks", value: roadblocks.join(",") }] : undefined, reason: "Keyword match" } : { tool: "overview", reason: "No specific capability matched" };
   }
-  if (last.tool === "overview") return { tool: "final_answer", reason: "Overview", text: `Here is ${last.result.context}: ${last.result.accounts.map((a: any) => `${a.name} ${formatMoney(a.balanceMinor)}`).join(", ")}. Try asking about trials, bills, refunds, travel or goals.` };
+  if (last.tool === "overview") return { tool: "final_answer", reason: "Overview", text: `${smallTalk(task.request_text) ? `${smallTalk(task.request_text)} ` : ""}Here is ${last.result.context}: ${last.result.accounts.map((a: any) => `${a.name} ${formatMoney(a.balanceMinor)}`).join(", ")}. Try asking about trials, bills, refunds, travel or goals.` };
   // After the customer answered a capability's own question, analyse again with that answer.
   const { capabilityId: askedCap, inputKey: askedKey } = (last.args ?? {}) as { capabilityId?: string; inputKey?: string };
   if (last.tool === "ask_user" && askedCap && askedKey) {
@@ -348,6 +299,10 @@ function simulatedDecision(db: DatabaseSync, session: Session, task: any, steps:
   const intro = analysis ? [sentence(analysis.headline), String(analysis.summary ?? "").length <= 400 ? sentence(analysis.summary) : ""].filter(Boolean).join(" ") : "";
   if (last.tool === "analyze") {
     if (last.result.error) return { tool: "final_answer", reason: "Analysis failed", text: `I could not read this right now: ${last.result.error}.` };
+    // "Don't cancel my trial" or "what would happen if I cancelled it?": show the analysis, prepare nothing.
+    const r = route(db, session, task.request_text);
+    if ((r.declined || r.hypothetical) && !last.result.done)
+      return { tool: "final_answer", reason: r.declined ? "The customer asked not to change anything" : "A what-would-happen question", text: `${intro} ${r.declined ? "You asked me not to change anything, so nothing is prepared." : "Nothing is prepared; ask me to prepare it when you want to go ahead."}`.trim() };
     // An action whose prerequisite cannot be prepared waits with it (e.g. activating a bundle before eligibility is checked).
     const ready = preparable(last.result.candidates.filter((c: any) => c.available && c.defaultSelected));
     if (ready.length && !last.result.done) return { tool: "prepare_proposal", capabilityId: last.result.capability, candidateKeys: ready.map((c: any) => c.key), reason: "Default available actions" };
@@ -387,7 +342,7 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
       if (mode === "LIVE_MODEL") {
         const ctxName = one<any>(db, "SELECT name FROM contexts WHERE id=?", task.context_id)?.name;
         const payload = { request: task.request_text, context: ctxName, step: i + 1, budget: task.step_budget, capabilities: capabilitiesFor(db, session).filter((c) => c.inThisContext).map((c) => ({ id: c.id, title: c.title, short: c.short })), answers, history: steps.map((s) => ({ tool: s.tool, args: s.args, result: s.result })) };
-        const res = await callModel(db, { purpose: "planner", system: SYSTEM, text: JSON.stringify(payload).slice(0, 24_000), schema: decisionSchema(ids), tenantId: task.tenant_id, taskId: task.id, timeoutMs: 90_000 });
+        const res = await callModel(db, { purpose: "planner", system: SYSTEM, text: JSON.stringify(payload).slice(0, 24_000), schema: decisionSchema(ids), tenantId: task.tenant_id, taskId: task.id });
         if (res.ok) {
           const parsed = Decision.safeParse(res.output);
           if (parsed.success) {
@@ -427,7 +382,7 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
       if (one<any>(db, "SELECT state FROM tasks WHERE id=?", task.id)?.state === "STOPPED") break;
       let out: { result: any; stop?: string };
       try {
-        out = await runTool(db, task, session, d);
+        out = await runTool(db, task, session, d, steps);
       } catch (e: any) {
         out = { result: { error: e instanceof HttpError ? e.message : "Tool failed" } };
       }
@@ -443,21 +398,19 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
         d.tool === "find_capability" ? `Looked up matching capabilities` :
         d.tool === "show_simulation" ? (out.result.error ? `Could not show the what-if: ${out.result.error}` : `Prepared a what-if: ${out.result.title}`) :
         d.tool === "overview" ? "Read your balances and upcoming charges" : "Answer ready";
-      taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: d.tool, label, evidence, payload: { reason: d.reason?.slice(0, 200) } });
+      taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: d.tool, label, evidence, payload: { reason: d.reason === undefined ? undefined : cut(d.reason, 200) } });
       if (out.stop === "ASK") {
         setTaskState(db, task.id, "WAITING_USER", out.result.asked ?? d.question ?? null);
         break;
       }
       if (out.stop === "DONE") {
-        let text = String(out.result.text ?? "");
-        const bad = checkNumbers(text, allowedNumbers(steps, task.request_text));
-        const claims = checkClaims(text, steps);
+        // Invisible characters are dropped from what is checked and what is shown, so both are the same text.
+        let text = plainText(String(out.result.text ?? "")).trim();
+        const problem = text ? textProblem(text, steps, customerSaid(db, task).text, untrustedNames(db, task.tenant_id)) : "The model wrote an empty answer";
         let provenance = "All numbers come from NextMove calculations";
-        if (bad.length || claims.length) {
-          const a = steps.filter((s) => s.tool === "analyze").pop();
-          provenance = bad.length
-            ? `Withheld a model sentence citing ${bad.join(", ")}, which no calculation produced`
-            : `Withheld a model sentence saying "${claims[0]}": nothing is carried out until you approve it`;
+        if (problem) {
+          const a = steps.filter((s) => s.tool === "analyze" && s.result?.headline).pop();
+          provenance = problem;
           text = a ? `${sentence(a.result.headline)}${steps.some((s) => s.tool === "prepare_proposal" && s.result.proposalId) ? " A proposal is ready for your review; nothing happens until you approve." : ""}` : "Here is what NextMove found.";
         }
         setBlock(db, task.id, "answer", 40, "answer", { text, by: mode, provenance });

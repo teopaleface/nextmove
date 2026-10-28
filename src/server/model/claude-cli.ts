@@ -258,7 +258,8 @@ export async function callModel(db: DatabaseSync | null, req: ModelRequest): Pro
 /** Remove control characters and cap string sizes in model output before any further validation. */
 export function sanitizeValue(v: unknown, depth = 0): unknown {
   if (depth > 8) return null;
-  if (typeof v === "string") return v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f‪-‮⁦-⁩]/g, "").slice(0, 4000);
+  // Control, direction-override and invisible (zero-width, soft hyphen, BOM) characters: none belongs in a planner decision.
+  if (typeof v === "string") return v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u00ad\u061c\u180e\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, "").slice(0, 4000);
   if (Array.isArray(v)) return v.slice(0, 64).map((x) => sanitizeValue(x, depth + 1));
   if (v && typeof v === "object") {
     const o: Record<string, unknown> = {};

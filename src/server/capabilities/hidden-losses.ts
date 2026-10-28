@@ -203,7 +203,7 @@ const A17: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["gym", "pulsegym", "unused", "not using", "still going", "don't use", "paying for nothing"],
+  keywords: ["gym", "pulsegym", "unused", "not using", "still going", "don't use", "paying for nothing", "gym membership", "sala", "sala de sport"],
   async analyze(env) {
     const sub = subscription(env, "pulsegym");
     if (!sub) return unavailable(env, "A17", "No gym membership found");

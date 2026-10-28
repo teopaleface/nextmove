@@ -16,8 +16,8 @@ import { EXT_CAPABILITIES, EXT_CAPABILITY_ORDER } from "../extensions/registry";
 import { isExtOperation } from "../extensions/types";
 import { makeEnv, type Analysis, type CapabilityDef } from "./core";
 
-const O1_ALEX: CapabilityDef = { id: "O1", title: "Goals: phone now, home later", short: "Home readiness with or without the new phone", group: "Goals", customer: "alex", contextKind: "PERSONAL", keywords: ["goal", "home", "house", "phone", "save", "afford", "down payment"], analyze: O1_PERSONAL };
-const O1_LAZIZ: CapabilityDef = { id: "O1", title: "Goals: the 40,000 RON order", short: "Business conditions for a large order", group: "Goals", customer: "laziz", contextKind: "BUSINESS", keywords: ["goal", "order", "afford", "big order", "new shop", "expand"], analyze: O1_BUSINESS };
+const O1_ALEX: CapabilityDef = { id: "O1", title: "Goals: phone now, home later", short: "Home readiness with or without the new phone", group: "Goals", customer: "alex", contextKind: "PERSONAL", keywords: ["goal", "home", "house", "phone", "save", "afford", "down payment", "casa", "telefon"], analyze: O1_PERSONAL };
+const O1_LAZIZ: CapabilityDef = { id: "O1", title: "Goals: the 40,000 RON order", short: "Business conditions for a large order", group: "Goals", customer: "laziz", contextKind: "BUSINESS", keywords: ["goal", "order", "afford", "big order", "new shop", "expand", "comanda", "large order"], analyze: O1_BUSINESS };
 
 export const CAPABILITIES: CapabilityDef[] = [O1_ALEX, ...ALEX_SUBSCRIPTION_CAPS, T4, ...ALEX_MONEY_CAPS, ...HIDDEN_LOSS_CAPS, O6_ALEX, ...CASH_AUTOPILOT_CAPS, O9, O1_LAZIZ, ...LAZIZ_CAPS, ...EXT_CAPABILITIES];
 

@@ -84,9 +84,10 @@ export function acceptPlannerInputs(capabilityId: string, raw: { key: string; va
     const rule = plannerRule(capabilityId, key);
     const v = String(value ?? "").trim();
     let ok: unknown = undefined;
-    if (rule?.source === "number" && /^-?\d+(\.\d+)?$/.test(v)) {
-      const n = Math.abs(Number(v));
-      if (written.has(n) || (key.endsWith("Minor") && written.has(n / 100))) ok = Number(v);
+    // No negative amounts, and a *Minor field is the customer's RON in bani: "500" for "500 RON" would be 5 RON.
+    if (rule?.source === "number" && /^\d{1,15}(\.\d+)?$/.test(v)) {
+      const n = Number(v);
+      if (key.endsWith("Minor") ? Number.isSafeInteger(n) && written.has(n / 100) : written.has(n)) ok = n;
     } else if (rule?.source === "text") {
       if (v.length >= 3 && lower.includes(v.toLowerCase())) ok = v;
     } else if (rule?.source === "answer") {

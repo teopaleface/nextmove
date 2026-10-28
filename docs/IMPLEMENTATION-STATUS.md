@@ -370,3 +370,62 @@ Known limits (demo scope):
 - In direct mode the per-IP key can be forged. The per-account limits and global ceilings are the backstop.
 
 **Checks:** `npx tsc --noEmit`: pass. `npm test`: **404 tests passed in 48 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.
+
+### Chat edge-case pass (2026-10-29)
+
+Three areas were tested without spending live-model budget: request phrasing on the deterministic planner, a hostile live model played by a scripted fake CLI, and the chat UI.
+
+**Routing** (`src/server/agent/routing.ts`, used by `rank()` in the deterministic planner and by `find_capability`):
+- Keywords match whole words and still take the usual endings: "rent" no longer matches "current" or "parents", "paid" not "repaid", "gym" not "gymnastics", "hold" not "household", "invest" not "investigate". Romanian diacritics are stripped before matching.
+- Generic verbs (cancel, stop, anulează, oprește) count for little, so a subject the customer names wins.
+- A negated clause ("don't cancel anything, just show my balance") no longer counts towards a capability. A request that only negates, or asks "what would happen if…", gets the analysis with nothing prepared.
+- A balance or accounts question goes to the overview on a tie. Thanks, greetings and "are you a bot" get a short opener in front of it.
+- The income what-if needs a real raise or salary change ("raised its price" no longer opens it). Two demo suggestions, "Who still owes us money?" and "Will my bills clear before the owner transfer arrives?", now reach O4 and A11.
+- Keyword lists were cleaned up in the capability and extension modules.
+
+**Live-model output** (`src/server/agent/guards.ts`; the checks run sentence by sentence):
+- Claims that something was done are withheld in passive, future, progressive and Romanian forms ("PulseGym was cancelled", "I will cancel", "a fost anulat", "s-a plătit"), including with hidden zero-width characters. Negated sentences and ones conditional on approval are kept.
+- A merchant name copied from a tool result can no longer vouch for the same claim, because merchant names are removed before matching.
+- Numbers: "5 000 RON", "2.000 RON", "$700", percentages, digits in other scripts, amounts in words, and dates no tool produced are all checked. Amounts and dates the customer wrote in their answers now count as written, not only those in the first request.
+- Links and requests for a PIN, card number or SMS code are withheld. Warnings such as "Never share your PIN" are allowed.
+- The model's own `ask_user` question goes through the same checks. Options are trimmed to one line, blanks and repeats are dropped, and a single option becomes a free-text question.
+- An empty or invisible-only final answer is replaced by the last analysis headline.
+- `NEXTMOVE_MODEL_TIMEOUT_MS` now applies; a hard-coded 90 s had overridden it. `sanitizeValue` strips invisible characters.
+- Planner inputs reject negatives. Fields in bani accept only the customer's RON amount converted to bani, so "500" for "500 RON" can no longer lower a floor to 5 RON.
+- Simulations read "1.500 lei" and "5 000 RON" correctly, reject negatives, and keep the sign of a change the customer described.
+- Stored question, option, reason and timeline texts are cut without splitting an emoji.
+
+**Chat UI:**
+- The task page keeps one draft per question and labels the answer field and options for screen readers.
+- An unknown task id shows "Task not found" with a link back.
+- A failed task, or a finished one with no answer, says so; when the step budget ran out, it says that instead.
+- The agent list shows an error with retry instead of "Nothing needs your approval", plus a loading state.
+- Long words wrap instead of widening the page.
+
+**Tests:**
+- `tests/unit/chat-routing.test.ts` (129 tests)
+- `tests/integration/edge-chat-routing.test.ts` (44)
+- `tests/integration/edge-chat-live.test.ts` (10; scripted fake CLI, so the real binary is never run)
+- `tests/unit/text-cut.test.ts`
+- 12 more unit tests across the claim, number, planner-input and simulation suites
+
+Open:
+- A request with two intents still gets one capability. "Cancel everything" and a bare "stop" go to trials.
+- Remaining mis-routes:
+  - "moving house" → E7;
+  - "forgot my password" and "block my card" → T4;
+  - "PayPal paid" → O7;
+  - "schedule of payments" → A5;
+  - "my income" alone opens the income what-if.
+- `roadblocksFromText` in `src/server/finance/route.ts` still matches substrings.
+- Lookalike letters ("cancеlled" with a Cyrillic е) still pass the claim check.
+- A non-numeric `NEXTMOVE_MODEL_TIMEOUT_MS` makes every call time out at once.
+- When the step budget runs out there is no answer block; the task page explains it.
+- UI:
+  - after an answer, focus returns to the page body;
+  - there is no dark mode;
+  - a malformed URL gets Next's own 400 page.
+
+**Checks:** `npx tsc --noEmit`: pass. `npm test`: **598 tests passed in 52 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean. UI crawl (labs on): no issues.
+
+The stale dev cache came back after a plain restart: pages reloaded about 650 times a second. Removing `.next/dev` again fixed it, so after restarting the stack, check that a page settles before a demo.

@@ -191,7 +191,7 @@ export const E5: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["price rise", "price increase", "price ceiling", "charged more", "price went up", "price gate", "consent"],
+  keywords: ["price rise", "price increase", "price ceiling", "charged more", "price went up", "price gate", "consent", "raise my price", "without asking", "ask me first"],
   analyze: analyzeE5,
 };
 

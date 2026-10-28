@@ -314,7 +314,7 @@ const O8: CapabilityDef = {
   group: "Bills",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["overdraft", "below zero", "negative", "unexpected bill", "shield", "top up", "short", "not enough"],
+  keywords: ["overdraft", "below zero", "negative", "unexpected bill", "shield", "top up", "short", "not enough", "descoperit"],
   async analyze(env) {
     const cfg = autopilotConfig();
     const a = accounts(env);

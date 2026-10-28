@@ -4,7 +4,7 @@ import Link from "next/link";
 import { use, useState } from "react";
 import { api, useApi } from "@/ui/api";
 import { useSession } from "@/ui/session";
-import { ActionStatus, ErrorBox, Group, Loading, Notice, PageHead, Row, Section, TaskStatus, useAction } from "@/ui/kit";
+import { ActionStatus, Empty, ErrorBox, Group, Loading, Notice, PageHead, Row, Section, TaskStatus, useAction } from "@/ui/kit";
 import { AgentSig, Icon } from "@/ui/icons";
 import { evidenceLabel, money, onDemoClock, time } from "@/ui/format";
 import { SimulationWidget } from "@/ui/simulation";
@@ -19,11 +19,20 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
     poll: (d: any) => (ACTIVE.has(d?.task?.state) ? 1000 : d?.proposal && ["APPROVED"].includes(d.proposal.status) ? 2500 : null),
   });
   const { run, busy, error: actError } = useAction();
-  const [free, setFree] = useState("");
+  // One draft per open question: two free-text questions must not share a box.
+  const [free, setFree] = useState<Record<string, string>>({});
+  if (!data && error?.status === 404)
+    return (
+      <>
+        <PageHead back="/agent" title="Task not found" />
+        <Empty action={<Link className="btn" href="/agent">Back to Agent</Link>}>This task does not exist, or it belongs to another account or context.</Empty>
+      </>
+    );
   if (!data) return error ? <ErrorBox error={error} onRetry={reload} /> : <Loading label="Loading the task…" />;
   const t = data.task;
   const open = data.questions.filter((q: any) => q.status === "OPEN");
-  const answer = data.blocks.find((b: any) => b.key === "answer")?.payload;
+  const answerBlock = data.blocks.find((b: any) => b.key === "answer")?.payload;
+  const answer = answerBlock && String(answerBlock.text ?? "").trim() ? answerBlock : null;
   const analyses = data.blocks.filter((b: any) => b.kind === "analysis").map((b: any) => b.payload);
   const batch = data.blocks.find((b: any) => b.key === "batch")?.payload;
   const simulations = data.blocks.filter((b: any) => b.kind === "simulation");
@@ -32,7 +41,7 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
   const reply = (questionId: string, value: string) =>
     run(async () => {
       await api(`/tasks/${t.id}/answer`, { body: { questionId, answer: value } });
-      setFree("");
+      setFree((f) => ({ ...f, [questionId]: "" }));
       await reload();
     });
   const stop = () =>
@@ -43,10 +52,10 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
 
   return (
     <>
-      <PageHead back="/agent" title={t.title} />
+      <PageHead back="/agent" title={t.title || "Untitled request"} />
       <div className="group pad">
         <div className="caption">You asked</div>
-        <div style={{ marginTop: 2 }}>{t.request}</div>
+        <div style={{ marginTop: 2 }}>{t.request || t.title || "No text"}</div>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px 12px", marginTop: 10 }}>
           <TaskStatus state={t.state} />
           <span className="caption">{plannerText(t.plannerMode, t.model)}</span>
@@ -72,11 +81,13 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
       {open.map((q: any) => (
         <Section key={q.id} title="Needs your input">
           <div className="group pad">
-            <div className="label">{q.text}</div>
+            <div className="label" id={`qt-${q.id}`}>
+              {q.text}
+            </div>
             {q.options.length ? (
-              <div className="chips" style={{ marginTop: 10 }}>
+              <div className="chips" style={{ marginTop: 10 }} role="group" aria-labelledby={`qt-${q.id}`}>
                 {q.options.map((o: string) => (
-                  <button key={o} type="button" className="chip" onClick={() => reply(q.id, o)} disabled={busy}>
+                  <button key={o} type="button" className="chip" style={{ textAlign: "left", height: "auto", paddingTop: 10, paddingBottom: 10, borderRadius: 16 }} onClick={() => reply(q.id, o)} disabled={busy}>
                     {o}
                   </button>
                 ))}
@@ -85,15 +96,13 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  if (free.trim()) void reply(q.id, free.trim());
+                  const v = (free[q.id] ?? "").trim();
+                  if (v && !busy) void reply(q.id, v);
                 }}
                 style={{ display: "flex", gap: 8, marginTop: 10 }}
               >
-                <label className="sr-only" htmlFor={`a-${q.id}`}>
-                  Your answer
-                </label>
-                <input id={`a-${q.id}`} className="input" value={free} onChange={(e) => setFree(e.target.value)} maxLength={200} />
-                <button type="submit" className="btn primary small-btn" disabled={busy || !free.trim()}>
+                <input id={`a-${q.id}`} className="input" aria-labelledby={`qt-${q.id}`} value={free[q.id] ?? ""} onChange={(e) => { const v = e.target.value; setFree((f) => ({ ...f, [q.id]: v })); }} maxLength={200} />
+                <button type="submit" className="btn primary small-btn" disabled={busy || !(free[q.id] ?? "").trim()}>
                   Send
                 </button>
               </form>
@@ -119,6 +128,18 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
             </div>
           ) : null}
         </Section>
+      ) : t.state === "FAILED" ? (
+        <div style={{ marginTop: 12 }}>
+          <Notice tone="warn" title="NextMove could not finish this task">
+            {p?.status === "APPROVED" ? "" : "Nothing was approved or sent on your behalf. "}Ask again from the Agent page to start a fresh check.
+          </Notice>
+        </div>
+      ) : t.state === "DONE" ? (
+        <div style={{ marginTop: 12 }}>
+          <Notice tone="info" title="No written answer">
+            {t.summary === "Step budget reached" ? "NextMove used all its steps before writing an answer. The activity below shows what it checked; ask again with more detail to continue." : "This task ended without a written answer. The activity below shows what NextMove checked."}
+          </Notice>
+        </div>
       ) : ACTIVE.has(t.state) ? (
         <Section>
           <div className="group pad" aria-live="polite">
@@ -174,6 +195,7 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
 
       <Section title="Activity" id="activity">
         <Group>
+          {data.events.length ? null : <Empty>No activity recorded yet.</Empty>}
           <ol className="timeline" aria-live="polite">
             {data.events.map((e: any) => (
               <li key={e.seq}>

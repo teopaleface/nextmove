@@ -23,6 +23,15 @@ describe("acceptPlannerInputs", () => {
     expect(acceptPlannerInputs("A6", [{ key: "months", value: "two" }], said("pause it for two months")).inputs).toEqual({});
   });
 
+  it("refuses negative values and a *Minor field given in RON instead of bani", () => {
+    expect(acceptPlannerInputs("O8", [{ key: "dailyFloorMinor", value: "-50000" }], said("keep at least 500 RON")).inputs).toEqual({});
+    expect(acceptPlannerInputs("O8", [{ key: "dailyFloorMinor", value: "500" }], said("keep at least 500 RON")).inputs).toEqual({});
+    expect(acceptPlannerInputs("O8", [{ key: "dailyFloorMinor", value: "50000" }], said("keep at least 500 RON")).inputs).toEqual({ dailyFloorMinor: 50000 });
+    expect(acceptPlannerInputs("O8", [{ key: "dailyFloorMinor", value: "150000" }], said("keep at least 1.500 lei")).inputs).toEqual({ dailyFloorMinor: 150000 });
+    expect(acceptPlannerInputs("O8", [{ key: "dailyFloorMinor", value: "150" }], said("keep at least 1.500 lei")).inputs).toEqual({});
+    expect(acceptPlannerInputs("A6", [{ key: "months", value: "-2" }], said("pause it for 2 months")).inputs).toEqual({});
+  });
+
   it("keeps free text only when the customer wrote it", () => {
     expect(acceptPlannerInputs("T3", [{ key: "studentIdNumber", value: "UB-2024-118" }], said("my student id is UB-2024-118")).inputs).toEqual({ studentIdNumber: "UB-2024-118" });
     expect(acceptPlannerInputs("T3", [{ key: "studentIdNumber", value: "UB-0000-001" }], said("I am a student")).inputs).toEqual({});

@@ -241,7 +241,7 @@ export const E3: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["retention offer", "offer to stay", "discount to stay", "keep me", "counter offer", "retention", "save offer"],
+  keywords: ["retention offer", "offer to stay", "discount to stay", "keep me", "counter offer", "retention", "save offer", "to stay"],
   analyze: analyzeE3,
 };
 

@@ -7,6 +7,7 @@ import { makeEnv, type CapEnv } from "../capabilities/core";
 import { customerOf, contextKindOf } from "../capabilities/registry";
 import type { Session } from "../auth/session";
 import { setBlock } from "./events";
+import { normalizeRequest } from "./routing";
 import { formatMoney } from "../../shared/money";
 import {
   SIMULATION_KINDS,
@@ -66,15 +67,26 @@ async function savingsBase(env: CapEnv) {
   return { confirmedMinor: confirmed.reduce((s, c) => s + c.amount_minor, 0), foundMinor: found, confirmedNames: confirmed.map((c) => c.merchant_name as string) };
 }
 
-const NUM = /\d[\d,]*(?:\.\d+)?/g;
-export const numbersIn = (text: string) => new Set([...text.matchAll(NUM)].map((m) => Number(m[0].replace(/,/g, ""))));
+// 5 000 (space-grouped), 1.500 / 1.500,50 (Romanian), 1,500.50 (English), 12,50 (Romanian decimal), 12.99, 7.
+const NUM = /\d{1,3}(?:[ \u00a0\u202f]\d{3})+(?![\d.,]*\d)(?:[.,]\d+)?|\d[\d.,]*\d|\d/g;
+/** One written number: dots before groups of three are Romanian thousands ("1.500 lei" is 1500, never 1.5). */
+export function readNumber(token: string) {
+  const t = token.replace(/[ \u00a0\u202f]/g, "");
+  if (/^\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(t)) return Number(t.replace(/\./g, "").replace(",", "."));
+  if (/^\d+,\d{1,2}$/.test(t)) return Number(t.replace(",", "."));
+  return Number(t.replace(/,/g, ""));
+}
+export const numbersIn = (text: string) =>
+  new Set([...text.matchAll(NUM)].flatMap((m) => (/\s/.test(m[0]) ? [readNumber(m[0]), ...m[0].split(/\s+/).map(readNumber)] : [readNumber(m[0])])).filter(Number.isFinite));
+
+const DROP = /\b(drop|cut|lose|lower|less|decrease|fall|fell|reduc)/;
 
 /** Values the customer actually wrote, read from their request (the simulated planner uses this too). */
 export function valuesFromText(text: string) {
   const t = text.toLowerCase();
   const out: { amountRon?: number; changePct?: number; termMonths?: number; ratePct?: number; years?: number } = {};
-  const amount = t.match(/(\d[\d,]*(?:\.\d+)?)\s*(?:ron|lei)\b/);
-  if (amount) out.amountRon = Number(amount[1].replace(/,/g, ""));
+  const amount = t.match(/(\d{1,3}(?:[ \u00a0\u202f]\d{3})+(?:[.,]\d+)?|\d[\d.,]*\d|\d)\s*(?:ron|lei)\b/);
+  if (amount && Number.isFinite(readNumber(amount[1]))) out.amountRon = readNumber(amount[1]);
   const term = t.match(/(\d{1,2})\s*(?:months?|installments?|instalments?)\b/);
   if (term) out.termMonths = Number(term[1]);
   const years = t.match(/(\d{1,2})\s*years?\b/);
@@ -82,7 +94,7 @@ export function valuesFromText(text: string) {
   const pctm = t.match(/(\d+(?:\.\d+)?)\s*%/);
   if (pctm) {
     const p = Number(pctm[1]);
-    if (/\b(raise|salary|income|pay|earn|drop|cut)/.test(t)) out.changePct = /\b(drop|cut|lose|lower|less|decrease|fall)/.test(t) ? -p : p;
+    if (/\b(raise|salary|income|pay|earn|drop|cut)/.test(t)) out.changePct = DROP.test(t) ? -p : p;
     else out.ratePct = p;
   }
   return out;
@@ -90,9 +102,13 @@ export function valuesFromText(text: string) {
 
 /** Which what-if a request is about, if any. Deliberately narrow so other suggestions keep their own flow. */
 export function simulationIntent(text: string): SimulationKind | null {
-  const t = text.toLowerCase();
-  if (/\b(invest|compound|grow (it|them|my)|put (it|this|that|them) aside)/.test(t)) return "invest";
-  if (/\b(raise|salary|pay ?rise|pay ?cut|income (drop|change|goes|falls|rises))|\bmy income\b/.test(t)) return "income";
+  const t = normalizeRequest(text);
+  // Whole words: "investigate this charge" is not about investing.
+  if (/\b(invest(s|ed|ing|ment|ments)?\b|compound|grow (it|them|my)|put (it|this|that|them) aside)/.test(t)) return "invest";
+  // A pay rise or a salary that changes; not a merchant that "raised its price" or "when does my salary arrive?".
+  if (/\b((a|my|the|pay|salary|\d+ ?%) raise|raise (of|by) \d)\b/.test(t)) return "income";
+  if (/\bsalary (drops?|dropped|falls?|fell|goes|went|rises?|rose|increases?|increased|decreases?|decreased|changes?|changed|is cut|cut)\b|\b(cut|drop|rise|increase|decrease|change) (in|to|of) my salary\b|\b(higher|lower|bigger|smaller|new) salary\b/.test(t)) return "income";
+  if (/\b(pay ?rise|pay ?cut|income (drop|change|goes|falls|rises))|\bmy income\b/.test(t)) return "income";
   if (/\b(loan|installments?|instalments?|borrow|financing|pay (it )?over)\b/.test(t)) return "loan";
   if (/\b(buy|afford|purchase)\b/.test(t) && /\bphone\b/.test(t) && /\bhome|house|goal\b/.test(t)) return "loan";
   return null;
@@ -107,7 +123,9 @@ export async function buildSimulation(env: CapEnv, kind: SimulationKind, request
     const raw = planned[key];
     if (raw != null && raw !== "") {
       const n = Number(String(raw).replace(/,/g, ""));
-      if (Number.isFinite(n) && written.has(Math.abs(n))) return n;
+      // Only a change in income has a sign, and it follows the customer's words ("drops 10%" is -10, never +10).
+      const signOk = key === "changePct" ? n >= 0 === (fromText.changePct != null ? fromText.changePct >= 0 : !DROP.test(request.toLowerCase())) : n >= 0;
+      if (Number.isFinite(n) && signOk && written.has(Math.abs(n))) return n;
       ignored.push(key);
     }
     return fromText[key];
