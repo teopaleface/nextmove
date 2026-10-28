@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "status": "synthetic_capability_scenarios_not_live_offers_or_accounts",
+  "description": "Additional fictional inputs for capability rows not covered by design/ui-fixtures.json or demo/cases.json. Independent of the 200-item stress fixture. All merchants, prices, policies, rates and counterparties are invented and labelled fictional in the product.",
+  "currency": "RON",
+  "moneyUnit": "bani",
+  "asOf": "2026-10-28T09:41:00+02:00",
+  "timezone": "Europe/Bucharest",
+  "alex": {
+    "historyNote": "Additive posted history before the fixture instant. Opening balances are derived so that Daily stays 12,480.00 RON and Savings 97,520.00 RON at the fixture instant.",
+    "transactions": [
+      { "id": "txn-salary-2026-10", "merchant": "Campus Bookshop Ltd (payroll)", "category": "Income", "amountMinor": 320000, "bookedAt": "2026-10-10T08:00:00+03:00", "status": "POSTED", "note": "Part-time salary" },
+      { "id": "txn-mobilenet-2026-10", "merchant": "MobileNet", "merchantId": "mobilenet", "category": "Telecom", "amountMinor": -6500, "bookedAt": "2026-10-03T07:10:00+03:00", "status": "POSTED" },
+      { "id": "txn-studiomart-2026-10", "merchant": "StudioMart", "merchantId": "studiomart", "category": "Shopping", "amountMinor": -24900, "bookedAt": "2026-10-12T17:44:00+03:00", "status": "POSTED", "orderRef": "SM-ORD-5531", "note": "Desk lamp, returned 24 Oct" },
+      { "id": "txn-soundhub-2026-10", "merchant": "SoundHub", "merchantId": "soundhub", "category": "Electronics", "amountMinor": -59900, "bookedAt": "2026-10-20T16:30:00+03:00", "status": "POSTED", "orderRef": "SH-7781", "note": "AirWave 3 headphones" },
+      { "id": "txn-techbits-a", "merchant": "TechBits", "merchantId": "techbits", "category": "Electronics", "amountMinor": -34900, "bookedAt": "2026-10-21T11:02:00+03:00", "status": "POSTED", "orderRef": "TB-30017" },
+      { "id": "txn-techbits-b", "merchant": "TechBits", "merchantId": "techbits", "category": "Electronics", "amountMinor": -34900, "bookedAt": "2026-10-21T11:04:00+03:00", "status": "POSTED", "orderRef": "TB-30017" },
+      { "id": "txn-urbanride-a", "merchant": "UrbanRide", "merchantId": "urbanride", "category": "Transport", "amountMinor": -2350, "bookedAt": "2026-10-24T08:12:00+03:00", "status": "POSTED", "orderRef": "UR-5521" },
+      { "id": "txn-urbanride-b", "merchant": "UrbanRide", "merchantId": "urbanride", "category": "Transport", "amountMinor": -2350, "bookedAt": "2026-10-24T19:40:00+03:00", "status": "POSTED", "orderRef": "UR-5598" },
+      { "id": "txn-streamly-2026-08", "merchant": "Streamly", "merchantId": "streamly", "category": "Subscriptions", "amountMinor": -3900, "bookedAt": "2026-08-26T14:22:00+03:00", "status": "POSTED" },
+      { "id": "txn-streamly-2026-09", "merchant": "Streamly", "merchantId": "streamly", "category": "Subscriptions", "amountMinor": -3900, "bookedAt": "2026-09-26T14:22:00+03:00", "status": "POSTED" },
+      { "id": "txn-cloudbox-2026-10", "merchant": "CloudBox", "merchantId": "cloudbox", "category": "Subscriptions", "amountMinor": -3500, "bookedAt": "2026-10-26T09:03:00+02:00", "status": "POSTED" },
+      { "id": "txn-studyplus-2026-10", "merchant": "StudyPlus", "merchantId": "studyplus", "category": "Subscriptions", "amountMinor": -7900, "bookedAt": "2026-10-26T10:14:00+02:00", "status": "POSTED" },
+      { "id": "txn-streamly-2026-10", "merchant": "Streamly", "merchantId": "streamly", "category": "Subscriptions", "amountMinor": -4900, "bookedAt": "2026-10-26T14:22:00+02:00", "status": "POSTED" },
+      { "id": "txn-freshmarket-posted", "merchant": "Fresh Market", "merchantId": "freshmarket", "category": "Groceries", "amountMinor": -12840, "bookedAt": "2026-10-27T18:05:00+02:00", "status": "POSTED", "orderRef": "FM-88412", "authId": "AUTH-FM-88412" },
+      { "id": "txn-freshmarket-hold", "merchant": "Fresh Market", "merchantId": "freshmarket", "category": "Groceries", "amountMinor": -12840, "bookedAt": "2026-10-27T18:05:00+02:00", "status": "PENDING", "orderRef": "FM-88412", "authId": "AUTH-FM-88412", "note": "Card authorization hold for the same purchase" }
+    ],
+    "bills": [
+      {
+        "id": "bill-mobilenet",
+        "merchantId": "mobilenet",
+        "merchant": "MobileNet",
+        "category": "TELECOM",
+        "planId": "unlimited-plus",
+        "planName": "Unlimited Plus 100 GB",
+        "amountMinor": 6500,
+        "billingDay": 3,
+        "nextChargeAt": "2026-11-03T07:10:00+02:00",
+        "subscriberAccountId": "mn-alex-0712"
+      }
+    ],
+    "mobileNet": {
+      "catalogRevision": 4,
+      "usageGb": [
+        { "cycle": "2026-08", "gb": 7.8 },
+        { "cycle": "2026-09", "gb": 9.2 },
+        { "cycle": "2026-10", "gb": 11.5 }
+      ],
+      "hotspotUsedGbLastCycle": 2.1,
+      "plans": [
+        { "id": "unlimited-plus", "name": "Unlimited Plus 100 GB", "monthlyMinor": 6500, "dataGb": 100, "hotspot": true, "euRoamingGb": 4 },
+        { "id": "smart-20", "name": "Smart 20 GB", "monthlyMinor": 3900, "dataGb": 20, "hotspot": true, "euRoamingGb": 6 },
+        { "id": "basic-10", "name": "Basic 10 GB", "monthlyMinor": 2900, "dataGb": 10, "hotspot": false, "euRoamingGb": 3 }
+      ],
+      "changeRule": "Plan changes requested at least 2 days before the next bill apply from that bill. No change fee.",
+      "extraEuGbMinor": 1500
+    },
+    "studyPlusAnnual": {
+      "monthlyMinor": 7900,
+      "annualMinor": 79000,
+      "switchEffectiveAt": "2026-11-26T10:14:00+02:00",
+      "annualRefundRule": "Annual plan refundable only within 14 days of the annual charge (fictional term).",
+      "autoRenewsYearly": true
+    },
+    "streamlyPriceHistory": [
+      { "termsRevision": 1, "monthlyMinor": 3900, "effectiveFrom": "2025-01-26T00:00:00+02:00", "noticeDate": null },
+      { "termsRevision": 2, "monthlyMinor": 4900, "effectiveFrom": "2026-10-26T00:00:00+02:00", "noticeDate": "2026-10-01T09:00:00+03:00", "noticeText": "Streamly Standard price changes from 39 RON to 49 RON per month from your October 2026 renewal." }
+    ],
+    "streamlyAlternatives": [
+      { "id": "streamly-basic", "name": "Streamly Basic with ads", "monthlyMinor": 2900, "offlinePlayback": false, "tvAccess": true, "ads": true }
+    ],
+    "streamlyPause": {
+      "allowedMonths": [1, 2, 3],
+      "feeMinor": 0,
+      "startsAt": "2026-11-26T14:22:00+02:00",
+      "rule": "A pause starts at your next renewal. Access ends at the end of the paid period and resumes automatically on the resume date at the current price."
+    },
+    "contentCatalog": {
+      "revision": 3,
+      "checkedAt": "2026-10-28T09:00:00+02:00",
+      "status": "fictional_versioned_catalog",
+      "titles": [
+        { "id": "northern-lights-s3", "title": "Northern Lights, season 3", "service": "streamly", "availableFrom": "2026-12-04", "availableUntil": null },
+        { "id": "atlas-files", "title": "The Atlas Files", "service": "cinemax", "availableFrom": "2026-11-20", "availableUntil": "2027-02-19" },
+        { "id": "code-and-chaos-s2", "title": "Code & Chaos, season 2", "service": "cinemax", "availableFrom": "2027-01-08", "availableUntil": "2027-04-30" },
+        { "id": "harbor-lights", "title": "Harbor Lights", "service": "streamly", "availableFrom": "2026-06-01", "availableUntil": null }
+      ],
+      "services": [
+        { "id": "cinemax", "name": "CinemaMax", "monthlyMinor": 3900, "billing": "30-day periods from the start date", "renewal": "monthly; renewal can be turned off at sign-up", "cancellationFeeMinor": 0 }
+      ]
+    },
+    "bookNookCredit": {
+      "merchantId": "booknook",
+      "creditId": "BNC-2209",
+      "balanceMinor": 12000,
+      "expiresAt": "2026-11-15T23:59:59+02:00",
+      "restrictions": "Books and stationery sold by BookNook, one order, not exchangeable for cash.",
+      "intendedPurchase": { "itemId": "BN-978-1-80002-114-7", "title": "Principles of Microeconomics (4th ed.)", "priceMinor": 18900, "category": "books", "source": "Alex's saved wishlist" }
+    },
+    "soundHubPolicy": {
+      "policyRevision": 2,
+      "text": "Price protection: if SoundHub lowers the price of the same item sold by SoundHub within 14 days of your purchase, we refund the difference to the original payment method. Excludes marketplace sellers and clearance items.",
+      "windowDays": 14,
+      "purchase": { "orderRef": "SH-7781", "item": "AirWave 3 headphones", "sku": "AW3-BLK", "paidMinor": 59900, "purchasedAt": "2026-10-20T16:30:00+03:00", "seller": "SoundHub" },
+      "currentPrice": { "sku": "AW3-BLK", "priceMinor": 49900, "observedAt": "2026-10-27T12:00:00+02:00", "catalogRevision": 5, "clearance": false, "seller": "SoundHub" }
+    },
+    "refund": {
+      "merchantId": "studiomart",
+      "merchant": "StudioMart",
+      "amountMinor": 24900,
+      "reference": "SM-2048",
+      "requestedAt": "2026-10-24T10:00:00+03:00",
+      "acceptedAt": "2026-10-25T15:00:00+02:00",
+      "expectedBy": "2026-10-31T23:59:59+02:00",
+      "originalTransactionId": "txn-studiomart-2026-10"
+    },
+    "phoneTco": {
+      "horizonMonths": 24,
+      "includeProtection": true,
+      "options": [
+        { "id": "phone-6000", "name": "Phone at 6,000 RON", "priceMinor": 600000, "requiredAccessoriesMinor": 9900, "requiredAccessoriesNote": "Charger not included", "protectionMonthlyMinor": 2900, "batteryServiceMinor": 34900, "batteryServiceMonth": 36, "resaleMinor": null },
+        { "id": "phone-3500", "name": "Phone at 3,500 RON", "priceMinor": 350000, "requiredAccessoriesMinor": 0, "requiredAccessoriesNote": "Charger included", "protectionMonthlyMinor": 1900, "batteryServiceMinor": 27900, "batteryServiceMonth": 24, "resaleMinor": null }
+      ]
+    },
+    "travel": {
+      "destination": "Barcelona",
+      "country": "Spain",
+      "start": "2026-11-12",
+      "end": "2026-11-16",
+      "budgetMinor": 150000,
+      "dataNeedGb": 5,
+      "expectedCardSpendMinor": 120000,
+      "connectivity": [
+        { "id": "datapass", "name": "DataPass Europe", "kind": "eSIM", "dataGb": 5, "validDays": 7, "costMinor": 2900, "merchantId": "datapass", "partnerOfNextMoveCard": true },
+        { "id": "roampack", "name": "RoamPack EU", "kind": "eSIM", "dataGb": 5, "validDays": 7, "costMinor": 4900, "merchantId": "roampack", "partnerOfNextMoveCard": false }
+      ],
+      "fxRate": { "pair": "EUR/RON", "rate": "4.9770", "observedAt": "2026-10-28T09:00:00+02:00", "status": "fictional_supplied_rate" },
+      "paymentMethods": [
+        { "id": "nextmove-card", "name": "NextMove debit card", "fxMarkupBasisPoints": 0, "fixedFeeMinor": 0, "source": "NextMove card terms v1 (fictional)" },
+        { "id": "other-card", "name": "Other bank card", "fxMarkupBasisPoints": 250, "fixedFeeMinor": 0, "source": "Customer-supplied terms" },
+        { "id": "airport-kiosk", "name": "Airport exchange kiosk", "fxMarkupBasisPoints": 700, "fixedFeeMinor": 0, "source": "Fictional kiosk board, 28 Oct" }
+      ],
+      "cardBenefit": { "id": "travel-connectivity-credit", "name": "Travel connectivity credit", "amountMinor": 1500, "eligibleMerchants": ["datapass"], "expiresAt": "2026-11-30T23:59:59+02:00", "source": "NextMove card benefits v1 (fictional)" }
+    }
+  },
+  "lazizHousehold": {
+    "openingBalanceMinor": 28000,
+    "bills": [
+      { "id": "bill-fiberlink", "merchantId": "fiberlink", "merchant": "FiberLink", "category": "TELECOM", "planName": "Home fibre 500", "amountMinor": 8900, "billingDay": 1, "nextChargeAt": "2026-11-01T08:00:00+02:00", "subscriberAccountId": "fl-laziz-2201" },
+      { "id": "bill-electracasa", "merchantId": "electracasa", "merchant": "ElectraCasa", "category": "UTILITY", "planName": "Fixed tariff home", "amountMinor": 24000, "billingDay": 2, "nextChargeAt": "2026-11-02T08:00:00+02:00", "subscriberAccountId": "ec-laziz-7730", "supportedBillingDays": [1, 2, 5, 10, 15, 20, 25], "changeRule": "Requests at least 3 days before the next bill apply to that bill. Moving later adds a one-off charge for the extra days, calculated as monthly amount x extra days / 30, rounded half up to the nearest ban.", "failedPaymentFeeMinor": 2500 }
+    ],
+    "income": [
+      { "id": "owner-transfer-monthly", "label": "Owner transfer from Laziz Products", "amountMinor": 400000, "expectedAt": "2026-11-03T09:00:00+02:00", "kind": "owner_transfer", "status": "planned_by_arrangement" }
+    ],
+    "essentials": [
+      { "id": "household-rent", "label": "Rent", "amountMinor": -350000, "dueAt": "2026-11-04T09:00:00+02:00" }
+    ]
+  },
+  "lazizBusiness": {
+    "company": "Laziz Products SRL",
+    "supplierQuotes": [
+      { "id": "quote-millco", "supplier": "MillCo Ingredients", "merchantId": "millco", "unitPriceMinor": 3000, "units": 800, "payments": [{ "day": 2, "share": "100%", "amountMinor": 2400000 }], "deliveryDay": 4, "validUntilDay": 5 },
+      { "id": "quote-dobrogea", "supplier": "Dobrogea Farms", "merchantId": "dobrogea", "unitPriceMinor": 3150, "units": 800, "payments": [{ "day": 2, "share": "50%", "amountMinor": 1260000 }, { "day": 32, "share": "50%", "amountMinor": 1260000 }], "deliveryDay": 6, "validUntilDay": 5 }
+    ],
+    "receivables": [
+      { "id": "inv-0142", "invoiceNumber": "INV-2026-0142", "customer": "Cafe Aurora SRL", "counterpartyId": "cafe-aurora", "amountMinor": 1200000, "dueDay": 12, "issuedDay": -18, "contacts": [{ "day": -3, "channel": "email", "summary": "Invoice sent with 30-day terms" }] },
+      { "id": "order-deposit", "invoiceNumber": "PRO-2026-0007", "customer": "Hotel Lumen", "counterpartyId": "hotel-lumen", "amountMinor": 1200000, "dueDay": 1, "issuedDay": 0, "kind": "order_deposit_request", "contacts": [] }
+    ],
+    "ownerArrangement": { "id": "owner-transfer-01", "amountMinor": 400000, "day": 3, "toContext": "laziz-personal", "basis": "Existing confirmed monthly owner arrangement. No tax or payroll classification is inferred." },
+    "teamDesk": {
+      "merchantId": "teamdesk",
+      "plan": "TeamDesk Business",
+      "seatPriceMinor": 4500,
+      "minimumSeats": 5,
+      "nextInvoiceAt": "2026-11-01T00:00:00+02:00",
+      "rule": "Seat reductions apply from the next invoice. The current period is not refunded.",
+      "seats": [
+        { "seatId": "seat-01", "user": "Mr Laziz", "role": "Owner, billing admin", "lastActive": "2026-10-28", "ownsSharedFiles": 0, "note": null },
+        { "seatId": "seat-02", "user": "Ana", "role": "Member", "lastActive": "2026-10-27", "ownsSharedFiles": 3, "note": null },
+        { "seatId": "seat-03", "user": "Radu", "role": "Member", "lastActive": "2026-10-28", "ownsSharedFiles": 1, "note": null },
+        { "seatId": "seat-04", "user": "Elena", "role": "Member", "lastActive": "2026-10-26", "ownsSharedFiles": 0, "note": null },
+        { "seatId": "seat-05", "user": "Victor", "role": "Member", "lastActive": "2026-10-25", "ownsSharedFiles": 2, "note": null },
+        { "seatId": "seat-06", "user": "Ioana", "role": "Member", "lastActive": "2026-10-22", "ownsSharedFiles": 0, "note": null },
+        { "seatId": "seat-07", "user": "Dan", "role": "Member", "lastActive": "2026-08-12", "ownsSharedFiles": 0, "note": null },
+        { "seatId": "seat-08", "user": "Sorin", "role": "Member", "lastActive": "2026-07-30", "ownsSharedFiles": 14, "note": null },
+        { "seatId": "seat-09", "user": "Cristina", "role": "Member", "lastActive": "2026-06-01", "ownsSharedFiles": 0, "note": "On leave, returns January 2027" },
+        { "seatId": "seat-10", "user": "Bogdan", "role": "Member", "lastActive": "2026-09-02", "ownsSharedFiles": 0, "note": null },
+        { "seatId": "seat-11", "user": "Shop tablet", "role": "Service account for the shop till", "lastActive": "2026-10-28", "ownsSharedFiles": 0, "note": "Required by the till integration" },
+        { "seatId": "seat-12", "user": null, "role": "Unassigned", "lastActive": null, "ownsSharedFiles": 0, "note": null }
+      ],
+      "inactivityThresholdDays": 45
+    }
+  }
+}

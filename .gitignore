@@ -22,3 +22,7 @@ NextMove/
 evidence/recordings/
 recordings/
 *.log
+next-env.d.ts
+*.tsbuildinfo
+evidence/tmp/
+/test-results/

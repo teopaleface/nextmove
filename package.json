@@ -1,0 +1,45 @@
+{
+  "name": "nextmove",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NextMove: a fictional phone bank with a financial agent, running against synthetic accounts and simulated merchants.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "demo": "node --import tsx scripts/run-all.ts --mode=production",
+    "dev": "node --import tsx scripts/run-all.ts --mode=development",
+    "stop": "node --import tsx scripts/stop.ts",
+    "reset": "node --import tsx scripts/reset.ts",
+    "build": "next build",
+    "next:dev": "next dev -p 3210 -H 127.0.0.1",
+    "next:start": "next start -p 3210 -H 127.0.0.1",
+    "merchant": "node --import tsx src/merchant/main.ts",
+    "worker": "node --import tsx src/worker/main.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:live": "NEXTMOVE_LIVE_TESTS=1 vitest run tests/live",
+    "test:e2e": "playwright test",
+    "smoke:model": "node --import tsx scripts/smoke-model.ts",
+    "fixtures:images": "node --import tsx scripts/make-fixture-images.ts",
+    "verify:fixtures": "python3 demo/verify_cases.py",
+    "evidence:manifest": "node --import tsx scripts/evidence-manifest.ts"
+  },
+  "dependencies": {
+    "next": "16.4.3",
+    "playwright": "1.64.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}
