@@ -164,7 +164,7 @@ async function analyzeE5(env: CapEnv): Promise<Analysis> {
     capability: "E5",
     title: "Price consent gate",
     contextId,
-    headline: notices.length ? `${notices[0].merchant_name} asked for more than you approved` : live.length ? `${live.length} price ceiling${live.length === 1 ? "" : "s"} on` : "No price ceilings yet",
+    headline: notices.length ? `${notices[0].merchant_name} tried to charge ${money(notices[0].requested_minor)} instead of ${money(notices[0].current_minor)}. The bank declined it, so nothing left your account. Accept the new price or stop renewal` : live.length ? `${live.length} price ceiling${live.length === 1 ? "" : "s"} on` : "No price ceilings yet",
     summary: "Set the most a subscription may take without asking. In this demo the ceiling is checked on the simulated merchant charges sent from this page: a higher charge is declined before any money moves.",
     evidence: ["BANK_RECORD", "SIMULATED_MERCHANT_EVENT", "DETERMINISTIC_CALCULATION"],
     blocks,

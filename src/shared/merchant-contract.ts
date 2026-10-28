@@ -119,6 +119,15 @@ export interface MerchantEvent {
 }
 
 export const SIGNATURE_HEADER = "x-nextmove-signature";
+
+/**
+ * What a partner operation's HMAC covers: method and path (so a signature for one contract cannot be replayed
+ * against another), then correlation id, idempotency key and the raw body. `path` is the URL pathname as sent,
+ * percent-encoding included.
+ */
+export function partnerSigningString(method: string, path: string, correlationId: string, idempotencyKey: string, rawBody: string): string {
+  return [method.toUpperCase(), path, correlationId, idempotencyKey, rawBody].join("\n");
+}
 export const CORRELATION_HEADER = "x-nextmove-correlation";
 export const IDEMPOTENCY_HEADER = "idempotency-key";
 export const ADMIN_HEADER = "x-merchant-admin";

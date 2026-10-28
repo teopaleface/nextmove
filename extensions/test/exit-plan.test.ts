@@ -280,6 +280,19 @@ describe('answering and outcomes', () => {
   it('rejects a receipt for another subscription or customer', () => {
     const requested = run(activePlan(), [uses(0)]).next;
     throwsCode(() => recordStopOutcome(requested, receipt({ subscriptionId: 'sub-x' })), 'RECEIPT_MISMATCH');
+    throwsCode(() => recordStopOutcome(requested, receipt({ merchantId: 'other' })), 'RECEIPT_MISMATCH');
     throwsCode(() => recordStopOutcome(requested, receipt({ scope: MARIA })), 'RECEIPT_MISMATCH');
+  });
+
+  it('counts only a read-back confirmation of an ending as the stop', () => {
+    const requested = run(activePlan(), [uses(0)]).next;
+    // A confirmed pause or reactivation is not the stop this plan asked for.
+    throwsCode(() => recordStopOutcome(requested, receipt({ operation: 'PAUSE' })), 'RECEIPT_MISMATCH');
+    throwsCode(() => recordStopOutcome(requested, receipt({ operation: 'REACTIVATE' })), 'RECEIPT_MISMATCH');
+    // A merchant message alone proves nothing: the plan keeps waiting for a read-back.
+    const weak = recordStopOutcome(requested, receipt({ verification: 'MERCHANT_MESSAGE_ONLY' }));
+    assert.equal(weak.next.status, 'STOP_REQUESTED');
+    assert.deepEqual(weak.effects, []);
+    assert.equal(recordStopOutcome(requested, receipt({ operation: 'CANCEL_IMMEDIATELY' })).next.status, 'STOPPED');
   });
 });

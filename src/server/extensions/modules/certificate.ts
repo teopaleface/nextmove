@@ -27,7 +27,7 @@ async function analyzeE8(env: CapEnv): Promise<Analysis> {
   for (const s of view.stops) {
     const ending = endingInForce(view.receipts, view.scope, s.sub.id, now);
     if (ending?.receiptId !== s.receipt.receiptId) continue;
-    const live = certs.find((c) => c.receipt_id === s.receipt.receiptId && !c.revoked_at);
+    const live = certs.find((c) => c.bank_receipt_id === s.bankReceiptId && !c.revoked_at);
     if (live) continue;
     const strong = s.receipt.verification === "INDEPENDENT_READ_BACK";
     candidates.push({
@@ -46,10 +46,10 @@ async function analyzeE8(env: CapEnv): Promise<Analysis> {
         params: { subscriptionId: s.sub.id, receiptId: s.receipt.receiptId, bankReceiptId: s.bankReceiptId, validityDays: VALIDITY_DAYS },
         display: display(
           `Issue a cancellation certificate for ${s.sub.merchant_name}`,
-          `A signed certificate that ${s.sub.merchant_name} confirmed the stop (ref ${s.receipt.receiptId}) and that NextMove read it back on ${fmtWhen(s.receipt.confirmedAt)}. You choose which details to show each time you share it.`,
+          `A signed certificate that ${s.sub.merchant_name} confirmed the stop (ref ${s.reference}) and that NextMove read it back on ${fmtWhen(s.receipt.confirmedAt)}. You choose which details to show each time you share it.`,
           [
             { label: "Provider", value: s.sub.merchant_name },
-            { label: "Stop reference", value: s.receipt.receiptId },
+            { label: "Stop reference", value: s.reference },
             { label: "Effective", value: fmtDate(effectiveDateOf(s.receipt)) },
             { label: "Valid for", value: `${VALIDITY_DAYS} days; withdrawn automatically if the provider turns renewal back on` },
             { label: "Never included", value: "Amounts, your name, account or card numbers" },
@@ -98,7 +98,7 @@ async function analyzeE8(env: CapEnv): Promise<Analysis> {
     capability: "E8",
     title: "Cancellation certificate",
     contextId: env.contextId,
-    headline: candidates.some((c) => c.available) ? `${candidates.filter((c) => c.available).length} stop(s) can be certified` : certs.some((c) => !c.revoked_at) ? `${certs.filter((c) => !c.revoked_at).length} valid certificate(s)` : "Nothing to certify yet",
+    headline: candidates.some((c) => c.available) ? plural(candidates.filter((c) => c.available).length, "stop") + " can be certified" : certs.some((c) => !c.revoked_at) ? plural(certs.filter((c) => !c.revoked_at).length, "valid certificate") : "No confirmed stop to certify yet",
     summary: "Proof you can show anyone that a subscription was stopped: a signed certificate any holder of NextMove's public key can check without calling the bank. It is NextMove's statement of what the bank observed, not the provider's.",
     evidence: ["BANK_RECORD", "DETERMINISTIC_CALCULATION"],
     blocks,
@@ -130,3 +130,5 @@ export const certificate: ExtensionModule = {
     { method: "POST", path: "/verify", fn: async ({ db, session, body }) => verifyPresented(db, session, await body()) },
   ],
 };
+
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;

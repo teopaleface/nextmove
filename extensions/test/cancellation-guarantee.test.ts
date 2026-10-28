@@ -161,6 +161,11 @@ describe('assessPostCancellationCharge', () => {
     assert.deepEqual(assess({ credits: [credit({ amountMinor: 8000 })] }), { kind: 'ALREADY_HANDLED', reason: 'FULLY_REFUNDED' });
   });
 
+  it('rejects a negative refund instead of disputing more than the charge', () => {
+    assert.throws(() => assess({ credits: [credit({ amountMinor: -5000 })] }), (e: unknown) => e instanceof DomainError && e.code === 'NEGATIVE_AMOUNT');
+    assert.throws(() => assess({ credits: [credit(), credit({ creditId: 'cr-2', amountMinor: -1 })] }), (e: unknown) => e instanceof DomainError && e.code === 'NEGATIVE_AMOUNT');
+  });
+
   it('ignores refunds for other charges or other customers', () => {
     const result = assess({ credits: [credit({ refundsTxId: 'tx-other' }), credit({ scope: MARIA })] });
     assert.equal(result.kind === 'ELIGIBLE' && result.disputableMinor, 7900);

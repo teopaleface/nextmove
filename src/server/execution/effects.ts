@@ -227,10 +227,9 @@ function applyEffects(db: DatabaseSync, action: any, spec: ActionSpec, receiptId
       const charge = Number(d.cardChargeMinor ?? 0);
       const grant = one<any>(db, "SELECT max_debit_minor FROM grants WHERE action_id=?", action.id);
       if (charge > 0) {
-        if (!grant || charge > grant.max_debit_minor) {
-          run(db, "UPDATE proposal_actions SET status='UNKNOWN', result_json=json_set(COALESCE(result_json,'{}'), '$.reason', ?) WHERE id=?", `Card charge ${charge} exceeds the approved maximum`, action.id);
-          break;
-        }
+        // verifyAndConfirm settles an over-approval charge before any receipt exists; reaching this means a caller
+        // skipped that check, so the whole confirmation (receipt, attempt, action) rolls back instead of half-applying.
+        if (!grant || charge > grant.max_debit_minor) throw new Error(`card charge ${charge} exceeds the approved maximum`);
         postCardOrTransfer(db, {
           tenantId: t, contextId: ctx, accountId: String(spec.params.debitAccountId), sourceEventId: `card:${res.issuer}:${res.reference}`, amountMinor: -charge,
           merchantName: spec.merchantName ?? res.issuer, merchantId: spec.merchantId, category: String(spec.params.category ?? "Shopping"), reference: res.reference, bookedAt: at,

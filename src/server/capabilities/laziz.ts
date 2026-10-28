@@ -393,7 +393,7 @@ const A11: CapabilityDef = {
             key: "move-date",
             defaultSelected: true,
             available: opt.appliesToNextBill && !opt.paymentWouldFail && !openActionFor(env, sub.id, "CHANGE_BILLING_DATE"),
-            unavailableReason: !opt.appliesToNextBill ? "Too late for the next bill" : opt.paymentWouldFail ? "This date would still fail" : undefined,
+            unavailableReason: opt.newDateTooSoon ? "The new date is less than 3 days away" : !opt.appliesToNextBill ? "Too late for the next bill" : opt.paymentWouldFail ? "This date would still fail" : undefined,
             spec: spec({
               operation: "CHANGE_BILLING_DATE",
               route: "PARTNER_API",
@@ -421,7 +421,7 @@ const A11: CapabilityDef = {
       summary: r.note,
       evidence: ["SIMULATED_MERCHANT_API", "BANK_RECORD", "DETERMINISTIC_CALCULATION"],
       blocks: [
-        { kind: "table", title: "Supported days", columns: ["Day", "First bill", "Extra", "Lowest balance", "Fails?"], rows: r.options.map((o) => ({ cells: [ordinal(o.billingDay) + (o.isCurrent ? " (now)" : ""), fmtDate(o.firstChargeAt), money(o.prorationMinor), money(o.minimumBalanceMinor), o.paymentWouldFail ? "Yes" : "No"], highlight: o.billingDay === (pick || r.recommendedDay), tone: o.paymentWouldFail ? ("bad" as const) : undefined })) },
+        { kind: "table", title: "Supported days", columns: ["Day", "First bill", "Extra", "Lowest balance", "Fails?"], rows: r.options.map((o) => ({ cells: [ordinal(o.billingDay) + (o.isCurrent ? " (now)" : ""), o.isCurrent || o.appliesToNextBill ? fmtDate(o.firstChargeAt) : o.newDateTooSoon ? "Under 3 days away" : "Too late for this bill", money(o.prorationMinor), money(o.minimumBalanceMinor), o.paymentWouldFail ? "Yes" : "No"], highlight: o.billingDay === (pick || r.recommendedDay), tone: o.paymentWouldFail ? ("bad" as const) : undefined })) },
         { kind: "timeline", title: "Household timeline", items: [...flows.map((f) => ({ at: f.at, label: f.label, amount: money(f.amountMinor, { sign: true }) })), { at: live.nextChargeAt!, label: "ElectraCasa (current date)", amount: money(-live.priceMinor) }].sort((a, b) => a.at.localeCompare(b.at)) },
       ],
       inputs: [{ key: "billingDay", label: "New billing day", type: "select", value: String(pick || r.recommendedDay || ""), options: r.options.filter((o) => !o.isCurrent).map((o) => ({ value: String(o.billingDay), label: ordinal(o.billingDay) })) }],

@@ -171,18 +171,85 @@ export class VoiceSession {
 /** Read a bounded summary of rendered text, never input values, hidden details or developer output. */
 export function visibleScreenSummary(root: HTMLElement | null): string {
   if (!root) return "";
-  const parts: string[] = [];
+  const parts: ScreenPart[] = [];
+  const items: Element[] = [];
   const textOf = (node: Node): string => {
     if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
     if (!(node instanceof HTMLElement) || node.matches("input, textarea, select, button, .sr-only, .dev, [hidden], [aria-hidden='true']") || getComputedStyle(node).display === "none" || getComputedStyle(node).visibility === "hidden") return "";
     return Array.from(node.childNodes, textOf).join(" ");
   };
-  for (const element of root.querySelectorAll<HTMLElement>("h1, .lede, .balance, .account-tile, .opportunity h2, .opportunity p, .kv, .notice")) {
+  for (const element of root.querySelectorAll<HTMLElement>("h1, .lede, .balance, .account-tile, .opportunity h2, .opportunity p, .kv, .notice, [data-voice]")) {
     if (element.closest("details:not([open]), .dev, [hidden], [aria-hidden='true']") || !element.getClientRects().length || getComputedStyle(element).visibility === "hidden") continue;
     const text = textOf(element).replace(/\s+/g, " ").trim();
-    if (!text || parts.includes(text)) continue;
-    if (parts.join(" ").length + text.length > 1800) break; // Never cut through an amount or term.
-    parts.push(text);
+    if (!text) continue;
+    // Lines inside one listed item (an action on the review screen) are summarised together.
+    const item = element.closest("[data-voice-item]");
+    if (item && !items.includes(item)) items.push(item);
+    parts.push({ text, item: item ? items.indexOf(item) : undefined });
   }
-  return parts.length ? `Screen summary. ${parts.join(". ")}. Full details and conditions remain on screen. Reading is not approval.` : "";
+  return screenSummary(parts);
+}
+
+export interface ScreenPart {
+  text: string;
+  /** Index of the listed item (for example one action) the text belongs to. */
+  item?: number;
+}
+
+const SUMMARY_CAP = 3600;
+const ITEM_MIN = 160;
+
+/**
+ * Bounded read-aloud text. Every listed item is kept: each gets an equal share of the budget and is cut between whole
+ * lines, never inside one, so a long first action cannot push later ones out. Other lines fill what is left in screen
+ * order. Nothing is cut through an amount or a term; what does not fit is left on screen and the summary says so.
+ */
+export function screenSummary(parts: ScreenPart[], cap = SUMMARY_CAP): string {
+  const seen = new Set<string>();
+  const unique = parts.filter((p) => {
+    const k = `${p.item ?? ""}|${p.text}`;
+    if (!p.text || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  const itemIds = [...new Set(unique.filter((p) => p.item != null).map((p) => p.item!))];
+  const share = itemIds.length ? Math.max(ITEM_MIN, Math.floor((cap * 0.7) / itemIds.length)) : 0;
+  let cut = false;
+  const itemText = new Map<number, string>();
+  for (const id of itemIds) {
+    const lines: string[] = [];
+    for (const p of unique.filter((x) => x.item === id)) {
+      // The first line (the item's title) is always kept.
+      if (lines.length && lines.join(". ").length + p.text.length + 2 > share) {
+        cut = true;
+        continue;
+      }
+      lines.push(p.text);
+    }
+    itemText.set(id, lines.join(". "));
+  }
+  const itemsLength = [...itemText.values()].reduce((n, t) => n + t.length + 2, 0);
+  // Headings, totals and notices keep at least 30% of the budget however many items there are.
+  let left = Math.max(cap * 0.3, cap - itemsLength);
+  const out: string[] = [];
+  const placed = new Set<number>();
+  let dropped = 0;
+  for (const p of unique) {
+    if (p.item != null) {
+      if (placed.has(p.item)) continue;
+      placed.add(p.item);
+      // Even a very long list stays bounded: past twice the cap the rest of the items are counted, not read.
+      if (out.join(". ").length + itemText.get(p.item)!.length > cap * 2) {
+        dropped++;
+        continue;
+      }
+      out.push(itemText.get(p.item)!);
+    } else if (p.text.length + 2 <= left) {
+      out.push(p.text);
+      left -= p.text.length + 2;
+    } else cut = true;
+  }
+  if (!out.length) return "";
+  const rest = dropped ? ` ${dropped} more item${dropped === 1 ? "" : "s"} on screen.` : cut ? " Some details are only on screen." : "";
+  return `Screen summary. ${out.join(". ")}.${rest} Full details and conditions remain on screen. Reading is not approval.`;
 }

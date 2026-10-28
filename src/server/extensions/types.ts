@@ -54,6 +54,8 @@ export interface ExtensionModule {
   operations?: Record<ExtOperation, ExtOperationHandler>;
   /** Additive demo data. Runs inside the tenant seed transaction; must leave existing balances and numbers unchanged. */
   seed?: (db: DatabaseSync, input: { tenantId: string; customer: "alex" | "laziz"; contexts: string[] }) => void;
+  /** Tenant reset: removes what the module keeps outside the database (keystore files). Runs before its ext_* rows are deleted. */
+  reset?: (db: DatabaseSync, tenantId: string) => void;
   /** Synthetic events for demos and tests. Only reachable in Labs mode. */
   labs?: Record<string, (c: ExtLabsContext) => unknown | Promise<unknown>>;
   routes?: ExtRoute[];

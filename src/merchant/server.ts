@@ -5,7 +5,7 @@ import { mall, mget, mrun, mtx } from "./db";
 import { seedWorld } from "./world";
 import { authenticate, contractView, executeOperation, merchantNow, merchantNowIso, readContract, requestView, receiptView, emitEvent, tick, payout } from "./ops";
 import { accountPage, cancelPage, resultPage, loginPage, inspectorIndex, inspectorTenant } from "./pages";
-import { ADMIN_HEADER, CORRELATION_HEADER, IDEMPOTENCY_HEADER, SIGNATURE_HEADER, type MerchantDirectoryEntry, type OperationRequestBody } from "../shared/merchant-contract";
+import { ADMIN_HEADER, CORRELATION_HEADER, IDEMPOTENCY_HEADER, SIGNATURE_HEADER, partnerSigningString, type MerchantDirectoryEntry, type OperationRequestBody } from "../shared/merchant-contract";
 import { toLocalIso, toMs } from "../shared/time";
 
 export interface MerchantServerOptions {
@@ -210,7 +210,8 @@ export function createMerchantServer(opts: MerchantServerOptions) {
         const idem = String(req.headers[IDEMPOTENCY_HEADER] ?? "");
         const sig = String(req.headers[SIGNATURE_HEADER] ?? "");
         if (!corr || !idem) return send(res, 400, { error: "VALIDATION", message: "Correlation and idempotency headers are required" });
-        if (!safeEq(sig, signBody(opts.partnerKey, corr, idem, raw))) return send(res, 401, { error: "BAD_SIGNATURE", message: "Partner signature invalid" });
+        // The signature binds method and path too, so it cannot be replayed against another contract or route.
+        if (!safeEq(sig, signBody(opts.partnerKey, partnerSigningString(method, p, corr, idem, raw)))) return send(res, 401, { error: "BAD_SIGNATURE", message: "Partner signature invalid" });
         let body: OperationRequestBody;
         try {
           body = JSON.parse(raw);

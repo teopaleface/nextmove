@@ -157,3 +157,58 @@ describe("E8 issue, disclose, verify, withdraw", () => {
     expect((await verify(a, old.holder_copy)).json).toMatchObject({ ok: false, reason: "NOT_ON_RECORD" });
   });
 });
+
+describe("E8 receipt identity and read-only fetch", () => {
+  it("keys certificates on the bank's receipt, so two stops sharing a provider reference are both certified", async () => {
+    const a = await stack.login("alex");
+    const t = a.tenantId;
+    await stopDashEats(a);
+    // A second confirmed stop, Streamly (offered as an alternative once Streamly sends a retention offer).
+    expect((await a.post("/api/labs/ext", { module: "retention-offers", action: "send_offer", body: { subscription: "streamly", variant: "valid", plan: "discount" } })).status).toBe(200);
+    const ps = await stack.propose(a, "E3", ["stop-streamly"]);
+    await stack.approve(a, ps);
+    expect((await stack.waitAction(ps.actions[0].id, ["CONFIRMED", "REFUSED", "BLOCKED", "UNKNOWN"])).status).toBe("CONFIRMED");
+    // Both providers happen to use the same confirmation number (each provider is its own receipt issuer).
+    const dash = stack.q1<any>("SELECT r.* FROM receipts r JOIN proposal_actions a ON a.id=r.action_id WHERE r.tenant_id=? AND a.subject_ref=? AND r.operation='STOP_RENEWAL'", t, sub(t).id)!;
+    const streamly = stack.q1<any>("SELECT * FROM receipts WHERE action_id=?", ps.actions[0].id)!;
+    stack.exec("UPDATE receipts SET issuer_reference=? WHERE id=?", dash.issuer_reference, streamly.id);
+
+    const e8 = await a.json("/api/capabilities/E8");
+    const keys = e8.candidates.filter((c: any) => c.available).map((c: any) => c.key).sort();
+    expect(keys).toEqual([`certificate-${t}:sub:streamly`, `certificate-${sub(t).id}`].sort());
+    expect(e8.candidates.map((c: any) => c.spec.params.receiptId).sort()).toEqual([dash.id, streamly.id].sort());
+    for (const key of keys) {
+      const p = await stack.propose(a, "E8", [key]);
+      await stack.approve(a, p);
+      expect((await stack.waitAction(p.actions[0].id, ["CONFIRMED", "REFUSED", "BLOCKED", "NO_CHANGE", "UNKNOWN"])).status).toBe("CONFIRMED");
+    }
+    const certs = stack.q<any>("SELECT * FROM ext_certificate WHERE tenant_id=? ORDER BY bank_receipt_id", t);
+    expect(certs.map((c) => c.bank_receipt_id)).toEqual([dash.id, streamly.id].sort());
+    // The provider's reference is what the customer and the provider see; it is display data only.
+    expect(certs.map((c) => c.receipt_id)).toEqual([dash.issuer_reference, dash.issuer_reference]);
+    const got = await a.json(`/api/ext/certificate/certificates/${certs[0].cert_id}`);
+    expect(got.stopReference).toBe(dash.issuer_reference);
+    expect((await verify(a, got.certificate)).json.disclosed.subscriptionRef).toBe(dash.issuer_reference);
+  });
+
+  it("fetching a certificate writes nothing; verifying applies the provider's later state", async () => {
+    const a = await stack.login("alex");
+    const t = a.tenantId;
+    await stopDashEats(a);
+    expect((await issue(a)).done.status).toBe("CONFIRMED");
+    const cert = stack.q1<any>("SELECT * FROM ext_certificate WHERE tenant_id=?", t)!;
+    const lists = () => stack.q<any>("SELECT seq FROM ext_certificate_revocation WHERE tenant_id=?", t).length;
+    const before = lists();
+    expect(before).toBeGreaterThan(0);
+
+    const demoNow = await stack.clock(a, 60);
+    stack.exec("UPDATE subscriptions SET state='ACTIVE', last_observed_at=? WHERE id=?", demoNow, cert.subscription_id);
+    const got = await a.json(`/api/ext/certificate/certificates/${cert.cert_id}`);
+    expect(got.revocationList).toBe(stack.q1<any>("SELECT signed_text FROM ext_certificate_revocation WHERE tenant_id=? ORDER BY seq DESC LIMIT 1", t)!.signed_text);
+    expect(lists()).toBe(before);
+    expect(stack.q1<any>("SELECT revoked_at FROM ext_certificate WHERE cert_id=?", cert.cert_id)!.revoked_at).toBeNull();
+
+    expect((await verify(a, cert.holder_copy)).json).toMatchObject({ ok: false, reason: "REVOKED" });
+    expect(lists()).toBe(before + 1);
+  });
+});

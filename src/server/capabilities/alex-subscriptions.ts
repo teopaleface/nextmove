@@ -134,7 +134,7 @@ const T2: CapabilityDef = {
       title: "FitFlow trial",
       contextId: env.contextId,
       headline: trial ? `Stopping the trial lowers upcoming charges from ${money(result.baselineMinor)} to ${money(result.baselineMinor - trial.reductionMinor)}` : sub.state === "RENEWAL_OFF" ? "FitFlow renewal is off. No charge is coming." : "No trial charge in this window",
-      summary: contract ? `FitFlow Premium converts to a paid plan on ${fmtWhen(contract.nextChargeAt)} for ${money(contract.priceMinor)}/month unless renewal is turned off.` : `Provider read failed (${status}).`,
+      summary: contract && !contract.nextChargeAt ? `Renewal is off: FitFlow Premium will not charge the ${money(contract.priceMinor)}/month plan. If FitFlow still charges you, ask "FitFlow charged me after I cancelled" to dispute it.` : contract ? `FitFlow Premium converts to a paid plan on ${fmtWhen(contract.nextChargeAt)} for ${money(contract.priceMinor)}/month unless renewal is turned off.` : `Provider read failed (${status}).`,
       evidence: ["SIMULATED_MERCHANT_API", "DETERMINISTIC_CALCULATION", "BANK_RECORD"],
       blocks: [
         { kind: "metrics", items: [{ label: "Upcoming in 30 days", value: money(result.baselineMinor) }, { label: "After stopping the trial", value: money(result.baselineMinor - (trial?.reductionMinor ?? 0)), tone: "good" }, { label: "Funds", value: "Unchanged", sub: "No money moves" }] },
@@ -398,7 +398,7 @@ const A2: CapabilityDef = {
       title: "MobileNet plan",
       contextId: env.contextId,
       headline: rec ? `${rec.name} fits your use and saves ${money(rec.monthlySavingMinor)}/month` : "Your current plan is the right size",
-      summary: `Peak ${r.peakGb} GB, average ${r.averageGb} GB over the last ${d.usageGb.length} cycles on a ${live.planName} plan.`,
+      summary: `Peak ${r.peakGb} GB, average ${r.averageGb} GB over the last ${d.usageGb.length} cycles on your ${live.planName} plan.`,
       evidence: ["SIMULATED_MERCHANT_API", "DETERMINISTIC_CALCULATION"],
       blocks: [
         { kind: "metrics", items: [{ label: "Peak use", value: `${r.peakGb} GB` }, { label: "Current plan", value: `${money(live.priceMinor)}/mo` }, ...(rec ? [{ label: "Suggested", value: `${money(rec.monthlyMinor)}/mo`, tone: "good" as const }] : [])] },

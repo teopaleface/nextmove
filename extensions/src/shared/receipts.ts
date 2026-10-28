@@ -8,7 +8,10 @@ export type ReceiptVerification = 'INDEPENDENT_READ_BACK' | 'MERCHANT_MESSAGE_ON
 
 /** A merchant outcome as stored by the app after execution (see the trialCancellationReceipt UI fixture). */
 export interface MerchantReceipt {
+  /** Unique per receipt; what everything is keyed on. */
   readonly receiptId: string;
+  /** The merchant's own confirmation number, for display. Merchants may reuse one, so it is never a key. */
+  readonly merchantReference?: string;
   readonly scope: Scope;
   readonly merchantId: string;
   readonly subscriptionId: string;
@@ -23,7 +26,7 @@ export interface MerchantReceipt {
   readonly evidenceRefs: readonly string[];
 }
 
-const ENDING_OPERATIONS: ReadonlySet<SubscriptionOperation> = new Set(['STOP_RENEWAL_AT_PERIOD_END', 'CANCEL_IMMEDIATELY']);
+export const ENDING_OPERATIONS: ReadonlySet<SubscriptionOperation> = new Set(['STOP_RENEWAL_AT_PERIOD_END', 'CANCEL_IMMEDIATELY']);
 
 export function isEndingReceipt(receipt: MerchantReceipt): boolean {
   return receipt.state === 'CONFIRMED' && ENDING_OPERATIONS.has(receipt.operation);

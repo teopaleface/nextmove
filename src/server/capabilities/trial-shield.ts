@@ -215,7 +215,7 @@ export const T4: CapabilityDef = {
         : blocked.length
           ? `${blocked.map((w) => w.c.merchantName).join(", ")} blocked. Nothing was taken.`
           : watches.length
-            ? `${watches.length} trials under watch. Nothing has tried to charge yet.`
+            ? `Watching ${watches.length} free trial${watches.length === 1 ? "" : "s"} (${watches.map((w) => w.c.merchantName).join(", ")}). Nothing has tried to charge yet.`
             : "No card checks found. Nothing to watch.",
       summary: first ? "Nothing has left your account. Block it or allow it; both open an exact review." : "We spot card checks from new merchants and hold their first full charge until you decide.",
       blocks,

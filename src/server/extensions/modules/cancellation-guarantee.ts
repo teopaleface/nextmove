@@ -47,7 +47,7 @@ async function analyzeE1(env: CapEnv): Promise<Analysis> {
       title: "Confirmed stops covered",
       columns: ["Provider", "Stop reference", "Confirmed", "Paid access until", "Proof"],
       rows: view.stops.map((s) => ({
-        cells: [s.sub.merchant_name, s.receipt.receiptId, fmtWhen(s.receipt.confirmedAt), fmtDate(s.receipt.accessUntil), s.receipt.verification === "INDEPENDENT_READ_BACK" ? "Read back from the provider" : "Provider message only"],
+        cells: [s.sub.merchant_name, s.reference, fmtWhen(s.receipt.confirmedAt), fmtDate(s.receipt.accessUntil), s.receipt.verification === "INDEPENDENT_READ_BACK" ? "Read back from the provider" : "Provider message only"],
         tone: inForce.includes(s) && s.receipt.verification === "INDEPENDENT_READ_BACK" ? "good" : "warn",
       })),
       note: "Only a stop NextMove read back from the provider counts as proof. A charge for a period after paid access ended, authorised after the stop, can be disputed.",
@@ -92,7 +92,7 @@ async function analyzeE1(env: CapEnv): Promise<Analysis> {
           [
             { label: "Charge", value: `${money(a.chargedMinor)} on ${fmtWhen(m.facts.chargePostedAt)}${a.alreadyRefundedMinor ? `, ${money(a.alreadyRefundedMinor)} already refunded` : ""}` },
             { label: "Disputed amount", value: money(a.disputableMinor) },
-            { label: "Evidence", value: `Stop ${a.receiptId}, read back from ${stop.sub.merchant_name}; paid access until ${fmtDate(m.facts.accessUntil)}` },
+            { label: "Evidence", value: `Stop ${stop.reference}, read back from ${stop.sub.merchant_name}; paid access until ${fmtDate(m.facts.accessUntil)}` },
             { label: "Credit now", value: `${money(a.disputableMinor)} provisional credit to the card account it was taken from` },
             { label: "If the network rules for the merchant", value: `The provisional ${money(a.disputableMinor)} is taken back from the card account` },
             { label: "File by", value: fmtDate(a.deadline) },
@@ -133,7 +133,7 @@ async function analyzeE1(env: CapEnv): Promise<Analysis> {
     capability: "E1",
     title: "Cancellation guarantee",
     contextId: env.contextId,
-    headline: candidates.length ? `${candidates.length} charge(s) after a confirmed stop` : view.stops.length ? `${view.stops.length} confirmed stop(s) covered` : "Nothing covered yet",
+    headline: candidates.length ? `${candidates.length} charge${candidates.length === 1 ? "" : "s"} after a confirmed stop: you can dispute ${candidates.length === 1 ? "it" : "them"} with the stop receipt` : disputeLine(disputes) ?? (view.stops.length ? `${view.stops.length} confirmed stop${view.stops.length === 1 ? "" : "s"} covered; no charge after any of them` : "No confirmed stop to protect yet"),
     summary: "After a provider confirms a stop, NextMove watches the card. A charge for a period you no longer pay for can be disputed with the stop receipt as evidence. The bank credits it while the card network decides; it cannot stop the provider from attempting the charge.",
     evidence: ["BANK_RECORD", "DETERMINISTIC_CALCULATION", ...(disputes.length ? (["BANK_LEDGER_POSTING"] as const) : [])],
     blocks,
@@ -152,7 +152,7 @@ export const E1: CapabilityDef = {
   group: "Money back",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["charged after cancel", "cancelled but charged", "still charging", "dispute", "chargeback", "charged again", "cancellation guarantee"],
+  keywords: ["charged after cancel", "cancelled but charged", "still charging", "dispute", "chargeback", "charged again", "cancellation guarantee", "charged me after", "after i cancelled", "after i canceled", "after cancelling", "after i stopped", "still charged"],
   analyze: analyzeE1,
 };
 
@@ -167,3 +167,15 @@ export const cancellationGuarantee: ExtensionModule = {
     network_decision: ({ db, session, body }) => simulateNetworkDecision(db, session, body),
   },
 };
+
+/** The customer's disputes in one line, most decisive first. */
+function disputeLine(disputes: { state: string; credited_minor: number | null }[]) {
+  const won = disputes.filter((d) => ["WON", "AWAITING_FINAL_CREDIT", "MERCHANT_REFUNDED"].includes(d.state));
+  const open = disputes.filter((d) => ["SUBMITTED", "PROVISIONAL_CREDIT", "APPROVED", "PREPARED"].includes(d.state));
+  const lost = disputes.filter((d) => d.state === "LOST");
+  const sum = (xs: typeof disputes) => money(xs.reduce((t, d) => t + (d.credited_minor ?? 0), 0));
+  if (open.length) return `${open.length} dispute${open.length === 1 ? "" : "s"} filed with the stop receipt; the card network is deciding`;
+  if (won.length) return `Dispute won: ${sum(won)} is back in your account for good`;
+  if (lost.length) return "The card network ruled for the provider; the provisional credit was taken back";
+  return null;
+}

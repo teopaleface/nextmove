@@ -10,7 +10,7 @@ import { type Analysis, type Block, type CapEnv, type CapabilityDef, type Candid
 import { toLocalIso } from "../../../shared/time";
 import type { ExtensionModule, ExtActionContext } from "../types";
 import { acceptOffer, compareOffer, type OfferFlag, type OfferTerms, type OfferVerdict, type PendingCancellation, type RetentionOffer, type SignedOffer } from "../../../../extensions/src/retention-offers/index.ts";
-import { OFFER_MERCHANTS, REJECTION_TEXT, contextKind, merchantSigningKey, receiveOffer, reverify, signOffer } from "../retention-offers/bank";
+import { OFFER_MERCHANTS, REJECTION_TEXT, contextKind, deleteMerchantKeyFiles, merchantSigningKey, receiveOffer, reverify, signOffer } from "../retention-offers/bank";
 
 // E3 Retention offers: a merchant that is a verified business client sends a signed offer to keep the customer.
 // The bank verifies it against the merchant's public key and its own records, compares it honestly with the current
@@ -69,8 +69,13 @@ function stopState(db: DatabaseSync, stop: any): PendingCancellation["state"] {
   if (stop.status === "UNKNOWN") return "UNKNOWN";
   if (stop.status !== "APPROVED") return "IN_FLIGHT";
   const started = one<any>(db, "SELECT 1 FROM attempts WHERE action_id=? AND status NOT IN ('NOT_DISPATCHED')", stop.id);
+  if (started) return "IN_FLIGHT";
   const job = one<any>(db, "SELECT status FROM jobs WHERE kind='ACTION' AND ref_id=? ORDER BY created_at DESC LIMIT 1", stop.id);
-  return started || (job && job.status !== "QUEUED") ? "IN_FLIGHT" : "APPROVED";
+  if (!job || job.status === "QUEUED") return "APPROVED";
+  // An exit plan's stop is leased on every poll while it waits for its condition. Until the plan decides to stop
+  // (STOP_REQUESTED), nothing can be sent, and the hold re-checks the approval before deciding, so it can still be withdrawn.
+  const plan = one<any>(db, "SELECT status FROM ext_exit_plan WHERE tenant_id=? AND action_id=?", stop.tenant_id, stop.id);
+  return plan && ["ACTIVE", "ASKED"].includes(plan.status) ? "APPROVED" : "IN_FLIGHT";
 }
 
 /* ------------------------------------------------------------------------------------------ capability */
@@ -85,6 +90,7 @@ async function analyzeE3(env: CapEnv): Promise<Analysis> {
   const numbers: Record<string, number> = {};
   let benefitOptions: string[] = [];
   let live = 0;
+  let firstVerdict = "";
 
   const accepted = rows.filter((r) => r.status === "ACCEPTED");
   for (const r of accepted.slice(0, 3)) {
@@ -112,6 +118,7 @@ async function analyzeE3(env: CapEnv): Promise<Analysis> {
     const tone = cmp.verdict === "CHEAPER_THAN_CURRENT" ? "good" : "warn";
     numbers[`offer_${sub.merchant_id}_total`] = cmp.offerTotalMinor;
     numbers[`keep_${sub.merchant_id}_total`] = cmp.keepCurrentTotalMinor;
+    if (!firstVerdict) firstVerdict = `${sub.merchant_name} offers ${termsLine(t)}. ${VERDICT_TEXT[cmp.verdict].replace(/\.$/, "")}`;
     blocks.push({
       kind: "table",
       title: `${sub.merchant_name}: your options over the next ${horizon} month${horizon === 1 ? "" : "s"}`,
@@ -204,7 +211,7 @@ async function analyzeE3(env: CapEnv): Promise<Analysis> {
     capability: "E3",
     title: "Retention offers",
     contextId,
-    headline: live ? `${live} signed offer${live === 1 ? "" : "s"} to compare` : "No open retention offers",
+    headline: live === 1 ? firstVerdict : live ? `${live} signed offers to compare` : "No open retention offers",
     summary: live ? "Verified offers from your merchants, compared with your current price and with stopping." : "When a verified merchant sends a signed offer to keep you, it appears here with an honest comparison.",
     evidence: ["BANK_RECORD", "SIMULATED_MERCHANT_EVENT", "DETERMINISTIC_CALCULATION"],
     blocks,
@@ -372,5 +379,7 @@ export const retentionOffers: ExtensionModule = {
     if (customer !== "alex") return;
     for (const m of OFFER_MERCHANTS) run(db, "INSERT OR IGNORE INTO ext_offer_merchant(tenant_id, merchant_id, verified, offers_enabled) VALUES (?,?,?,?)", tenantId, m.merchantId, m.verified ? 1 : 0, m.offersEnabled ? 1 : 0);
   },
+  // A file removed here while the reset rolls back is harmless: merchantSigningKey rotates a key whose private half is gone.
+  reset: (_db, tenantId) => deleteMerchantKeyFiles(tenantId),
   labs: { send_offer: sendOffer },
 };

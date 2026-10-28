@@ -1,5 +1,5 @@
 import { assertMinor, ceilDiv, divRoundHalfUp, sumMinor, MoneyError } from "../../shared/money";
-import { toMs, toLocalIso, addDaysMs, inWindow } from "../../shared/time";
+import { toMs, toLocalIso, addDaysMs, inWindow, addLocalMonths, withLocalDay, localDaysBetween } from "../../shared/time";
 
 // Deterministic calculators for the optimisation, recovery and planning capabilities (A2–A14).
 // Inputs are explicit; unknown values stay unknown and are reported instead of being treated as zero.
@@ -222,19 +222,14 @@ export function planContentSchedule(input: {
 /* ----------------------------------------------------------------- A6 pause */
 export function pauseEffect(input: { monthlyMinor: number; pauseStartsAt: string; months: number; allowedMonths: number[]; feeMinor: number; window: { startInclusive: string; endExclusive: string } }) {
   if (!input.allowedMonths.includes(input.months)) throw new MoneyError(`Pause of ${input.months} month(s) is not offered`);
-  const start = new Date(toMs(input.pauseStartsAt));
-  const resume = new Date(start);
-  resume.setUTCMonth(resume.getUTCMonth() + input.months);
+  // Calendar months in Europe/Bucharest, the same maths the merchant uses for the resume date.
+  const start = toMs(input.pauseStartsAt);
   const skipped: string[] = [];
-  for (let i = 0; i < input.months; i++) {
-    const d = new Date(start);
-    d.setUTCMonth(d.getUTCMonth() + i);
-    skipped.push(toLocalIso(d.getTime()));
-  }
+  for (let i = 0; i < input.months; i++) skipped.push(toLocalIso(addLocalMonths(start, i)));
   const skippedInWindow = skipped.filter((s) => inWindow(s, input.window.startInclusive, input.window.endExclusive));
   return {
     accessEndsAt: input.pauseStartsAt,
-    resumesAt: toLocalIso(resume.getTime()),
+    resumesAt: toLocalIso(addLocalMonths(start, input.months)),
     skippedCharges: skipped,
     skippedInWindowMinor: skippedInWindow.length * input.monthlyMinor,
     totalSkippedMinor: skipped.length * input.monthlyMinor,
@@ -387,15 +382,20 @@ export function billingDateOptions(input: {
   requestAt: string;
   minNoticeDays: number;
 }) {
-  const nextCharge = new Date(toMs(input.bill.nextChargeAt));
+  const nextCharge = toMs(input.bill.nextChargeAt);
+  const minNoticeMs = input.minNoticeDays * 86_400_000;
+  const noticeOk = (ms: number) => ms - toMs(input.requestAt) >= minNoticeMs;
+  const currentOk = noticeOk(nextCharge);
   const results = input.supportedDays.map((day) => {
-    const shift = day - input.bill.currentDay;
-    const newDate = new Date(nextCharge);
-    newDate.setUTCDate(nextCharge.getUTCDate() + shift);
-    const appliesNow = toMs(input.bill.nextChargeAt) - toMs(input.requestAt) >= input.minNoticeDays * 86_400_000;
+    // Same rule as the merchant: the next bill moves to the new day of its local month (clamped), and both the
+    // current and the new date must be at least the notice period away.
+    const newDate = withLocalDay(nextCharge, day);
+    const shift = localDaysBetween(nextCharge, newDate);
+    const newDateTooSoon = currentOk && !noticeOk(newDate);
+    const appliesNow = currentOk && !newDateTooSoon;
     const extraDays = Math.max(0, shift);
     const prorationMinor = shift > 0 ? divRoundHalfUp(input.bill.amountMinor * extraDays, 30) : 0;
-    const chargeAt = appliesNow ? toLocalIso(newDate.getTime()) : input.bill.nextChargeAt;
+    const chargeAt = appliesNow ? toLocalIso(newDate) : input.bill.nextChargeAt;
     const chargeMinor = input.bill.amountMinor + (appliesNow ? prorationMinor : 0);
     const flows = [...input.flows, { id: input.bill.id, label: input.bill.label, amountMinor: -chargeMinor, at: chargeAt }].sort((a, b) => toMs(a.at) - toMs(b.at));
     let bal = input.balanceMinor;
@@ -411,6 +411,7 @@ export function billingDateOptions(input: {
       isCurrent: day === input.bill.currentDay,
       firstChargeAt: chargeAt,
       appliesToNextBill: appliesNow,
+      newDateTooSoon,
       prorationMinor: appliesNow ? prorationMinor : 0,
       minimumBalanceMinor: min,
       paymentWouldFail: failedAt !== null,

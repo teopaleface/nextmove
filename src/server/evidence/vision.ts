@@ -113,8 +113,12 @@ export async function extractFromUpload(db: DatabaseSync, s: { tenantId: string;
   const res = await callModel(db, { purpose: `vision:${kind}`, system: SYSTEM, text: PROMPTS[kind], images: [{ mediaType: up.row.mime, data: up.data }], schema: SCHEMAS[kind], tenantId: s.tenantId, taskId, timeoutMs: 120_000 });
   const id = shortId("ext");
   if (!res.ok) {
-    run(db, "INSERT INTO extractions(id, tenant_id, context_id, upload_id, task_id, mode, model, status, fields_json, created_at) VALUES (?,?,?,?,?, 'LIVE_MODEL', ?, 'FAILED', ?, ?)", id, s.tenantId, s.contextId, uploadId, taskId, null, JSON.stringify({ kind, error: res.error, status: res.status }), new Date().toISOString());
-    return { extractionId: id, ok: false as const, error: res.error, status: res.status };
+    // The CLI's own error text stays in the server log and model_calls (shown only on /dev/status); the customer and
+    // the evidence list get a generic message with the call id to match them up.
+    console.warn(`[vision] ${res.callId} ${res.status}: ${res.error}`);
+    const error = res.status === "TIMEOUT" ? "The model took too long to read this image" : res.status === "UNAVAILABLE" ? "The model is not available right now" : "The model could not read this image";
+    run(db, "INSERT INTO extractions(id, tenant_id, context_id, upload_id, task_id, mode, model, status, fields_json, created_at) VALUES (?,?,?,?,?, 'LIVE_MODEL', ?, 'FAILED', ?, ?)", id, s.tenantId, s.contextId, uploadId, taskId, null, JSON.stringify({ kind, error, status: res.status, callId: res.callId }), new Date().toISOString());
+    return { extractionId: id, ok: false as const, error, status: res.status, callId: res.callId };
   }
   const parsed = VALIDATORS[kind].safeParse(res.output);
   if (!parsed.success) {

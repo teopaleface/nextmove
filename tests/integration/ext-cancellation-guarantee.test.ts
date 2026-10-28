@@ -78,6 +78,11 @@ describe("E1 dispute after a confirmed stop", () => {
     const receipt = stack.q1<any>("SELECT * FROM receipts WHERE action_id=?", p.actions[0].id)!;
     expect(receipt).toMatchObject({ issuer: "nextmove-bank", operation: "EXT_FILE_DISPUTE", status: "CONFIRMED" });
     expect(receipt.issuer_reference).toMatch(/^NMD-[0-9A-F]{10}$/);
+    // The dispute is keyed on the bank's stop receipt; the provider's own reference is shown, never used as a key.
+    const stop = stack.q1<any>("SELECT r.* FROM receipts r JOIN proposal_actions a ON a.id=r.action_id WHERE r.tenant_id=? AND a.subject_ref=? AND r.operation='STOP_RENEWAL'", t, s.id)!;
+    expect(d.receipt_id).toBe(stop.id);
+    expect(cand.spec.params.receiptId).toBe(stop.id);
+    expect(JSON.parse(receipt.money_effect_json).details.cancellationReceipt).toBe(stop.issuer_reference);
     expect(unbalanced(t)).toEqual([]);
 
     // Filed charges are not offered again.

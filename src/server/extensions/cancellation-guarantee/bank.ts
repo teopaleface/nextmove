@@ -78,7 +78,8 @@ export function assessCharges(db: DatabaseSync, tenantId: string, contextId: str
   );
   const disputes = all<any>(db, "SELECT * FROM ext_dispute_case WHERE tenant_id=? AND context_id=?", tenantId, contextId);
   const disputed = new Set(disputes.map((d) => d.tx_id as string));
-  const credits: MerchantCredit[] = all<any>(db, "SELECT * FROM transactions WHERE tenant_id=? AND context_id=? AND direction='CREDIT' AND status='POSTED' AND json_extract(data_json,'$.refundsTxId') IS NOT NULL", tenantId, contextId).map((c) => ({
+  // Only positive credits are refunds; the module refuses a negative one, which would raise the disputable amount.
+  const credits: MerchantCredit[] = all<any>(db, "SELECT * FROM transactions WHERE tenant_id=? AND context_id=? AND direction='CREDIT' AND status='POSTED' AND amount_minor > 0 AND json_extract(data_json,'$.refundsTxId') IS NOT NULL", tenantId, contextId).map((c) => ({
     creditId: c.id, scope: view.scope, refundsTxId: String(json<any>(c.data_json, {}).refundsTxId), amountMinor: c.amount_minor, currency: c.currency, postedAt: iso(c.booked_at),
   }));
   const now = iso(nowIso(db, tenantId));
@@ -181,6 +182,8 @@ function fileDisputeTx({ db, action, spec, attemptId }: ExtActionContext) {
   const ctxId = action.context_id;
   const settle = (status: "REFUSED" | "NO_CHANGE", reason: string) => void tx(db, () => recordSettled(db, action.id, attemptId, status, { reason }));
   const reference = `NMD-${sha256Hex(action.logical_key).slice(0, 10).toUpperCase()}`;
+  // receipt_id is the bank's receipt id (the key); the customer recognises the provider's own reference.
+  const stopRef = (row: any) => one<any>(db, "SELECT issuer_reference FROM receipts WHERE id=? AND tenant_id=?", row.receipt_id, t)?.issuer_reference ?? row.receipt_id;
   const confirm = (row: any) =>
     recordConfirmed(db, action.id, attemptId, {
       issuer: "nextmove-bank",
@@ -188,9 +191,9 @@ function fileDisputeTx({ db, action, spec, attemptId }: ExtActionContext) {
       effectiveAt: row.created_at,
       accessUntil: null,
       termsRevision: null,
-      details: { packetId: row.packet_id, merchantName: row.merchant_name, disputedTransactionId: row.tx_id, disputedMinor: row.disputable_minor, provisionalCreditMinor: row.provisional_minor, networkRef: row.network_ref, cancellationReceipt: row.receipt_id },
+      details: { packetId: row.packet_id, merchantName: row.merchant_name, disputedTransactionId: row.tx_id, disputedMinor: row.disputable_minor, provisionalCreditMinor: row.provisional_minor, networkRef: row.network_ref, cancellationReceipt: stopRef(row) },
       channel: "BANK",
-      verification: { method: "module assessment re-run on current bank records; balanced provisional credit", checks: [`stop ${row.receipt_id} confirmed before the charge`, `packet digest ${row.manifest_digest.slice(0, 12)}… matches the approval`, "credit not above the disputed amount", "unique source event"] },
+      verification: { method: "module assessment re-run on current bank records; balanced provisional credit", checks: [`stop ${stopRef(row)} confirmed before the charge`, `packet digest ${row.manifest_digest.slice(0, 12)}… matches the approval`, "credit not above the disputed amount", "unique source event"] },
       evidence: "BANK_LEDGER_POSTING",
     });
 
@@ -266,7 +269,7 @@ export function simulateChargeAfterStop(db: DatabaseSync, session: Session, body
       data: { extCg: { subscriptionId: subId, authorizedAt: at, servicePeriodStart, recurring: true, simulated: true } },
     });
     const title = `${sub.merchant_name} charged ${money(amount)} after you stopped it`;
-    const body = `${sub.merchant_name} confirmed your stop (ref ${ending.receiptId}) and charged the card anyway. Review the dispute in Cancellation guarantee.`;
+    const body = `${sub.merchant_name} confirmed your stop (ref ${ending.merchantReference ?? ending.receiptId}) and charged the card anyway. Review the dispute in Cancellation guarantee.`;
     const findingId = `${t}:finding:ext-cg:${r.transactionId}`;
     run(db, "INSERT OR IGNORE INTO findings(id, tenant_id, context_id, watch_id, dedupe_key, kind, title, body, subject_ref, task_kind, priority, data_json, created_at) VALUES (?,?,?,NULL,?,?,?,?,?,?,?,?,?)",
       findingId, t, ctxId, findingId, "EXT_CHARGE_AFTER_STOP", title, body, r.transactionId, "E1", 0, JSON.stringify({ subscriptionId: subId, amountMinor: amount }), at);

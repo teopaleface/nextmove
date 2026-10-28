@@ -209,8 +209,8 @@ The nine pure modules in `extensions/src` (commit `aa3d345`) are wired through o
 ### Open
 
 - Existing tenants created before this checkpoint need **Labs → Reset** (or a separate copy) for the extension seed data. The shared Alex and Laziz demo tenants were reset on 2026-10-28.
-- Per-run merchant and certificate key files under `<dataDir>/keystore` are not deleted when a tenant is reset.
-- The certificate GET route can write a revocation sweep.
+- ~~Per-run merchant key files are not deleted when a tenant is reset.~~ Fixed in the third pass: E3 removes the tenant's merchant key files through the new `reset` hook. The shared certificate key is kept on purpose.
+- ~~The certificate GET route can write a revocation sweep.~~ Fixed in the third pass: the GET is read-only and serves the stored revocation list.
 - The simulated merchant does not apply an accepted offer price or a price ceiling on its side; only bank records and the forecast change.
 - The live-model browser E2E for E1–E9 has not been run.
 
@@ -236,19 +236,41 @@ Four read-only reviewers covered the core server, bank and merchant, the extensi
 - `EXT_*` handlers run in one transaction. A failure rolls back and settles BLOCKED ("nothing was changed") instead of UNKNOWN plus a merchant reconcile.
 - E3: an offer claiming to reply to a counter-offer is refused; the bank never sends counter-offers, so this closed a way around the unrequested-offer limit.
 - The Trial Shield copy names the real paying account and no longer claims that own-account transfers are unsupported. The merchant's offers list is filtered by merchant.
+- Capability inputs from the model pass a per-capability allowlist (`src/server/agent/planner-inputs.ts`): numbers and text count only if the customer wrote them, and Airbag stop/pause and the A17/A18 answers only from the customer's answer to that capability's own question. Inputs that lower a protection are never set by the model. The review screen lists the inputs used, and the task's calculation link opens with them.
+- The model's final answer is withheld if it claims something was cancelled, paid, paused or otherwise carried out.
+- ADR 0005 now describes what is built: schema-bound decisions, no CLI tools or MCP servers. The CLI also gets `--setting-sources user` and `--permission-prompts none`; a call without the hardening flags is refused and the worker reports `MISCONFIGURED`.
+- Vision errors show a generic message; the CLI detail stays in the server log and `model_calls`.
+- The review page's money totals count only the selected actions. The voice summary keeps every action, each cut between whole lines.
 
 **Not fixed (accepted for the demo, or later work):**
 
 - Merchant `/m/<id>/login` needs no credentials or tenant (simulated merchant). `/__inspect` is protected only by loopback.
-- Merchant PAUSE / CHANGE_BILLING_DATE month and DST maths (`src/merchant/ops.ts`, `src/server/finance/capabilities.ts`).
-- The partner signature does not cover method and path. The inbox issuer is self-declared under a shared HMAC key.
-- Reconcile does not read bank records for `BANK_INTERNAL` operations other than INTERNAL_TRANSFER; they end UNKNOWN.
-- Upload and body size limits are checked after buffering.
+- The inbox issuer is self-declared under a shared HMAC key (no per-issuer keys).
 - `/labs/reset` does not revoke the old session. `/session/demo` can create unlimited tenants.
-- PLACE_ORDER above the max debit leaves the receipt and the status inconsistent.
-- Capability inputs from the model have no allowlist per capability. Free-text answers (Airbag stop/pause, A17/A18) are loosely bound to the question they answer.
-- ADR 0005 does not match `claude-cli.ts`: there is no `--restricted` flag or MCP allowlist yet.
-- Vision errors include sanitized stderr. The voice summary is cut at 1800 characters.
-- The review page's money totals add up all actions, not only the selected ones.
-- E1 and E8 use the merchant reference as the receipt id. After a reset, a re-issued E8 certificate can have the same id as the old one (the id comes from the receipt, issue time and key).
-- Accepting an offer while an E2 hold is pending can be refused. The exit plan's `recordStopOutcome` accepts any CONFIRMED receipt. E1 `assertMinor` allows negative credits.
+
+These are credentials and logins, left out on purpose: NextMove is a demo, not a product. Every other item from this audit was fixed in the third pass below.
+
+### Third pass: remaining audit items, chat sweep and story flows (2026-10-28)
+
+**Fixed from the second audit's open list** (tests: `tests/unit/merchant-calendar.test.ts`, `tests/integration/partner-signature.test.ts`, `tests/integration/core-boundary.test.ts`, `tests/unit/planner-inputs.test.ts`, `tests/integration/planner-inputs.test.ts`, and the extension suites):
+
+- Merchant PAUSE and CHANGE_BILLING_DATE use Bucharest calendar helpers (`fromLocal`, `addLocalMonths`, `withLocalDay`, `localDaysBetween` in `src/shared/time.ts`), so month ends and DST no longer shift dates. A change inside the notice period is refused with 409, and the A11 table marks days that are too late for the next bill.
+- The partner signature covers the method and path.
+- `BANK_INTERNAL` actions reconcile against bank records: a receipt means CONFIRMED, no receipt and no effect means BLOCKED ("nothing was changed"), and records that disagree stay UNKNOWN, then ask the customer to contact the bank after five checks.
+- Request bodies are read with limits while streaming (256 KB JSON, 5 MB uploads, 64 KB inbox) and answer 413 `TOO_LARGE`.
+- A PLACE_ORDER charged above the approved amount ends UNKNOWN with `CHARGE_ABOVE_APPROVED` and no receipt.
+- E1 and E8 are keyed on the bank receipt id; the merchant reference is display only. Approvals made before this change are refused as changed and must be prepared again.
+- Accepting an offer during an E2 hold works. `recordStopOutcome` needs the same merchant, an ending operation and a CONFIRMED receipt checked by independent read-back. E1 refuses negative amounts.
+- Month labels in goals and simulations use local calendar months.
+
+**Chat sweep.** 45 chat requests, one per capability and simulation, each in an isolated tenant through the real router and worker on the simulated planner: all 45 route to the right capability, and every prepared proposal approves and settles. Found and fixed:
+
+- T3 crashed (`Cannot read properties of undefined`) when the bundle was prepared without its eligibility check. An action whose prerequisite is not ready now waits with it, and the answer says what is missing.
+- A17 and A18 now ask their own question in the chat, then prepare from the answer.
+- When a capability offers actions but none is a safe default (T4 block or allow, E3 accept or stop, E5 accept the new price or stop), the chat asks which one to prepare, with a "Nothing for now" option. Only the chosen action is prepared (test in `tests/integration/trial-shield.test.ts`).
+- Headlines now state the result: O1 home date, A10 total cost, O9 services that can be paused, T4 trials watched, E1 dispute outcome, E2 plan state, E3 offer and verdict, E5 declined price rise, E8 stops to certify.
+- "FitFlow charged me after I cancelled" now goes to E1 instead of T2, and T2 no longer shows an empty date once renewal is off.
+
+**Story flows** (chained, each in an isolated tenant): stop FitFlow → certificate → charge after the stop → dispute → network rules for the customer; T4 hold → block; E3 signed offer → accept; E5 ceiling → higher charge declined → accept the new price; E6 card reissue → merchant list; E2 exit plan → check day → customer asked; E7 household and business approvals → repayment. All seven run end to end.
+
+**Checks:** `npx tsc --noEmit`: pass. `npm test`: **285 tests passed in 41 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.

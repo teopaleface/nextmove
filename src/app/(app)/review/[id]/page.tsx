@@ -37,6 +37,9 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const hasScheduledTransfers = p.actions.some((a: any) => a.operation === "INTERNAL_TRANSFER" && a.consequences?.effectiveAt);
   const otherContext = session?.context && p.context.id !== session.context.id;
   const chosen = selected ?? new Set<string>();
+  // Money covers only the actions ticked for this approval.
+  const total = (k: "immediateDebitMinor" | "maxDebitMinor" | "feesMinor" | "forecastChangeMinor") => p.actions.reduce((t: number, a: any) => t + (chosen.has(a.id) ? a.money[k] : 0), 0);
+  const forecast = total("forecastChangeMinor");
 
   const approve = () =>
     run(async () => {
@@ -140,13 +143,22 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         ))}
       </div>
 
-      <Section title="Money">
+      {p.agentInputs?.length ? (
+        <Section title="What the agent used">
+          <KV items={p.agentInputs.map((i: any) => ({ label: i.label, value: i.value }))} />
+          <p className="caption" style={{ margin: "8px 0 0" }}>
+            The agent set these inputs from your request and answers. Everything else uses your saved plan and bank records.
+          </p>
+        </Section>
+      ) : null}
+
+      <Section title={single ? "Money" : `Money, ${chosen.size} selected`}>
         <KV
           items={[
-            { label: "Pays now", value: money(p.totals.immediateDebitMinor) },
-            { label: "Most it can cost", value: money(p.totals.maxDebitMinor) },
-            { label: "Fees", value: money(p.totals.feesMinor) },
-            { label: "Upcoming charges, next 30 days", value: p.totals.forecastChangeMinor === 0 ? "No change" : p.totals.forecastChangeMinor < 0 ? `${money(-p.totals.forecastChangeMinor)} less` : `${money(p.totals.forecastChangeMinor)} more` },
+            { label: "Pays now", value: money(total("immediateDebitMinor")) },
+            { label: "Most it can cost", value: money(total("maxDebitMinor")) },
+            { label: "Fees", value: money(total("feesMinor")) },
+            { label: "Upcoming charges, next 30 days", value: forecast === 0 ? "No change" : forecast < 0 ? `${money(-forecast)} less` : `${money(forecast)} more` },
           ]}
         />
         <p className="caption" style={{ margin: "8px 0 0" }}>
@@ -193,12 +205,12 @@ function ActionDetail({ a, single, checked, onToggle }: { a: any; single: boolea
   if (c.dataEffect) lines.push({ label: "Data", value: c.dataEffect });
   if (c.remainingObligations) lines.push({ label: "Still due", value: c.remainingObligations });
   return (
-    <div>
+    <div data-voice-item="">
       {!single ? (
         <label className="check-row" style={{ padding: "4px 0 8px" }}>
           <input type="checkbox" checked={checked} onChange={onToggle} />
           <span>
-            <span className="label" style={{ display: "block" }}>
+            <span className="label" data-voice="" style={{ display: "block" }}>
               {a.display.title}
             </span>
             <span className="row-sub" style={{ display: "block" }}>

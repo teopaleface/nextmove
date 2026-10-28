@@ -170,22 +170,46 @@ describe("T4 edge cases", () => {
     expect((await l.get("/api/capabilities/T4")).status).toBe(404);
   });
 
-  it("the agent routes the suggestion to T4 and does not choose for the customer", async () => {
+  const settled = async (taskId: string) => {
+    for (let i = 0; i < 120; i++) {
+      const tk = stack.q1<any>("SELECT * FROM tasks WHERE id=?", taskId)!;
+      if (["DONE", "FAILED", "NEEDS_APPROVAL", "WAITING_USER"].includes(tk.state)) return tk;
+      await new Promise((res) => setTimeout(res, 500));
+    }
+    return stack.q1<any>("SELECT * FROM tasks WHERE id=?", taskId)!;
+  };
+  const askAndAnswer = async (a: Api, answer: string) => {
+    const task = await a.ok("/api/tasks", { text: "Did anything try to charge me after a free trial?" });
+    const asked = await settled(task.taskId);
+    expect(asked.state).toBe("WAITING_USER");
+    const q = stack.q1<any>("SELECT id, text, options_json FROM task_questions WHERE task_id=? AND status='OPEN'", task.taskId)!;
+    expect(q.text).toContain("What should I prepare for your review?");
+    expect(stack.q("SELECT id FROM proposals WHERE task_id=?", task.taskId)).toHaveLength(0);
+    expect((await a.post(`/api/tasks/${task.taskId}/answer`, { questionId: q.id, answer })).status).toBe(200);
+    return { taskId: task.taskId, options: JSON.parse(q.options_json) as string[], done: await settled(task.taskId) };
+  };
+
+  it("the agent routes the suggestion to T4 and asks which decision to prepare; nothing is prepared on 'Nothing for now'", async () => {
     const a = await stack.login("alex");
     await attempt(a, "snapwise");
-    const task = await a.ok("/api/tasks", { text: "Did anything try to charge me after a free trial?" });
-    const done = await (async () => {
-      for (let i = 0; i < 120; i++) {
-        const tk = stack.q1<any>("SELECT * FROM tasks WHERE id=?", task.taskId)!;
-        if (["DONE", "FAILED", "NEEDS_APPROVAL", "WAITING_USER"].includes(tk.state)) return tk;
-        await new Promise((res) => setTimeout(res, 500));
-      }
-      return stack.q1<any>("SELECT * FROM tasks WHERE id=?", task.taskId)!;
-    })();
-    expect(stack.q1<any>("SELECT block_key FROM task_blocks WHERE task_id=? AND block_key='analysis:T4'", task.taskId)).toBeTruthy();
-    const events = stack.q<any>("SELECT label FROM task_events WHERE task_id=?", task.taskId).map((e) => e.label).join("\n");
+    const { taskId, options, done } = await askAndAnswer(a, "Nothing for now");
+    expect(options.at(-1)).toBe("Nothing for now");
+    expect(options.length).toBeGreaterThanOrEqual(3);
+    expect(stack.q1<any>("SELECT block_key FROM task_blocks WHERE task_id=? AND block_key='analysis:T4'", taskId)).toBeTruthy();
+    const events = stack.q<any>("SELECT label FROM task_events WHERE task_id=?", taskId).map((e) => e.label).join("\n");
     expect(events).toContain("Snapwise Pro tried to take 120.00 RON");
-    expect(stack.q("SELECT id FROM proposals WHERE task_id=?", task.taskId)).toHaveLength(0);
-    expect(done.state).not.toBe("FAILED");
+    expect(stack.q("SELECT id FROM proposals WHERE task_id=?", taskId)).toHaveLength(0);
+    expect(done.state).toBe("DONE");
+  });
+
+  it("the customer's pick becomes a proposal with exactly that one action", async () => {
+    const a = await stack.login("alex");
+    await attempt(a, "snapwise");
+    const first = await askAndAnswer(a, "Nothing for now");
+    const pick = first.options[0];
+    const { taskId, done } = await askAndAnswer(a, pick);
+    expect(done.state).toBe("NEEDS_APPROVAL");
+    const titles = stack.q<any>("SELECT pa.spec_json FROM proposal_actions pa JOIN proposals p ON p.id=pa.proposal_id WHERE p.task_id=?", taskId).map((r) => JSON.parse(r.spec_json).display.title);
+    expect(titles).toEqual([pick]);
   });
 });

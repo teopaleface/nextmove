@@ -51,6 +51,29 @@ export function merchantSigningKey(db: DatabaseSync, tenantId: string, merchantI
   return { keyId, privateKeyPem };
 }
 
+/**
+ * Tenant reset: deletes this tenant's simulated merchant private keys, so a reset demo signs with fresh keys and an
+ * old private half cannot sign for the re-seeded tenant. Files are matched on the tenant recorded inside them, which
+ * also clears keys whose rows an earlier reset already removed. A missing keystore is fine.
+ */
+export function deleteMerchantKeyFiles(tenantId: string) {
+  let names: string[];
+  try {
+    names = fs.readdirSync(keystoreDir());
+  } catch {
+    return;
+  }
+  for (const name of names) {
+    if (!/^mk_[0-9a-f]{18}\.json$/.test(name)) continue;
+    const file = path.join(keystoreDir(), name);
+    try {
+      if (JSON.parse(fs.readFileSync(file, "utf8")).tenantId === tenantId) fs.unlinkSync(file);
+    } catch {
+      /* unreadable or already gone: nothing of this tenant's to remove */
+    }
+  }
+}
+
 /** Merchant-side signing (Labs simulation only). */
 export function signOffer(offer: RetentionOffer, key: { keyId: string; privateKeyPem: string }): SignedOffer {
   const signature = edSign(null, Buffer.from(canonicalJson(offer)), createPrivateKey(key.privateKeyPem)).toString("base64");
@@ -88,9 +111,9 @@ export function verifySigned(db: DatabaseSync, tenantId: string, signed: SignedO
   }));
   const received = all<any>(
     db,
-    "SELECT offer_id, subscription_id, received_at FROM ext_retention_offer WHERE tenant_id=? AND status != 'REJECTED' AND (? IS NULL OR received_at < ?)",
+    "SELECT offer_id, revision, subscription_id, received_at FROM ext_retention_offer WHERE tenant_id=? AND status != 'REJECTED' AND (? IS NULL OR received_at < ?)",
     tenantId, opts.excludeReceivedAt ?? null, opts.excludeReceivedAt ?? null,
-  ).map((r) => ({ offerId: r.offer_id, subscriptionId: r.subscription_id, receivedAt: r.received_at, isCounterReply: false }));
+  ).map((r) => ({ offerId: r.offer_id, revision: r.revision, subscriptionId: r.subscription_id, receivedAt: r.received_at, isCounterReply: false }));
   try {
     return verifyOffer(bridged, { keys, merchants, ownership, received, now: opts.now });
   } catch {

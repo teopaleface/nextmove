@@ -1,4 +1,5 @@
 import { all, json, one, run } from "../db/connection";
+import { addLocalMonths } from "../../shared/time";
 import { accountsFor } from "../bank/ledger";
 import { classifyPossibleDuplicates, priceAdjustmentCheck, totalCostOfOwnership, expiringCreditMatch, travelComparison } from "../finance/capabilities";
 import { homeReadiness, comparePurchases, afterHomeBudget } from "../finance/goals";
@@ -333,6 +334,14 @@ const A9: CapabilityDef = {
 };
 
 /* ------------------------------------------------------------------------------------------------ A10 */
+function tcoHeadline(horizon: number, rows: { id: string; name: string; totalMinor: number }[], lowestId: string | null) {
+  const low = rows.find((x) => x.id === lowestId);
+  const high = [...rows].sort((a, b) => b.totalMinor - a.totalMinor)[0];
+  const name = (n: string) => n.charAt(0).toLowerCase() + n.slice(1);
+  if (!low || !high || high.id === low.id) return `Over ${horizon} months every option costs the same`;
+  return `Over ${horizon} months the ${name(low.name)} costs ${money(low.totalMinor)} in total, ${money(high.totalMinor - low.totalMinor)} less than the ${name(high.name)}`;
+}
+
 const A10: CapabilityDef = {
   id: "A10",
   title: "True cost of a purchase",
@@ -351,7 +360,7 @@ const A10: CapabilityDef = {
       capability: "A10",
       title: "Total cost of ownership",
       contextId: env.contextId,
-      headline: `Over ${horizon} months the ${r.rows.find((x) => x.id === r.lowestId)?.name} costs ${money(r.differenceMinor)} less`,
+      headline: tcoHeadline(horizon, r.rows, r.lowestId),
       summary: r.note,
       evidence: ["DETERMINISTIC_CALCULATION", "MANUAL_INPUT"],
       blocks: [
@@ -524,6 +533,11 @@ export function verifyTravelBenefit(env: CapEnv) {
 }
 
 /* ------------------------------------------------------------------------------------------------ O1 (personal) */
+function homeHeadline(contributions: number, phoneDelay: number, when: string) {
+  const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
+  const phone = phoneDelay > 0 ? `paying 6,000 RON upfront for the phone pushes it back ${plural(phoneDelay, "month")}` : "paying 6,000 RON upfront for the phone does not delay it";
+  return `Home ready in ${when} after ${plural(contributions, "monthly contribution")}; ${phone}`;
+}
 export const O1_PERSONAL = async (env: CapEnv): Promise<Analysis> => {
   const g = goalInputs(env, "home")!;
   const phone = goalInputs(env, "phone")!.inputs;
@@ -542,8 +556,7 @@ export const O1_PERSONAL = async (env: CapEnv): Promise<Analysis> => {
   const after = afterHomeBudget(ah);
   const monthLabel = (n: number | null) => {
     if (n == null) return "Unknown";
-    const d = new Date(env.nowMs);
-    d.setUTCMonth(d.getUTCMonth() + n);
+    const d = new Date(addLocalMonths(env.nowMs, n));
     return new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "Europe/Bucharest" }).format(d);
   };
   const saved = all<any>(env.db, "SELECT * FROM saved_comparisons WHERE tenant_id=? AND context_id=? AND kind='O1' ORDER BY created_at DESC LIMIT 1", env.tenantId, env.contextId)[0];
@@ -551,7 +564,7 @@ export const O1_PERSONAL = async (env: CapEnv): Promise<Analysis> => {
     capability: "O1",
     title: "Phone now, home later",
     contextId: env.contextId,
-    headline: cmp.baseline.complete ? `Home ready after ${cmp.baseline.contributions} contributions; the 6,000 RON phone adds ${(cmp.rows.find((r) => r.id === "phone-6000")?.contributions ?? 0) - (cmp.baseline.contributions ?? 0)}` : "Add transaction costs to see when the home is ready",
+    headline: cmp.baseline.complete ? homeHeadline(cmp.baseline.contributions ?? 0, (cmp.rows.find((r) => r.id === "phone-6000")?.contributions ?? 0) - (cmp.baseline.contributions ?? 0), monthLabel(cmp.baseline.contributions)) : "Add transaction costs to see when the home is ready",
     summary: `Liquid funds ${money(liquid)} across ${accts.length} accounts. Target = down payment + transaction costs + protected reserve. No loan or mortgage approval is implied.`,
     evidence: ["DETERMINISTIC_CALCULATION", "BANK_RECORD", "MANUAL_INPUT"],
     blocks: [

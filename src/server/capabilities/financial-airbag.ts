@@ -31,6 +31,7 @@ export const O9: CapabilityDef = {
     const rows: { cells: string[] }[] = [];
     const statusBlocks: Block[] = [];
 
+    const offered: number[] = []; // monthly price of each service the customer can pause or stop here
     for (const sub of subscriptions) {
       const provider = providers.find((p) => p.id === sub.merchant_id);
       const localBenefits = json<Record<string, unknown>>(sub.benefits_json, {});
@@ -81,7 +82,7 @@ export const O9: CapabilityDef = {
       const choice = env.inputs[key] === "pause" && canPause ? "pause" : env.inputs[key] === "stop" && canStop ? "stop" : "keep";
       const options = [{ value: "keep", label: "Keep unchanged" }, ...(canPause ? [{ value: "pause", label: "Provider pause · 1 month, then resumes" }] : []), ...(canStop ? [{ value: "stop", label: "Turn off renewal · paid access ends" }] : [])];
       // Keep the existing primitive-input boundary: no list of client-authored action specs or amounts.
-      if (inputs.length < 20) inputs.push({ key, label: sub.merchant_name, type: "select", value: choice, options, help: "Choose an exact action, then Recalculate. You still review and approve its terms before anything is sent." });
+      if (inputs.length < 20) (offered.push(c.priceMinor), inputs.push({ key, label: sub.merchant_name, type: "select", value: choice, options, help: "Choose an exact action, then Recalculate. You still review and approve its terms before anything is sent." }));
       else {
         rows.push({ cells: [sub.merchant_name, "Keep", "This review supports 19 service choices; review this service separately."] });
         continue;
@@ -127,7 +128,7 @@ export const O9: CapabilityDef = {
     const cashMinor = accountsFor(env.db, env.tenantId, env.contextId).reduce((s, a) => s + a.balanceMinor, 0);
     return {
       capability: "O9", title: "Financial Airbag", contextId: env.contextId,
-      headline: changes.length ? `${changes.length} optional change${changes.length === 1 ? "" : "s"} ready for exact review` : "Choose optional spending to pause or stop renewing",
+      headline: changes.length ? `${changes.length} optional change${changes.length === 1 ? "" : "s"} ready for exact review` : offered.length ? `${offered.length} optional service${offered.length === 1 ? "" : "s"} (${money(offered.reduce((s, m) => s + m, 0))}/month) can be paused or stopped. Choose which` : "No optional service can be paused or stopped right now",
       summary: "An emergency spending review. Opening it changes nothing; you choose each service and approve an exact manifest.",
       evidence: ["BANK_RECORD", "SIMULATED_MERCHANT_API", "DETERMINISTIC_CALCULATION"],
       blocks: [

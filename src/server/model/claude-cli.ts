@@ -8,7 +8,8 @@ import { shortId } from "../canonical";
 
 // Server-only adapter for the locally authenticated, first-party Claude Code CLI in headless print mode.
 // - Fixed argument array (no shell), prompt and image bytes only through stdin.
-// - All tools disabled, no MCP servers, no slash commands or skills, no session persistence, safe mode.
+// - All tools disabled, no MCP servers, no slash commands or skills, no session persistence, safe mode; only user
+//   settings load (where CLI sign-in may live) and anything that would ask for permission is denied (HARDENING_FLAGS).
 // - Empty sandbox working directory and a minimal environment (no application secrets are inherited).
 // - Bounded: timeout, spend ceiling, output size and process concurrency.
 // - Only metadata is logged (purpose, sizes, duration, status); never prompt text or image payloads.
@@ -66,7 +67,33 @@ function minimalEnv(): NodeJS.ProcessEnv {
   return env as NodeJS.ProcessEnv;
 }
 
-function args(model: string, system: string, schema: Record<string, unknown>) {
+/**
+ * Flags every CLI call must carry (ADR 0005). Left out on purpose: --bare (it reads only ANTHROPIC_API_KEY or an
+ * apiKeyHelper passed with --settings, never the OAuth/keychain sign-in) and --restricted (it ignores user settings,
+ * which can hold the apiKeyHelper sign-in). With --tools "" no tool runs either way.
+ */
+export const HARDENING_FLAGS: readonly (readonly string[])[] = [
+  ["--tools", ""],
+  ["--safe-mode"],
+  ["--no-session-persistence"],
+  ["--strict-mcp-config"],
+  ["--disable-slash-commands"],
+  ["--setting-sources", "user"],
+  ["--permission-prompts", "none"],
+];
+
+/** What an argv lacks against HARDENING_FLAGS (each flag with its exact value), for the worker's startup check and tests. */
+export function hardeningProblems(argv: readonly string[]): string[] {
+  const problems = HARDENING_FLAGS.filter(([flag, ...values]) => {
+    const i = argv.indexOf(flag);
+    return i < 0 || values.some((v, j) => argv[i + 1 + j] !== v);
+  }).map((f) => `missing ${f.join(" ").trim()}`);
+  // Nothing may add an MCP server, a tool or a different sign-in next to them.
+  for (const f of ["--mcp-config", "--allowedTools", "--allowed-tools", "--bare", "--dangerously-skip-permissions", "--settings"]) if (argv.includes(f)) problems.push(`unexpected ${f}`);
+  return problems;
+}
+
+export function cliArgs(model: string, system: string, schema: Record<string, unknown>) {
   return [
     "-p",
     "--verbose",
@@ -74,12 +101,7 @@ function args(model: string, system: string, schema: Record<string, unknown>) {
     "stream-json",
     "--output-format",
     "stream-json",
-    "--tools",
-    "",
-    "--safe-mode",
-    "--no-session-persistence",
-    "--strict-mcp-config",
-    "--disable-slash-commands",
+    ...HARDENING_FLAGS.flat(),
     "--model",
     model,
     "--effort",
@@ -120,7 +142,11 @@ export async function callModel(db: DatabaseSync | null, req: ModelRequest): Pro
     const result = await new Promise<ModelResult>((resolve) => {
       let child;
       try {
-        child = spawn(config.claudeBin, args(model, req.system, req.schema), { cwd: sandboxDir(), env: minimalEnv(), stdio: ["pipe", "pipe", "pipe"], detached: true });
+        const argv = cliArgs(model, req.system, req.schema);
+        // Never run the CLI without its hardening, whatever edits cliArgs later (the worker also checks at startup).
+        const problems = hardeningProblems(argv);
+        if (problems.length) return resolve({ ok: false, status: "UNAVAILABLE", error: `CLI flags refused: ${problems.join(", ")}`, callId });
+        child = spawn(config.claudeBin, argv, { cwd: sandboxDir(), env: minimalEnv(), stdio: ["pipe", "pipe", "pipe"], detached: true });
       } catch (e: any) {
         return resolve({ ok: false, status: "UNAVAILABLE", error: `CLI not startable: ${String(e?.code ?? e?.message ?? e)}`, callId });
       }

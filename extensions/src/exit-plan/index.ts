@@ -2,7 +2,7 @@ import { checkGrant, type ApprovalGrant, type GrantCheck, type Scope } from '../
 import { digestOf } from '../shared/digest.ts';
 import { DomainError, invariant } from '../shared/errors.ts';
 import { assertCurrency, assertNonNegativeMinor } from '../shared/money.ts';
-import type { MerchantReceipt } from '../shared/receipts.ts';
+import { ENDING_OPERATIONS, type MerchantReceipt } from '../shared/receipts.ts';
 import { assertDate, assertInstant, daysBetween, isBefore, localDate, type Instant, type IsoDate } from '../shared/time.ts';
 
 /**
@@ -234,14 +234,19 @@ export function answerExitQuestion(plan: ExitPlan, answer: 'KEEP' | 'STOP', now:
   return requestStop(plan, 0);
 }
 
-/** Applies the merchant outcome of the requested stop. Pending and repeated outcomes leave the plan unchanged. */
+/**
+ * Applies the merchant outcome of the requested stop. Pending and repeated outcomes leave the plan unchanged, and so
+ * does a confirmation without an independent read-back: a merchant message alone never proves the stop.
+ */
 export function recordStopOutcome(plan: ExitPlan, receipt: MerchantReceipt): ExitRun {
   const inactive = { outcome: { kind: 'INACTIVE', status: plan.status } as const, next: plan, effects: [] };
   if (plan.status !== 'STOP_REQUESTED') return inactive;
-  invariant(receipt.subscriptionId === plan.terms.subscriptionId, 'RECEIPT_MISMATCH', 'receipt is for another subscription');
+  invariant(receipt.subscriptionId === plan.terms.subscriptionId && receipt.merchantId === plan.terms.merchantId, 'RECEIPT_MISMATCH', 'receipt is for another subscription');
   invariant(receipt.scope.ownerId === plan.terms.scope.ownerId && receipt.scope.contextId === plan.terms.scope.contextId, 'RECEIPT_MISMATCH', 'receipt belongs to another customer');
+  invariant(ENDING_OPERATIONS.has(receipt.operation), 'RECEIPT_MISMATCH', `receipt is for ${receipt.operation}, not a stop`);
   if (receipt.state === 'PENDING') return inactive;
   if (receipt.state === 'CONFIRMED') {
+    if (receipt.verification !== 'INDEPENDENT_READ_BACK') return inactive;
     return { outcome: { kind: 'STOPPED', receiptId: receipt.receiptId }, next: { ...plan, status: 'STOPPED' }, effects: [{ type: 'NOTIFY_CUSTOMER', ruleId: plan.ruleId, message: 'STOPPED' }] };
   }
   return { outcome: { kind: 'VOID', reason: 'MERCHANT_REFUSED' }, next: { ...plan, status: 'VOID', closedReason: 'MERCHANT_REFUSED' }, effects: [{ type: 'NOTIFY_CUSTOMER', ruleId: plan.ruleId, message: 'STOP_REFUSED' }] };

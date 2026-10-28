@@ -1,4 +1,5 @@
 import { json, one } from "../db/connection";
+import { addLocalMonths } from "../../shared/time";
 import { config } from "../config";
 import { accountsFor } from "../bank/ledger";
 import { featureAllowed, featureForRoute } from "../authority/features";
@@ -31,9 +32,7 @@ const SAVING_OPS = new Set(["STOP_RENEWAL", "PAUSE", "CHANGE_PLAN"]);
 const whole = (minor: number | null | undefined) => (minor == null ? "—" : formatMoney(Math.round(minor / 100) * 100, "RON", { whole: true }));
 
 function monthDate(nowMs: number, n: number) {
-  const d = new Date(nowMs);
-  d.setUTCMonth(d.getUTCMonth() + n);
-  return d;
+  return new Date(addLocalMonths(nowMs, n));
 }
 const fmtMonth = (nowMs: number, n: number | null, style: "long" | "short" = "long") =>
   n == null ? "Not within 5 years" : new Intl.DateTimeFormat("en-GB", { month: style, year: style === "long" ? "numeric" : undefined, timeZone: "Europe/Bucharest" }).format(monthDate(nowMs, n));

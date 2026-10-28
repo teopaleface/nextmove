@@ -9,12 +9,15 @@ import { ErrorBox, Group, Loading, Notice, PageHead, Row, Section, useAction } f
 import { AgentSig, Icon } from "@/ui/icons";
 import { ShieldDecision } from "@/ui/trial-shield";
 
-export default function CapabilityPage({ params }: { params: Promise<{ id: string }> }) {
+export default function CapabilityPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { id } = use(params);
   const cap = id.toUpperCase();
+  // An agent task links here with the inputs it used (i.<key>=value), so this shows the same calculation.
+  const linked = Object.fromEntries(Object.entries(use(searchParams)).filter(([k, v]) => k.startsWith("i.") && typeof v === "string").map(([k, v]) => [k.slice(2), /^-?\d+$/.test(v as string) ? Number(v) : v]));
+  const query = new URLSearchParams(Object.entries(linked).map(([k, v]) => [`i.${k}`, String(v)])).toString();
   const { epoch, session, toast } = useSession();
-  const { data, error, reload, setData } = useApi<any>(`/capabilities/${cap}`, { epoch });
-  const [inputs, setInputs] = useState<Record<string, unknown>>({});
+  const { data, error, reload, setData } = useApi<any>(`/capabilities/${cap}${query ? `?${query}` : ""}`, { epoch });
+  const [inputs, setInputs] = useState<Record<string, unknown>>(linked);
   const recalc = useAction();
   const act = useAction();
 
@@ -76,6 +79,11 @@ export default function CapabilityPage({ params }: { params: Promise<{ id: strin
         <AgentSig label="NextMove calculation" />
         <h2 style={{ fontSize: 20, lineHeight: "26px" }}>{data.headline}</h2>
       </div>
+      {query ? (
+        <div style={{ marginTop: 12 }}>
+          <Notice tone="info">Calculated with the inputs your agent task used. Change them below to compare.</Notice>
+        </div>
+      ) : null}
 
       {cap === "T4" ? <ShieldDecision key={data.candidates?.map((c: any) => c.key).join("|")} candidates={data.candidates ?? []} /> : null}
 

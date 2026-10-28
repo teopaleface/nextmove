@@ -105,7 +105,7 @@ export function issueCertificate(input: {
 
   const claims: Record<ClaimName, unknown> = {
     merchant: { merchantId: receipt.merchantId, name: input.merchantName.trim() },
-    subscriptionRef: receipt.receiptId,
+    subscriptionRef: receipt.merchantReference ?? receipt.receiptId,
     effectiveDate: effectiveDateOf(receipt),
   };
   const saltOf = input.salt ?? (() => randomBytes(16).toString('base64url'));

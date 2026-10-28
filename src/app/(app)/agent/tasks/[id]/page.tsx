@@ -132,7 +132,7 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
         <Section title="Calculations">
           <Group>
             {analyses.map((a: any) => (
-              <CapabilityRow key={a.capability} id={a.capability} steps={data.steps} />
+              <CapabilityRow key={a.capability} id={a.capability} inputs={a.inputs} steps={data.steps} />
             ))}
           </Group>
         </Section>
@@ -208,7 +208,9 @@ function plannerText(mode: string | null, model: string | null) {
   return "Live model";
 }
 
-function CapabilityRow({ id, steps }: { id: string; steps: any[] }) {
+function CapabilityRow({ id, inputs, steps }: { id: string; inputs?: Record<string, unknown>; steps: any[] }) {
   const s = [...steps].reverse().find((x: any) => x.tool === "analyze" && x.capabilityId === id);
-  return <Row href={`/capabilities/${id}`} title={s?.summary ?? id} sub="Open the full calculation" />;
+  // The calculation opens with the inputs this task used, so it shows the numbers the proposal was built on.
+  const q = new URLSearchParams(Object.entries(inputs ?? {}).filter(([, v]) => ["string", "number", "boolean"].includes(typeof v)).map(([k, v]) => [`i.${k}`, String(v)])).toString();
+  return <Row href={`/capabilities/${id}${q ? `?${q}` : ""}`} title={s?.summary ?? id} sub="Open the full calculation" />;
 }

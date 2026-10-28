@@ -140,7 +140,7 @@ describe('verifyOffer', () => {
   });
 
   it('allows one unsolicited offer per subscription per 30 days', () => {
-    const recent: ReceivedOffer = { offerId: 'off-0', subscriptionId: 'sub-streamly', receivedAt: '2026-10-01T10:00:00+02:00', isCounterReply: false };
+    const recent: ReceivedOffer = { offerId: 'off-0', revision: 1, subscriptionId: 'sub-streamly', receivedAt: '2026-10-01T10:00:00+02:00', isCounterReply: false };
     assert.equal(reason(verify(sign(offer()), { received: [recent] })), 'RATE_LIMITED');
     assert.equal(reason(verify(sign(offer()), { received: [{ ...recent, receivedAt: '2026-09-27T10:00:00+02:00' }] })), 'OK');
     assert.equal(reason(verify(sign(offer()), { received: [{ ...recent, subscriptionId: 'sub-other' }] })), 'OK');
@@ -148,12 +148,18 @@ describe('verifyOffer', () => {
   });
 
   it('re-verifying the same offer does not trip its own rate limit', () => {
-    const self: ReceivedOffer = { offerId: 'off-1', subscriptionId: 'sub-streamly', receivedAt: NOW, isCounterReply: false };
+    const self: ReceivedOffer = { offerId: 'off-1', revision: 1, subscriptionId: 'sub-streamly', receivedAt: NOW, isCounterReply: false };
     assert.equal(reason(verify(sign(offer()), { received: [self] })), 'OK');
   });
 
+  it('counts an unrequested new revision of the same offer against the limit', () => {
+    const first: ReceivedOffer = { offerId: 'off-1', revision: 1, subscriptionId: 'sub-streamly', receivedAt: '2026-10-28T09:00:00+02:00', isCounterReply: false };
+    assert.equal(reason(verify(sign(offer({ revision: 2 })), { received: [first] })), 'RATE_LIMITED');
+    assert.equal(reason(verify(sign(offer({ revision: 2 })), { received: [{ ...first, revision: 2 }] })), 'OK');
+  });
+
   it('lets a reply to the customer’s counter through the rate limit', () => {
-    const recent: ReceivedOffer = { offerId: 'off-0', subscriptionId: 'sub-streamly', receivedAt: '2026-10-28T09:00:00+02:00', isCounterReply: false };
+    const recent: ReceivedOffer = { offerId: 'off-0', revision: 1, subscriptionId: 'sub-streamly', receivedAt: '2026-10-28T09:00:00+02:00', isCounterReply: false };
     assert.equal(reason(verify(sign(offer({ revision: 2, inReplyToCounterId: 'ctr_x' })), { received: [recent] })), 'OK');
   });
 

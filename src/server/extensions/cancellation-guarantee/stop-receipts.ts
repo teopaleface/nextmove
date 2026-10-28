@@ -9,6 +9,8 @@ import type { Scope } from "../../../../extensions/src/shared/authority.ts";
 // subject_ref is the subscription, and the subscription moves to RENEWAL_OFF. Only a receipt confirmed through an
 // independent read-back of the provider's state counts as proof; anything else maps to MERCHANT_MESSAGE_ONLY.
 // A subscription the bank later observed with renewal back on is mapped to a REACTIVATE receipt at that observation.
+// Receipts are keyed on the bank's own receipt id: a merchant can reuse its confirmation number (issuer_reference)
+// across subscriptions or customers, so that is carried only as merchantReference, for display.
 
 export const iso = (v: string) => toLocalIso(toMs(v));
 
@@ -19,7 +21,10 @@ export function scopeOf(db: DatabaseSync, tenantId: string, contextId: string): 
 
 export interface StopRecord {
   receipt: MerchantReceipt;
+  /** receipts.id, the same as receipt.receiptId. */
   bankReceiptId: string;
+  /** The provider's confirmation number, shown to the customer; not unique. */
+  reference: string;
   sub: any;
 }
 
@@ -49,7 +54,8 @@ export function stopReceipts(db: DatabaseSync, tenantId: string, contextId: stri
   for (const r of rows) {
     const v = json<any>(r.verification_json, {});
     const receipt: MerchantReceipt = {
-      receiptId: r.issuer_reference,
+      receiptId: r.rid,
+      merchantReference: r.issuer_reference,
       scope,
       merchantId: r.merchant_id,
       subscriptionId: r.id,
@@ -62,7 +68,7 @@ export function stopReceipts(db: DatabaseSync, tenantId: string, contextId: stri
       verification: String(v.method ?? "").startsWith("independent read-back") ? "INDEPENDENT_READ_BACK" : "MERCHANT_MESSAGE_ONLY",
       evidenceRefs: [`receipt:${r.rid}`],
     };
-    stops.push({ receipt, bankReceiptId: r.rid, sub: r });
+    stops.push({ receipt, bankReceiptId: r.rid, reference: r.issuer_reference, sub: r });
     subs.set(r.id, r);
   }
   const receipts: MerchantReceipt[] = stops.map((s) => s.receipt);

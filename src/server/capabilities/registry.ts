@@ -138,6 +138,8 @@ export function proposalView(db: DatabaseSync, session: Session, proposalId: str
     };
   });
   const sum = (f: (s: ActionSpec) => number) => p.actions.reduce((t: number, a: any) => t + f(a.spec), 0);
+  // An agent task's proposal records the capability inputs the planner set (each one given by the customer).
+  const agent = p.task_id ? json<any>(one<any>(db, "SELECT payload_json FROM task_blocks WHERE task_id=? AND block_key='proposal'", p.task_id)?.payload_json, null) : null;
   return {
     id: p.id,
     revision: p.revision,
@@ -152,6 +154,7 @@ export function proposalView(db: DatabaseSync, session: Session, proposalId: str
     context: { id: p.context_id, name: ctx.name, kind: ctx.kind },
     taskId: p.task_id,
     batchId: p.batch_id,
+    agentInputs: agent?.proposalId === p.id && Array.isArray(agent.inputs) ? (agent.inputs as { key: string; label: string; value: string }[]) : [],
     mandate: mandate ? { id: mandate.id, status: mandate.status, startExpiresAt: mandate.start_expires_at, revokedAt: mandate.revoked_at } : null,
     totals: { immediateDebitMinor: sum((s) => s.money.immediateDebitMinor), maxDebitMinor: sum((s) => s.money.maxDebitMinor), feesMinor: sum((s) => s.money.feesMinor), forecastChangeMinor: sum((s) => s.money.forecastChangeMinor) },
     actions,

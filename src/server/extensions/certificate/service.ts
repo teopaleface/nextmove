@@ -53,7 +53,7 @@ export function trustedKeys(db: DatabaseSync, tenantId: string): Map<string, Tru
 }
 
 const issuedOf = (db: DatabaseSync, tenantId: string, contextId: string, scope: IssuedCertificate["scope"]): IssuedCertificate[] =>
-  all<any>(db, "SELECT * FROM ext_certificate WHERE tenant_id=? AND context_id=? AND revoked_at IS NULL", tenantId, contextId).map((r) => ({ certId: r.cert_id, scope, subscriptionId: r.subscription_id, receiptId: r.receipt_id, expiresAt: r.expires_at }));
+  all<any>(db, "SELECT * FROM ext_certificate WHERE tenant_id=? AND context_id=? AND revoked_at IS NULL", tenantId, contextId).map((r) => ({ certId: r.cert_id, scope, subscriptionId: r.subscription_id, receiptId: r.bank_receipt_id, expiresAt: r.expires_at }));
 
 /**
  * Revoke certificates that no longer describe the truth (renewal back on, or a newer ending) and keep a fresh signed
@@ -116,14 +116,15 @@ function issueTx({ db, action, spec, attemptId }: ExtActionContext) {
   if (!ending || ending.receiptId !== spec.params.receiptId) return settle("REFUSED", "The stop you approved is no longer in force; nothing was issued");
   if (ending.verification !== "INDEPENDENT_READ_BACK") return settle("REFUSED", "Only a stop read back from the provider can be certified");
   if (Number(spec.params.validityDays) !== VALIDITY_DAYS) return settle("REFUSED", "Validity does not match what was approved");
-  const live = one<any>(db, "SELECT cert_id FROM ext_certificate WHERE tenant_id=? AND context_id=? AND receipt_id=? AND revoked_at IS NULL", t, ctxId, ending.receiptId);
+  // Keyed on the bank's receipt id; receipt_id holds the provider's reference, which is for display and may repeat.
+  const live = one<any>(db, "SELECT cert_id FROM ext_certificate WHERE tenant_id=? AND context_id=? AND bank_receipt_id=? AND revoked_at IS NULL", t, ctxId, ending.receiptId);
   if (live) return settle("NO_CHANGE", "A valid certificate for this stop already exists");
   const key = tenantKey(db, t);
   const { compact, record } = issueCertificate({ scope: view.scope, subscriptionId: subId, receipts: view.receipts, merchantName: sub.merchant_name, key, validityDays: VALIDITY_DAYS, now });
   run(
     db,
     "INSERT INTO ext_certificate(cert_id, tenant_id, context_id, action_id, subscription_id, receipt_id, bank_receipt_id, merchant_name, key_id, issued_at, expires_at, holder_copy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-    record.certId, t, ctxId, action.id, subId, record.receiptId, view.stops.find((s) => s.receipt.receiptId === record.receiptId)!.bankReceiptId, sub.merchant_name, key.keyId, now, record.expiresAt, compact,
+    record.certId, t, ctxId, action.id, subId, view.stops.find((s) => s.bankReceiptId === record.receiptId)!.reference, record.receiptId, sub.merchant_name, key.keyId, now, record.expiresAt, compact,
   );
   confirm(one<any>(db, "SELECT * FROM ext_certificate WHERE cert_id=?", record.certId));
   sweep(db, t);
@@ -131,9 +132,13 @@ function issueTx({ db, action, spec, attemptId }: ExtActionContext) {
 
 /* ---------------------------------------------------------------------------------------- routes */
 
+/**
+ * Read-only: shows the certificate with the latest signed revocation list on record. The list is refreshed (and
+ * certificates that no longer hold are revoked) on issuing, on verifying and when E8 is analysed, never on a GET.
+ */
 export function getCertificate(db: DatabaseSync, session: Session, certId: string, url: URL) {
   if (!/^cert_[0-9a-f]{24}$/.test(certId)) throw new HttpError(404, "NOT_FOUND", "Certificate not found");
-  const list = sweep(db, session.tenantId);
+  const list = one<any>(db, "SELECT signed_text FROM ext_certificate_revocation WHERE tenant_id=? ORDER BY seq DESC LIMIT 1", session.tenantId)?.signed_text as string | undefined;
   const row = one<any>(db, "SELECT * FROM ext_certificate WHERE cert_id=? AND tenant_id=? AND context_id=?", certId, session.tenantId, session.contextId);
   if (!row || !list) throw new HttpError(404, "NOT_FOUND", "Certificate not found");
   const reveal = (url.searchParams.get("reveal") ?? "").split(",").map((s) => s.trim()).filter(Boolean);

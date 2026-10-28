@@ -28,6 +28,7 @@ export function extTenantTables(db: DatabaseSync): string[] {
 }
 
 export function deleteExtTenantRows(db: DatabaseSync, tenantId: string) {
+  for (const m of EXTENSIONS) m.reset?.(db, tenantId);
   // Children (tables whose rows reference another ext table) first: delete in reverse dependency order by retrying.
   let pending = extTenantTables(db);
   for (let pass = 0; pending.length && pass < 5; pass++) {

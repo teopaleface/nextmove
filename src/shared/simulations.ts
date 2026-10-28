@@ -1,4 +1,5 @@
 import { assertMinor, MoneyError } from "./money";
+import { addLocalMonths } from "./time";
 
 // What-if simulations shown inside agent answers and the goal analysis. Pure and deterministic: the server
 // computes the first result from tool data, the phone recomputes with the same functions while the customer
@@ -142,8 +143,7 @@ export function investDelta(i: InvestInputs): InvestResult {
 /** Same month arithmetic as O1: the demo clock plus n months, named in Europe/Bucharest. */
 export function monthLabel(asOfIso: string, months: number | null, style: "long" | "short" = "long"): string {
   if (months == null) return "Not within 50 years";
-  const d = new Date(asOfIso);
-  d.setUTCMonth(d.getUTCMonth() + months);
+  const d = new Date(addLocalMonths(Date.parse(asOfIso), months));
   return new Intl.DateTimeFormat("en-GB", { month: style, year: "numeric", timeZone: "Europe/Bucharest" }).format(d);
 }
 

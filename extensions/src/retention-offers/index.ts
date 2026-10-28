@@ -71,6 +71,7 @@ export interface SubscriptionOwnership {
 
 export interface ReceivedOffer {
   readonly offerId: string;
+  readonly revision: number;
   readonly subscriptionId: string;
   readonly receivedAt: Instant;
   /** Revisions answering a customer counter do not count against the limit. */
@@ -185,8 +186,14 @@ export function verifyOffer(
 
   if (offer.inReplyToCounterId === undefined) {
     const windowStart = toMillis(ctx.now) - policy.perDays * 86_400_000;
+    // Only this exact revision (a re-verification of the same offer) is skipped; a new revision nobody asked for is
+    // another unrequested offer, so re-issuing under one offer id cannot get around the limit.
     const recent = ctx.received.filter(
-      (r) => r.subscriptionId === offer.subscriptionId && !r.isCounterReply && r.offerId !== offer.offerId && toMillis(r.receivedAt) > windowStart,
+      (r) =>
+        r.subscriptionId === offer.subscriptionId &&
+        !r.isCounterReply &&
+        !(r.offerId === offer.offerId && r.revision === offer.revision) &&
+        toMillis(r.receivedAt) > windowStart,
     );
     if (recent.length >= policy.maxUnsolicitedOffers) return { ok: false, reason: 'RATE_LIMITED' };
   }

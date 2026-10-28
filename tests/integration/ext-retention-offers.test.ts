@@ -138,6 +138,39 @@ describe("E3 retention offers", () => {
     }
   });
 
+  it("accepting withdraws an exit-plan stop even while the worker holds it", async () => {
+    const a = await stack.login("alex");
+    const subId = `${a.tenantId}:sub:streamly`;
+    expect((await send(a, { subscription: "streamly", variant: "valid", plan: "discount" })).json.status).toBe("VERIFIED");
+    const ps = await stack.propose(a, "E2", ["exit-streamly"], { subscription: subId });
+    await stack.approve(a, ps);
+    const stopId = ps.actions[0].id;
+    // The worker starts the hold (the check day is still ahead), then stops.
+    for (let i = 0; i < 60 && !stack.q1("SELECT 1 FROM ext_exit_plan WHERE action_id=?", stopId); i++) await new Promise((r) => setTimeout(r, 100));
+    await stack.stopWorkers();
+    try {
+      expect(stack.q1<any>("SELECT status FROM ext_exit_plan WHERE action_id=?", stopId)!.status).toBe("ACTIVE");
+      // The customer looks and approves while the hold's job is leased for one of its polls.
+      stack.exec("UPDATE jobs SET status='LEASED', lease_owner='w-test', lease_expires_at=? WHERE kind='ACTION' AND ref_id=?", "2099-01-01T00:00:00.000Z", stopId);
+      const c = acceptKey(await a.json("/api/capabilities/E3"));
+      expect(c).toMatchObject({ available: true });
+      expect(c.spec.params.withdrawStopActionId).toBe(stopId);
+      expect(c.spec.display.note).toMatch(/withdraws the renewal stop you approved \(your exit plan\)/);
+      const pa = await stack.propose(a, "E3", [c.key]);
+      await stack.approve(a, pa);
+      // The poll ends; the next one is not due before the acceptance runs.
+      stack.exec("UPDATE jobs SET status='QUEUED', lease_owner=NULL, lease_expires_at=NULL, available_at=? WHERE kind='ACTION' AND ref_id=?", "2099-01-01T00:00:00.000Z", stopId);
+      await stack.worker();
+      expect((await stack.waitAction(pa.actions[0].id, ["CONFIRMED", "REFUSED", "BLOCKED"])).status).toBe("CONFIRMED");
+      expect(stack.action(stopId).status).toBe("REVOKED");
+      expect(stack.attempts(stopId)).toHaveLength(0);
+      expect(stack.q1<any>("SELECT status FROM ext_exit_plan WHERE action_id=?", stopId)!.status).toBe("VOID");
+    } finally {
+      stack.exec("UPDATE jobs SET status='QUEUED', lease_owner=NULL, lease_expires_at=NULL WHERE kind='ACTION' AND ref_id=? AND lease_owner='w-test'", stopId);
+      if (!stack.workers.some((w) => w.running)) await stack.worker();
+    }
+  });
+
   it("never withdraws a stop approved after the offer was accepted", async () => {
     const a = await stack.login("alex");
     await stack.stopWorkers();
@@ -161,6 +194,29 @@ describe("E3 retention offers", () => {
     } finally {
       if (!stack.workers.some((w) => w.running)) await stack.worker();
     }
+  });
+
+  it("a Labs reset deletes the tenant's merchant private keys and the re-seeded tenant gets fresh ones", async () => {
+    const a = await stack.login("alex");
+    const other = await stack.login("alex");
+    expect((await send(a, { subscription: "streamly", variant: "valid", plan: "discount" })).json.status).toBe("VERIFIED");
+    expect((await send(other, { subscription: "streamly", variant: "valid", plan: "discount" })).json.status).toBe("VERIFIED");
+    const keyFile = (t: string) => path.join(stack.dataDir, "keystore", `${stack.q1<any>("SELECT key_id FROM ext_offer_merchant_key WHERE tenant_id=? AND status='ACTIVE'", t)!.key_id}.json`);
+    const oldFile = keyFile(a.tenantId);
+    const otherFile = keyFile(other.tenantId);
+    expect(fs.existsSync(oldFile)).toBe(true);
+
+    expect((await a.post("/api/labs/reset", {})).status).toBe(200);
+    a.csrf = (await a.json("/api/session")).csrfToken; // the reset signs in again with a fresh session
+    expect(fs.existsSync(oldFile)).toBe(false);
+    expect(fs.existsSync(otherFile)).toBe(true); // another tenant's key is untouched
+    expect(stack.q("SELECT * FROM ext_offer_merchant_key WHERE tenant_id=?", a.tenantId)).toHaveLength(0);
+
+    const r = await send(a, { subscription: "streamly", variant: "valid", plan: "discount" });
+    expect(r.json.status).toBe("VERIFIED");
+    const newFile = keyFile(a.tenantId);
+    expect(newFile).not.toBe(oldFile);
+    expect(fs.existsSync(newFile)).toBe(true);
   });
 
   it("keeps offers and Labs scoped to the tenant and bounded", async () => {

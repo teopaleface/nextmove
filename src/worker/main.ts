@@ -8,7 +8,7 @@ import { runInspectBatchJob } from "../server/capabilities/batch";
 import { runAgentJob } from "../server/agent/orchestrator";
 import { runDueWatches } from "../server/monitoring/watches";
 import { closeSharedBrowser } from "../server/execution/browser";
-import { callModel } from "../server/model/claude-cli";
+import { callModel, cliArgs, hardeningProblems } from "../server/model/claude-cli";
 import { config } from "../server/config";
 
 // Durable local worker. Several workers may run against the same database: claims, leases and fences live in
@@ -63,6 +63,15 @@ async function tick() {
   }
 }
 
+/** The CLI must carry every hardening flag (ADR 0005); otherwise the planner is reported misconfigured, not ready. */
+function checkCliFlags() {
+  const problems = hardeningProblems(cliArgs(config.model, "", {}));
+  if (!problems.length) return true;
+  run(db, "INSERT OR REPLACE INTO system_status(key, value_json, updated_at) VALUES ('model:smoke', ?, ?)", JSON.stringify({ ok: false, status: "MISCONFIGURED", reason: "Model CLI flags are missing hardening", at: new Date().toISOString() }), new Date().toISOString());
+  log(`[worker] model CLI misconfigured: ${problems.join(", ")}`);
+  return false;
+}
+
 async function smoke() {
   if (config.planner === "simulated") {
     run(db, "INSERT OR REPLACE INTO system_status(key, value_json, updated_at) VALUES ('model:smoke', ?, ?)", JSON.stringify({ ok: false, skipped: true, reason: "NEXTMOVE_PLANNER=simulated", at: new Date().toISOString() }), new Date().toISOString());
@@ -76,7 +85,7 @@ async function smoke() {
 
 async function main() {
   log(`[worker] ${workerId} started (mode ${config.mode}, planner ${config.planner})`);
-  if (!process.env.NEXTMOVE_SKIP_SMOKE) smoke().catch(() => undefined);
+  if (checkCliFlags() && !process.env.NEXTMOVE_SKIP_SMOKE) smoke().catch(() => undefined);
   while (!stopping) {
     try {
       await tick();

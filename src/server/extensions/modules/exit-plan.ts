@@ -74,6 +74,20 @@ const STATUS_TEXT: Record<string, string> = {
   VOID: "Closed without stopping",
 };
 
+/** What the customer's exit plans are doing now: an open question first, then waiting plans, then the latest outcome. */
+function planHeadline(env: CapEnv, live: { a: any; spec: ActionSpec }[]) {
+  const withRow = live.map((p) => ({ ...p, row: one<any>(env.db, "SELECT status FROM ext_exit_plan WHERE action_id=? AND tenant_id=?", p.a.id, env.tenantId)?.status as string | undefined }));
+  const open = withRow.filter((p) => ["APPROVED", "EXECUTING"].includes(p.a.status));
+  const asked = open.find((p) => p.row === "ASKED");
+  if (asked) return `${asked.spec.merchantName}: the check day came and NextMove needs your answer`;
+  if (open.length) return `${open.length} exit plan${open.length === 1 ? "" : "s"} waiting for the check day`;
+  const last = withRow[0];
+  if (!last) return "Decide now when a subscription should end";
+  if (last.a.status === "CONFIRMED") return `${last.spec.merchantName}: the condition was not met, so renewal was stopped`;
+  if (last.row === "KEPT") return `${last.spec.merchantName}: you used it enough, so it was kept`;
+  return `${last.spec.merchantName}: the exit plan closed without stopping anything`;
+}
+
 async function analyzeE2(env: CapEnv): Promise<Analysis> {
   const subs = all<any>(env.db, "SELECT * FROM subscriptions WHERE tenant_id=? AND context_id=? AND dataset='ui' AND state IN ('TRIAL','ACTIVE') ORDER BY state DESC, merchant_name", env.tenantId, env.contextId);
   const blocks: Block[] = [];
@@ -195,8 +209,10 @@ async function analyzeE2(env: CapEnv): Promise<Analysis> {
     capability: "E2",
     title: "Exit plan",
     contextId: env.contextId,
-    headline: live.some((p) => ["APPROVED", "EXECUTING"].includes(p.a.status)) ? `${live.filter((p) => ["APPROVED", "EXECUTING"].includes(p.a.status)).length} exit plan(s) active` : "Decide now when a subscription should end",
-    summary: "Approve once: on the check day NextMove stops renewal only if you did not use the service as often as you said. If the data cannot show it, you are asked.",
+    headline: planHeadline(env, live),
+    summary: blocks.some((b) => b.kind === "question" && !b.answer)
+      ? "The usage you shared cannot show whether you used it enough. Choose Keep it or Stop renewal on the Exit plan screen; nothing is stopped without your answer."
+      : "Approve once: on the check day NextMove stops renewal only if you did not use the service as often as you said. If the data cannot show it, you are asked.",
     evidence: ["BANK_RECORD", "SIMULATED_MERCHANT_API", "DETERMINISTIC_CALCULATION"],
     blocks,
     inputs,
@@ -251,6 +267,10 @@ async function holdExitPlan(c: { db: DatabaseSync; action: any; spec: ActionSpec
   if (row?.status === "ASKED" && !answerFor(db, action) && nowMs(db, t) < toMs(p.terms.cancelDeadline)) return poll(db, t, p.terms.cancelDeadline);
 
   const r = await new MerchantClient(db, t).getContract(sub.merchant_id, sub.subscriber_account_id, sub.contract_id).catch(() => null);
+  // The read above awaits the provider, and the stop may have been withdrawn meanwhile (an accepted retention offer
+  // revokes it). Decide nothing then: the next run sees the settled action and finishes without touching it.
+  const still = one<any>(db, "SELECT a.status, g.status AS grant_status FROM proposal_actions a LEFT JOIN grants g ON g.id=? WHERE a.id=? AND a.tenant_id=?", grant.id, action.id, t);
+  if (still?.status !== "APPROVED" || still.grant_status !== "ACTIVE") return poll(db, t);
   const contract = r?.contract;
   if (!contract) {
     // No provider read: never guess. Keep trying until the deadline, then close unsent.

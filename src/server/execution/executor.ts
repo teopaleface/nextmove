@@ -10,10 +10,12 @@ import { browserStopRenewal } from "./browser";
 import { recordConfirmed, recordSettled } from "./effects";
 import { reconcileInternalTransfer, runInternalTransfer, transferWait } from "./internal-transfer";
 import { SHIELD_OPERATIONS, runShieldDecision } from "../bank/trial-shield";
+import { balanceOf } from "../bank/ledger";
 import { extPreDispatch, runExtOperation } from "../extensions/registry";
 import { enqueueJob, finishJob, renewLease, type Job } from "./jobs";
-import { taskEvent, taskIdForAction } from "../agent/events";
+import { taskEvent, taskIdForAction, type EvidenceLevel } from "../agent/events";
 import type { MerchantContractView, OperationResponse } from "../../shared/merchant-contract";
+import { formatMoney } from "../../shared/money";
 
 // One durable action attempt: persisted before any external effect, authorized at the final dispatch gate under
 // the worker's fence, independently read back, and closed with a receipt or an explicit non-success status.
@@ -273,6 +275,25 @@ async function verifyAndConfirm(db: DatabaseSync, client: MerchantClient, action
     }
     checks.push(`contract state verified (terms revision ${c.contract!.termsRevision})`);
   }
+  // An order charged above the approved maximum is not a success: no receipt and no booking are written, and the
+  // attempt and the action both stay UNKNOWN with the merchant's reference so the customer can take it up with them.
+  if (spec.operation === "PLACE_ORDER") {
+    const charge = Number((req.receipt.details as any)?.cardChargeMinor ?? 0);
+    const max = one<any>(db, "SELECT max_debit_minor FROM grants WHERE action_id=?", action.id)?.max_debit_minor;
+    if (!Number.isSafeInteger(charge) || charge < 0 || (charge > 0 && (max == null || charge > max))) {
+      const who = spec.merchantName ?? m;
+      tx(db, () =>
+        recordSettled(db, action.id, attemptId, "UNKNOWN", {
+          reason: `${who} placed order ${req.receipt!.reference} but reported a card charge of ${Number.isSafeInteger(charge) ? formatMoney(charge) : "an unreadable amount"}, more than the ${formatMoney(Number(max ?? 0))} you approved. The bank did not book that charge and this is not counted as done; check the order with ${who}.`,
+          code: "CHARGE_ABOVE_APPROVED",
+          reference: req.receipt!.reference,
+          cardChargeMinor: Number.isSafeInteger(charge) ? charge : null,
+          approvedMaxDebitMinor: max ?? null,
+        }),
+      );
+      return false;
+    }
+  }
   tx(db, () =>
     recordConfirmed(db, action.id, attemptId, {
       issuer: m,
@@ -354,8 +375,22 @@ async function runBankInternal(db: DatabaseSync, action: any, spec: ActionSpec, 
   if (spec.operation === "INTERNAL_TRANSFER") return runInternalTransfer(db, action, spec, attemptId, authorize, (reason) => gateDenied(db, action.id, attemptId, reason));
   const gate = await authorize();
   if (!gate.ok) return gateDenied(db, action.id, attemptId, gate.reason);
+  // Fenced: the whole bank step commits (as a savepoint of this transaction) only while the attempt still holds its
+  // dispatch authorization. Once recovery has marked it UNKNOWN, reconciliation owns it, and a stalled worker's late
+  // commit is dropped, so "nothing in the bank's records" stays true. Every handler below is synchronous.
+  let pending: Promise<void> | undefined;
+  const live = tx(db, () => {
+    if (!one(db, "SELECT 1 FROM attempts WHERE id=? AND status IN ('DISPATCH_AUTHORIZED','SENT')", attemptId)) return false;
+    if (spec.operation.startsWith("EXT_")) pending = runExtOperation({ db, action, spec, attemptId });
+    else bankInternalStep(db, action, spec, attemptId);
+    return true;
+  });
+  if (!live) return;
+  await pending;
+}
+
+function bankInternalStep(db: DatabaseSync, action: any, spec: ActionSpec, attemptId: string) {
   if (SHIELD_OPERATIONS.has(spec.operation)) return runShieldDecision(db, action, spec, attemptId);
-  if (spec.operation.startsWith("EXT_")) return runExtOperation({ db, action, spec, attemptId });
   if (spec.operation === "CARD_FREEZE") {
     const acct = one<any>(db, "SELECT * FROM accounts WHERE id=? AND tenant_id=? AND context_id=?", spec.params.accountId, action.tenant_id, action.context_id);
     const card = acct?.card_json ? JSON.parse(acct.card_json) : null;
@@ -387,7 +422,6 @@ async function runBankInternal(db: DatabaseSync, action: any, spec: ActionSpec, 
     ? one<any>(db, "SELECT * FROM accounts WHERE id=? AND tenant_id=? AND context_id=?", spec.params.fromAccountId, action.tenant_id, action.context_id)
     : one<any>(db, "SELECT * FROM accounts WHERE id=? AND tenant_id=?", spec.params.fromAccountId, action.tenant_id);
   if (!from) return void tx(db, () => recordSettled(db, action.id, attemptId, "REFUSED", { reason: "Source account not found" }));
-  const { balanceOf } = await import("../bank/ledger");
   if (balanceOf(db, from.id) < amount) return void tx(db, () => recordSettled(db, action.id, attemptId, "REFUSED", { reason: "Insufficient funds in the source account" }));
   if (amount > spec.money.maxDebitMinor) return void tx(db, () => recordSettled(db, action.id, attemptId, "REFUSED", { reason: "Amount exceeds the approved maximum" }));
   const reference = `NMB-${sha256Hex(action.logical_key).slice(0, 8).toUpperCase()}`;
@@ -447,9 +481,11 @@ export async function runReconcileJob(db: DatabaseSync, job: Job, ctx: WorkerCtx
   run(db, "UPDATE attempts SET reconcile_checks=reconcile_checks+1, next_reconcile_at=NULL WHERE id=?", attempt.id);
   const checkNo = attempt.reconcile_checks + 1;
   const taskId = taskIdForAction(db, action.id);
-  if (spec.operation === "INTERNAL_TRANSFER") {
+  // A bank-internal step is reconciled against the bank's own records only; the merchant never saw it.
+  if (spec.route === "BANK_INTERNAL") {
     try {
-      reconcileInternalTransfer(db, attempt, action, spec, checkNo);
+      if (spec.operation === "INTERNAL_TRANSFER") reconcileInternalTransfer(db, attempt, action, spec, checkNo);
+      else reconcileBankInternal(db, attempt, action, spec, checkNo);
     } catch (e: any) {
       ctx.log(`[worker] reconcile ${attempt.id} error ${String(e?.message ?? e).slice(0, 160)}`);
       scheduleNextCheck(db, attempt.id);
@@ -493,6 +529,73 @@ export async function runReconcileJob(db: DatabaseSync, job: Job, ctx: WorkerCtx
     if (attempt.status === "UNKNOWN") scheduleNextCheck(db, attempt.id);
   }
   finishJob(db, job, ctx.workerId, { status: "DONE" });
+}
+
+/**
+ * Reconcile an UNKNOWN bank-internal attempt other than a transfer (the worker stopped between the gate and the
+ * commit, or the step threw). Each such step writes its change and its receipt in one fenced transaction, so the
+ * bank's own records answer the question: the action's receipt, cross-checked against the record the step changes,
+ * means it happened; neither means the transaction rolled back and nothing changed. A disagreement stays UNKNOWN.
+ */
+function reconcileBankInternal(db: DatabaseSync, attempt: any, action: any, spec: ActionSpec, checkNo: number) {
+  const t = action.tenant_id;
+  const taskId = taskIdForAction(db, action.id);
+  const receipt = one<any>(db, "SELECT * FROM receipts WHERE tenant_id=? AND (action_id=? OR attempt_id=?) AND status='CONFIRMED' ORDER BY verified_at LIMIT 1", t, action.id, attempt.id);
+  const effect = bankEffectRecord(db, action, spec, attempt, Boolean(receipt));
+  if (receipt && effect?.found !== false) {
+    taskEvent(db, { taskId, tenantId: t, kind: "reconcile", label: `Check ${checkNo}: the bank's records show this step (ref ${receipt.issuer_reference}); recording it`, evidence: "BANK_RECORD" });
+    const ver = json<any>(receipt.verification_json, {});
+    tx(db, () =>
+      recordConfirmed(db, action.id, attempt.id, {
+        issuer: receipt.issuer,
+        reference: receipt.issuer_reference,
+        effectiveAt: receipt.effective_at,
+        accessUntil: receipt.access_until,
+        termsRevision: receipt.terms_revision,
+        details: json<any>(receipt.money_effect_json, {})?.details ?? {},
+        channel: "BANK",
+        verification: { method: `bank record read back (reconciliation check ${checkNo})`, checks: [`receipt ${receipt.issuer_reference} for this action`, ...(effect ? [effect.label] : [])] },
+        evidence: (ver.evidence ?? "BANK_RECORD") as EvidenceLevel,
+      }),
+    );
+    return;
+  }
+  if (!receipt && !effect?.found) {
+    taskEvent(db, { taskId, tenantId: t, kind: "reconcile", label: `Check ${checkNo}: the bank has no record of this step; it was rolled back and nothing changed`, evidence: "BANK_RECORD" });
+    tx(db, () => recordSettled(db, action.id, attempt.id, "BLOCKED", { reason: "The bank step stopped before it was recorded, so nothing was changed. Approve it again to retry." }));
+    return;
+  }
+  taskEvent(db, { taskId, tenantId: t, kind: "reconcile", label: `Check ${checkNo} of ${RECONCILE_SCHEDULE_MIN.length}: the bank's records disagree (${receipt ? `receipt ${receipt.issuer_reference}, ${effect!.label}` : `${effect!.label}, no receipt`}); outcome still unknown`, evidence: "BANK_RECORD" });
+  scheduleNextCheck(db, attempt.id);
+  if (checkNo >= RECONCILE_SCHEDULE_MIN.length) run(db, "UPDATE proposal_actions SET result_json=json_set(COALESCE(result_json,'{}'), '$.reason', ?) WHERE id=?", "Still unknown after 5 checks: the bank's records disagree about this step. NextMove will not retry it; contact the bank.", action.id);
+}
+
+/**
+ * The record a bank-internal step changes, read independently of its receipt. Null when the receipt itself is that
+ * record (a Trial Shield block, an extension step) or, for a card, once a receipt exists (the card may have changed since).
+ */
+function bankEffectRecord(db: DatabaseSync, action: any, spec: ActionSpec, attempt: any, hasReceipt: boolean): { found: boolean; label: string } | null {
+  const posting = (sourceEventId: string) => {
+    const e = one<any>(db, "SELECT id FROM ledger_entries WHERE tenant_id=? AND source_event_id=?", action.tenant_id, sourceEventId);
+    return { found: Boolean(e), label: e ? `ledger entry ${e.id}` : "no ledger posting" };
+  };
+  switch (spec.operation) {
+    case "PAYMENT":
+      return posting(`payment:${action.logical_key}`);
+    case "OWNER_TRANSFER":
+      return posting(`transfer:${action.logical_key}`);
+    case "HOLD_ALLOW":
+      return posting(`shield-allow:${spec.subjectRef}`);
+    case "CARD_FREEZE": {
+      if (hasReceipt) return null;
+      const card = json<any>(one<any>(db, "SELECT card_json FROM accounts WHERE id=? AND tenant_id=?", spec.params.accountId, action.tenant_id)?.card_json, null);
+      const reference = `NMC-${sha256Hex(`${action.logical_key}:${attempt.id}`).slice(0, 8).toUpperCase()}`;
+      const found = card?.statusReference === reference;
+      return { found, label: found ? `card status set under ${reference}` : "card status not changed by this step" };
+    }
+    default:
+      return null;
+  }
 }
 
 /** Manual "check again" from the exception screen: an immediate extra read, never a resubmission. */

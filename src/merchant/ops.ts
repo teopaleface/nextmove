@@ -10,7 +10,7 @@ import type {
   MerchantOperation,
   MerchantEvent,
 } from "../shared/merchant-contract";
-import { toLocalIso, toMs } from "../shared/time";
+import { addLocalMonths, localDaysBetween, toLocalIso, toMs, withLocalDay } from "../shared/time";
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 const j = (s: string | null | undefined, f: any = {}) => {
@@ -309,10 +309,7 @@ function applyOperation(db: DatabaseSync, account: AuthedAccount, contract: any,
       const pause = details.pause;
       const months = Number(p.months);
       if (!pause || !pause.allowedMonths.includes(months)) return { error: "VALIDATION", message: "Pause length not offered", httpStatus: 400 };
-      const start = new Date(toMs(pause.startsAt));
-      const resume = new Date(start);
-      resume.setUTCMonth(resume.getUTCMonth() + months);
-      const resumesAt = toLocalIso(resume.getTime());
+      const resumesAt = toLocalIso(addLocalMonths(toMs(pause.startsAt), months));
       mrun(db, "UPDATE m_contracts SET next_charge_at=?, access_until=?, pending_json=? WHERE tenant_id=? AND id=?", resumesAt, pause.startsAt, JSON.stringify({ pause: { startsAt: pause.startsAt, resumesAt, months } }), t, contract.id);
       bump(db, t, contract.id);
       return { effectiveAt: pause.startsAt, accessUntil: pause.startsAt, termsRevision: contract.terms_revision + 1, details: { resumesAt, months, feeMinor: 0, resumePriceMinor: contract.price_minor } };
@@ -320,13 +317,16 @@ function applyOperation(db: DatabaseSync, account: AuthedAccount, contract: any,
     case "CHANGE_BILLING_DATE": {
       const day = Number(p.billingDay);
       if (!details.supportedBillingDays?.includes(day)) return { error: "VALIDATION", message: "Billing day not supported", httpStatus: 400 };
-      const next = new Date(toMs(contract.next_charge_at));
-      const notice = toMs(contract.next_charge_at) - toMs(nowIso) >= 3 * 86_400_000;
-      const shift = day - details.billingDay;
-      if (!notice) return { error: "VALIDATION", message: "Too late for the next bill; request at least 3 days before", httpStatus: 409 };
-      next.setUTCDate(next.getUTCDate() + shift);
+      if (!contract?.next_charge_at) return { error: "VALIDATION", message: "No upcoming bill to move", httpStatus: 409 };
+      const now = toMs(nowIso);
+      const current = toMs(contract.next_charge_at);
+      if (current - now < 3 * 86_400_000) return { error: "VALIDATION", message: "Too late for the next bill; request at least 3 days before", httpStatus: 409 };
+      // The next bill moves to the new day of the same local month; an earlier day must still give 3 days' notice.
+      const next = withLocalDay(current, day);
+      if (next - now < 3 * 86_400_000) return { error: "VALIDATION", message: "The new billing day is less than 3 days away; choose a later day", httpStatus: 409 };
+      const shift = localDaysBetween(current, next);
       const proration = shift > 0 ? Math.floor((contract.price_minor * shift * 2 + 30) / 60) : 0;
-      const firstBillAt = toLocalIso(next.getTime());
+      const firstBillAt = toLocalIso(next);
       details.billingDay = day;
       details.nextBillAmountMinor = contract.price_minor + proration;
       details.prorationMinor = proration;

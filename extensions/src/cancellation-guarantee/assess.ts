@@ -1,6 +1,6 @@
 import { endingInForce, type MerchantReceipt } from '../shared/receipts.ts';
 import { sameScope, type Scope } from '../shared/authority.ts';
-import { assertCurrency, assertMinor } from '../shared/money.ts';
+import { assertCurrency, assertMinor, assertNonNegativeMinor } from '../shared/money.ts';
 import { addDays, assertInstant, isAfter, isBefore, localDate, type Instant, type IsoDate } from '../shared/time.ts';
 import { invariant } from '../shared/errors.ts';
 
@@ -156,7 +156,8 @@ export function assessPostCancellationCharge(input: AssessmentInput): Assessment
   const linkedCredits = input.credits.filter((c) => c.refundsTxId === tx.txId && sameScope(c.scope, tx.scope));
   if (linkedCredits.some((c) => c.currency !== tx.currency)) return review('CREDIT_CURRENCY_MISMATCH');
   const alreadyRefundedMinor = linkedCredits.reduce((total, c) => {
-    assertMinor(c.amountMinor, 'credit.amountMinor');
+    // A negative "refund" would raise the disputable amount above the charge.
+    assertNonNegativeMinor(c.amountMinor, 'credit.amountMinor');
     return total + c.amountMinor;
   }, 0);
   if (alreadyRefundedMinor >= tx.amountMinor) return { kind: 'ALREADY_HANDLED', reason: 'FULLY_REFUNDED' };

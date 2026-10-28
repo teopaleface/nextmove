@@ -8,6 +8,7 @@ import {
   CORRELATION_HEADER,
   IDEMPOTENCY_HEADER,
   SIGNATURE_HEADER,
+  partnerSigningString,
   type MerchantContractView,
   type MerchantRequestView,
   type OperationRequestBody,
@@ -60,8 +61,8 @@ export function delegatedToken(db: DatabaseSync, tenantId: string, merchantId: s
   return decryptSecret(link.token_cipher);
 }
 
-export function signOperation(correlationId: string, idempotencyKey: string, rawBody: string) {
-  return `sha256=${createHmac("sha256", localSecrets().partnerHmacKey).update([correlationId, idempotencyKey, rawBody].join("\n")).digest("hex")}`;
+export function signOperation(method: string, path: string, correlationId: string, idempotencyKey: string, rawBody: string) {
+  return `sha256=${createHmac("sha256", localSecrets().partnerHmacKey).update(partnerSigningString(method, path, correlationId, idempotencyKey, rawBody)).digest("hex")}`;
 }
 
 export class MerchantClient {
@@ -103,6 +104,8 @@ export class MerchantClient {
   async operate(merchantId: string, accountId: string, contractId: string | null, body: OperationRequestBody, ids: { correlationId: string; idempotencyKey: string }): Promise<{ status: number; response: OperationResponse }> {
     const raw = JSON.stringify(body);
     const path = contractId ? `/m/${merchantId}/api/v1/contracts/${encodeURIComponent(contractId)}/operations` : `/m/${merchantId}/api/v1/operations`;
+    // Sign the pathname exactly as it goes on the wire (after URL normalisation), so the merchant recomputes the same string.
+    const signedPath = validateMerchantUrl(`${config.merchantBaseUrl}${path}`, merchantId).pathname;
     try {
       const r = await safeFetch(merchantId, path, {
         method: "POST",
@@ -111,7 +114,7 @@ export class MerchantClient {
           "content-type": "application/json",
           [CORRELATION_HEADER]: ids.correlationId,
           [IDEMPOTENCY_HEADER]: ids.idempotencyKey,
-          [SIGNATURE_HEADER]: signOperation(ids.correlationId, ids.idempotencyKey, raw),
+          [SIGNATURE_HEADER]: signOperation("POST", signedPath, ids.correlationId, ids.idempotencyKey, raw),
         },
         body: raw,
         timeoutMs: 10_000,

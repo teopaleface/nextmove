@@ -47,6 +47,13 @@ describe('issueCertificate', () => {
     assert.equal(record.receiptId, 'NF-1047');
   });
 
+  it('shows the merchant’s own reference but keys the record on the unique receipt id', () => {
+    const { compact, record } = issue({ receipts: [receipt({ receiptId: 'rcp-bank-1', merchantReference: 'NF-1047' })] });
+    const result = check(compact);
+    assert.equal(result.ok && result.disclosed.subscriptionRef, 'NF-1047');
+    assert.equal(record.receiptId, 'rcp-bank-1');
+  });
+
   it('never contains amounts, the customer or bank identifiers', () => {
     const { compact } = issue();
     const decoded = compact.split(/[.~]/).map((p) => Buffer.from(p, 'base64url').toString('utf8')).join(' ');

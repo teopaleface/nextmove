@@ -489,9 +489,11 @@ post("/preferences", async (c) => {
 /* ------------------------------------------------------------------------------------------ uploads */
 post("/uploads", async (c) => {
   const ses = s(c);
-  const len = Number(c.req.headers.get("content-length") ?? 0);
-  if (len > 5 * 1024 * 1024) throw new HttpError(413, "TOO_LARGE", "Images must be 4 MB or smaller");
-  const form = await c.req.formData();
+  // Bounded read: a chunked upload without content-length is cut off at the same 5 MB, not buffered whole first.
+  const raw = await readLimited(c.req, 5 * 1024 * 1024, "Images must be 4 MB or smaller");
+  const form = await new Response(raw, { headers: { "content-type": c.req.headers.get("content-type") ?? "" } }).formData().catch(() => {
+    throw new HttpError(400, "BAD_FORM", "Send the image as a form upload");
+  });
   const file = form.get("file");
   if (!file || typeof file === "string") throw new HttpError(400, "NO_FILE", "Choose an image");
   const buf = Buffer.from(await (file as File).arrayBuffer());
@@ -690,8 +692,7 @@ get("/dev/status", (c) => {
 
 /* -------------------------------------------------------------------------------------------- inbox */
 post("/inbox/merchant", async ({ db, req }) => {
-  const raw = await req.text();
-  if (raw.length > 64 * 1024) throw new HttpError(413, "TOO_LARGE", "Event too large");
+  const raw = new TextDecoder().decode(await readLimited(req, 64 * 1024, "Event too large"));
   if (!verifyInboxSignature(raw, req.headers.get("x-nextmove-signature"))) throw new HttpError(401, "BAD_SIGNATURE", "Signature invalid");
   const r = storeInboxEvent(db, raw);
   if (!r.ok) throw new HttpError(400, "BAD_EVENT", r.error ?? "Invalid event");
@@ -712,6 +713,35 @@ function match(pattern: string, pathName: string): Record<string, string> | null
   return params;
 }
 
+/**
+ * Read a request body, giving up as soon as it passes `limit` bytes: a declared content-length is refused up front,
+ * and a chunked body is counted as it streams in and cancelled at the limit, so it is never buffered whole first.
+ */
+async function readLimited(req: Request, limit: number, message: string): Promise<Uint8Array<ArrayBuffer>> {
+  if (Number(req.headers.get("content-length") ?? 0) > limit) throw new HttpError(413, "TOO_LARGE", message);
+  if (!req.body) return new Uint8Array(0);
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > limit) {
+      await reader.cancel().catch(() => undefined);
+      throw new HttpError(413, "TOO_LARGE", message);
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(size);
+  let at = 0;
+  for (const c of chunks) {
+    out.set(c, at);
+    at += c.byteLength;
+  }
+  return out;
+}
+
 export async function handleApi(req: Request, segments: string[]): Promise<Response> {
   const url = new URL(req.url);
   const pathName = `/${segments.map(encodeURIComponent).join("/")}`;
@@ -729,8 +759,7 @@ export async function handleApi(req: Request, segments: string[]): Promise<Respo
     let cached: any;
     const body = async () => {
       if (cached !== undefined) return cached;
-      const text = await req.text();
-      if (text.length > 256 * 1024) throw new HttpError(413, "TOO_LARGE", "Request too large");
+      const text = new TextDecoder().decode(await readLimited(req, 256 * 1024, "Request too large"));
       try {
         cached = text ? JSON.parse(text) : {};
       } catch {
