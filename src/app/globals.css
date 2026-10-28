@@ -1384,7 +1384,8 @@ details.group[open] > summary {
     padding-left: 16px;
     padding-right: 16px;
   }
-  .sheet {
+  .sheet,
+  .sheet-actions {
     margin-left: -16px;
     margin-right: -16px;
     padding-left: 16px;
@@ -1408,6 +1409,30 @@ details.group[open] > summary {
 
 .composer textarea {
   min-width: 0;
+}
+
+/* Keep analysis layout/type overridable by the display mode. */
+.analysis-metrics.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.analysis-metric-value {
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 650;
+  margin-top: 4px;
+}
+
+.display-preference-error {
+  border-left: 2px solid var(--warning);
+  margin: 8px 0 16px;
+  padding: 12px 16px;
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.display-preference-error p {
+  margin: 0 0 8px;
 }
 
 /* Simple mode changes reading and orientation, never financial content or authority. */
@@ -1479,7 +1504,7 @@ details.group[open] > summary {
   line-height: 32px;
 }
 
-.app[data-simple-mode="true"] :is(.row-title, .row-amount, .btn, .input, .select, .textarea, .composer textarea, .account-tile .amt, .kv dd) {
+.app[data-simple-mode="true"] :is(.row-title, .row-amount, .btn, .input, .select, .textarea, .composer textarea, .account-tile .amt, .kv dd, .analysis-metric-value) {
   font-size: 20px;
   line-height: 30px;
 }

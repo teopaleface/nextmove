@@ -141,3 +141,36 @@ Existing demo sessions/data were preserved. For the newly added provider fixture
 Recordings, the evidence manifest and long/live browser E2E remain postponed by Teo. The earlier crash-recovery clock mismatch and the other open items above remain explicit; the full combined UI and long-lived scheduled behavior have not been revalidated in a browser in this pass. The untracked `jev-discord/` directory is unrelated and remains untouched.
 
 Final local smoke after integration: app source build `c05cdd9` is running in production mode on 127.0.0.1:3210, merchant on 3211, worker healthy. The startup live-model smoke succeeded on `claude-sonnet-5-5` (3.8 seconds). A newly created isolated Alex copy exposes T4, A15–A18 and O6–O8; all eight analysis endpoints returned HTTP 200. This was a short API smoke, not a browser E2E or recording. Current process IDs remain in `.data/pids.json`.
+
+
+## Checkpoint 4 — approved Financial Airbag and Bunic Mode
+
+Review target: branch `wave2/approved-features` at `/Users/teo/.t3/worktrees/nextmove-wave2-combined`. It combines the isolated Financial Airbag and Bunic Mode branches. The local bank runs at `http://localhost:3290`, merchant at `127.0.0.1:3291`, through:
+
+```sh
+NEXTMOVE_BANK_PORT=3290 NEXTMOVE_MERCHANT_PORT=3291 npm run demo
+```
+
+The original checkout and its existing demo data are separate. Historical `discord-proposals` and `dp-*` worktrees were preserved. No remote push, deployment or real financial operation was performed.
+
+### Delivered
+
+- **O9 Financial Airbag:** Alex Home opens a review with all services kept unchanged. Explicit supported one-month pause or renewal-off choices produce an exact existing approval manifest. Essential bills, data/student dependencies and required playback remain protected. Each approved item retains its own outcome and receipt. Pending/unknown outcomes keep their costs due; disabled execution contributes no hypothetical reduction. The catalogue now has 31 distinct capability IDs.
+- **Simple mode (Bunic Mode):** Profile → Display and voice. Larger text, larger controls, stacked financial rows and screen guides across the existing four tabs. Boolean preference uses the existing tenant/context table and CSRF-protected endpoint. It persists on reload and remains separate between customers and between personal/business contexts.
+- **Optional voice:** user-initiated screen summary and editable spoken draft. No automatic task submission or financial approval. Stop, errors, edits, route/context/session changes, hidden tabs and unmount release the owned voice session. Same-origin microphone policy permits a browser request, without granting permission or starting audio.
+
+### Checks and corrections
+
+- Focused feature checks passed: 17 Airbag tests, 24 display/voice lifecycle tests and four preference API tests. A further disabled-execution regression was added after review.
+- Combined `npm test`: **182 tests passed in 21 files**, 75.59 seconds. These are unit/integration checks, including simulated-provider execution; they are not the postponed live-model browser E2E suite.
+- `npm run build`: pass, including TypeScript. A real local dependency installation was needed because Turbopack refuses the initial node_modules symlink outside the worktree.
+- `npm run typecheck` and `git diff --check`: pass.
+- Two independent read-only reviews found three P2 issues, all corrected: disabled Airbag actions reduced the comparison; inline styles defeated enlarged metric stacking/labels; failed preference saves lost visible error feedback after navigation.
+- Browser QA confirmed the Airbag pause + renewal-off workflow with two separate confirmed receipts. This isolated Alex copy's recorded 30-day costs changed **2,036.99 → 1,958.00 RON**, with cash **110,000 RON** before and after.
+- Simple mode's four tabs were checked at **360 and 390px** without horizontal overflow. Financial metrics stack to one column and detail labels use 18px. The existing 4px review action-bar overflow was corrected and checked against the final build at 360px.
+- Reload persistence, separate-customer display state, business/personal context isolation and restoration, and visible failed-save feedback after navigation were exercised in the browser. The settings retry path recovered.
+- Browser speech mocks verified no audio starts automatically, draft text preserves typed input, Enter does not submit a voice draft, editing stops recognition and ignores late results, and read-aloud has a working Stop action. Test mocks were removed by reloading before the final UI checks.
+
+### Remaining verification
+
+Real microphone capture, speech-service availability and audible speaker output were not exercised. They need a human device check; no claim of real audio acceptance is made. Recordings, the evidence manifest and long/live-model E2E remain postponed as instructed. The earlier unrelated open items in checkpoints 2–3 remain tracked there.

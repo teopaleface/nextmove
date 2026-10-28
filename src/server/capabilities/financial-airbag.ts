@@ -2,6 +2,7 @@ import { all, json, one } from "../db/connection";
 import { sha256Hex } from "../canonical";
 import { accountsFor } from "../bank/ledger";
 import { scheduledItems } from "../bank/forecast";
+import { featureAllowed, featureForRoute } from "../authority/features";
 import { pauseEffect } from "../finance/capabilities";
 import { airbagProjection, airbagProtection, type AirbagChange } from "../finance/financial-airbag";
 import type { MerchantContractView } from "../../shared/merchant-contract";
@@ -85,7 +86,8 @@ export const O9: CapabilityDef = {
         rows.push({ cells: [sub.merchant_name, "Keep", "This review supports 19 service choices; review this service separately."] });
         continue;
       }
-      const unavailableReason = busy ? `Another change is ${busy.status.toLowerCase()}; follow the existing action.` : pending ? "The provider already has a pending change or scheduled pause; review its outcome first." : undefined;
+      const executionAllowed = featureAllowed(featureForRoute(provider!.connector as "PARTNER_API" | "ISOLATED_BROWSER"));
+      const unavailableReason = !executionAllowed ? "Execution is disabled in this environment; current scheduled costs stay due." : busy ? `Another change is ${busy.status.toLowerCase()}; follow the existing action.` : pending ? "The provider already has a pending change or scheduled pause; review its outcome first." : undefined;
       rows.push({ cells: [sub.merchant_name, choice === "pause" ? "Pause 1 month" : choice === "stop" ? "Renewal off" : "Keep", unavailableReason ?? (canPause ? "Provider pause available; access stops temporarily and resumes automatically." : "Provider pause unavailable. Renewal-off preserves paid access, then ends it.")] });
       if (choice === "keep") continue;
       const p = choice === "pause" ? pauseEffect({ monthlyMinor: c.priceMinor, pauseStartsAt: pause!.startsAt!, months: 1, allowedMonths: pause!.allowedMonths!, feeMinor: 0, window }) : null;

@@ -16,7 +16,19 @@ NextMove has its own yellow/ink/white identity inspired by the supplied banking 
 
 ## Discord feature extension
 
-The original 22 capability groups are extended with five feature packages: interactive agent charts/sliders; Trial Shield for a 0/1 RON card verification followed by a held charge; four hidden-cost analyses; an editable route to the home goal; and Cash Autopilot/Bill Vault/Overdraft Shield using approved internal transfers. The catalogue now covers 30 distinct capability IDs. All provider, charge-hold and transfer operations remain synthetic. See [the feature notes](docs/DISCORD-PROPOSALS.md) and [ADR 0008](docs/adr/0008-scheduled-bank-internal-transfers.md).
+The original 22 capability groups are extended with interactive agent charts/sliders; Trial Shield for a 0/1 RON card verification followed by a held charge; four hidden-cost analyses; an editable route to the home goal; and Cash Autopilot/Bill Vault/Overdraft Shield using approved internal transfers. Financial Airbag adds O9, bringing the catalogue to 31 distinct capability IDs. All provider, charge-hold and transfer operations remain synthetic. See [the feature notes](docs/DISCORD-PROPOSALS.md) and [ADR 0008](docs/adr/0008-scheduled-bank-internal-transfers.md).
+
+The approved follow-up also adds [Simple mode (Bunic Mode)](docs/features/bunic-mode.md): larger text and controls, context-scoped saved preferences, optional read-aloud and editable voice drafts. Profile → Display and voice switches it on. Speech never sends a question or approves an action. Actual microphone/speaker behavior still needs a human device check; browser speech support varies.
+
+[Financial Airbag](docs/features/financial-airbag.md) is on Alex Home. All services initially stay unchanged. Choose a supported pause or renewal-off, recalculate and review the exact selected actions before approval. Essential bills and data/student-tool dependencies stay protected. Confirmed future charges avoided do not increase current cash.
+
+The combined review branch is `wave2/approved-features`, in `/Users/teo/.t3/worktrees/nextmove-wave2-combined`. To run it alongside the original local demo, from this checkout:
+
+```sh
+NEXTMOVE_BANK_PORT=3290 NEXTMOVE_MERCHANT_PORT=3291 npm run demo
+```
+
+Open [the separate local demo](http://localhost:3290). This host also keeps its browser session separate from the original demo on `127.0.0.1:3210`. Unit/integration tests pass: **182 tests in 21 files**. Production build and targeted 360/390px browser checks pass. Full recordings, the evidence manifest and long live-model E2E remain postponed.
 
 ## Requirements
 

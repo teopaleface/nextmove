@@ -8,9 +8,9 @@ The mode raises body and financial row text to 20px, supporting text to 18px and
 
 The client reads `preferences.simple_mode` from `GET /api/permissions` and saves a boolean through `POST /api/preferences` with `{ "key": "simple_mode", "value": true }` (or false). Missing values mean off. Strings such as `"true"` do not enable the mode. Storage is the existing authenticated tenant/context preferences table; no schema or browser-storage key is added.
 
-The parent integration owns the server allowlist addition for boolean `simple_mode`. It also owns the narrow `Permissions-Policy` change to permit `microphone=(self)` while keeping camera/geolocation denied. Neither server/config file belongs to this UI patch.
+The server allowlists boolean `simple_mode` and rejects ambiguous nonboolean values. Its `Permissions-Policy` permits `microphone=(self)` while keeping camera/geolocation denied. This enables a browser permission request; it does not grant microphone access or start capture.
 
-In-memory identity includes the session identity and customer/tenant/context. Old loads, failed writes and acknowledgements cannot update a later scope. Switching context or signing out clears the display state immediately, stops voice, and waits for an already-sent preference write before changing the server session's context. A failed save restores the previous display value and shows a retryable error; it never announces that an unsaved value was persisted. A failed load offers retry.
+In-memory identity includes the session identity and customer/tenant/context. Old loads, failed writes and acknowledgements cannot update a later scope. Switching context or signing out clears the display state immediately, stops voice, and waits for an already-sent preference write before changing the server session's context. A failed save restores the previous display value and shows a scoped error; outside Profile, the persistent shell links back to display settings so the customer can retry. A failed load offers retry.
 
 ## Optional voice
 
@@ -34,4 +34,4 @@ After the parent applies the patch and server hooks:
 4. On Agent, type a draft, optionally speak additional text, then edit it. Confirm no task appears until Send and no commitment runs without exact review. Test denial/unsupported-browser fallback with keyboard alone.
 5. Start reading an available summary, then Stop, navigate, switch context or hide the tab. Confirm audio stops. Repeat for microphone input and check there is no automatic restart.
 
-This patch is authored under `/tmp` only. Applying, typecheck, tests, build, rendered mobile QA and real microphone/speaker validation belong to the parent integration and are not claimed here. Recordings, evidence manifest and long live-model E2E remain postponed.
+The combined branch passes 182 unit/integration tests and the build. The four phone tabs were checked at 360px and 390px; an exact review was checked at 360px after correcting its action-bar overflow. Reload persistence, customer/context isolation, failure feedback after navigation and retry through settings were exercised in the browser. Browser speech mocks verified draft-only input, Enter without submission, typed edits rejecting late results, read-aloud and Stop. No real microphone or speaker was used; those need a human device check. Recordings, evidence manifest and long live-model E2E remain postponed.

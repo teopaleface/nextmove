@@ -31,11 +31,11 @@ export function BlockView({ block, onAnswer }: { block: Block; onAnswer?: (id: s
   switch (block.kind) {
     case "metrics":
       return (
-        <div className="split" style={{ gridTemplateColumns: block.items.length === 1 ? "1fr" : "1fr 1fr" }}>
+        <div className={`split analysis-metrics${block.items.length === 1 ? " single" : ""}`}>
           {block.items.map((m, i) => (
             <div key={i} className="group pad">
               <div className="small muted">{m.label}</div>
-              <div className="num" style={{ fontSize: 20, lineHeight: "26px", fontWeight: 650, marginTop: 4, color: m.tone === "bad" ? "var(--danger)" : m.tone === "good" ? "var(--success)" : undefined }}>
+              <div className="num analysis-metric-value" style={{ color: m.tone === "bad" ? "var(--danger)" : m.tone === "good" ? "var(--success)" : undefined }}>
                 {m.value}
               </div>
               {m.sub ? <div className="caption" style={{ marginTop: 2 }}>{m.sub}</div> : null}
@@ -134,7 +134,7 @@ export function BlockView({ block, onAnswer }: { block: Block; onAnswer?: (id: s
           <Group>
             {block.items.map((f, i) => (
               <div key={i} className="kv">
-                <dt style={{ color: "var(--muted)", fontSize: 14 }}>
+                <dt className="small muted">
                   {f.label}
                   <div className="caption">{f.provenance}</div>
                 </dt>

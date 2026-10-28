@@ -25,7 +25,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
 
 function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
-  const { session, switchContext, epoch, contextChanging, simpleMode } = useSession();
+  const { session, switchContext, epoch, contextChanging, simpleMode, simpleModeError } = useSession();
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [menu, setMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -115,6 +115,12 @@ function Shell({ children }: { children: React.ReactNode }) {
         </Link>
       </header>
       <main className={`main${hideTabs ? " no-tabs" : ""}`} id="main">
+        {simpleModeError && !pathname.startsWith("/profile") ? (
+          <aside className="display-preference-error" role="alert">
+            <p>{simpleModeError}</p>
+            <Link href="/profile#display" className="link">Retry in display settings</Link>
+          </aside>
+        ) : null}
         {session?.authenticated && !contextChanging && simpleMode ? <SimpleOrientation pathname={pathname} context={ctx?.name} /> : null}
         {session?.authenticated && !contextChanging && simpleMode ? <ReadAloud content={contentRef} /> : null}
         <div ref={contentRef}>{session?.authenticated && !contextChanging ? children : <ShellLoading />}</div>
