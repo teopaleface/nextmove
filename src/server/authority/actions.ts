@@ -24,7 +24,9 @@ export type Operation =
   | "CARD_FREEZE"
   | "MERCHANT_BLOCK"
   | "HOLD_ALLOW"
-  | "PREPARE_PACKET";
+  | "PREPARE_PACKET"
+  // Wired extension modules (src/server/extensions); executed only on BANK_INTERNAL after the dispatch gate.
+  | `EXT_${string}`;
 
 export interface DisplayLine {
   label: string;
@@ -34,7 +36,7 @@ export interface DisplayLine {
 export interface ActionSpec {
   operation: Operation;
   route: Route;
-  capability: string; // O1..A14 / T1..T4 / BANK
+  capability: string; // O1..A18 / T1..T4 / E1..E9 / BANK
   merchantId: string | null;
   merchantName: string | null;
   subscriberAccountId: string | null;

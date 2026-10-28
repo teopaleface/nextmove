@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { config } from "../config";
 import { BANK_SCHEMA, BANK_SCHEMA_VERSION } from "./schema";
+import { EXT_SCHEMA } from "../extensions/schema";
 
 export type Db = DatabaseSync;
 export type Row = Record<string, any>;
@@ -30,6 +31,7 @@ export function migrate(db: DatabaseSync): void {
     }
   }
   db.exec(BANK_SCHEMA);
+  db.exec(EXT_SCHEMA);
   db.prepare("INSERT INTO schema_meta(key, value) VALUES ('bank_schema_version', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(
     String(BANK_SCHEMA_VERSION),
   );

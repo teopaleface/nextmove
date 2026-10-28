@@ -13,6 +13,7 @@ import { canonicalKey, merchantAccountId, merchantContractId } from "../../share
 import { toMs } from "../../shared/time";
 import { seedTrialShield } from "./trial-shield-seed";
 import { seedHiddenLosses } from "./hidden-losses-seed";
+import { deleteExtTenantRows, seedExtensions } from "../extensions/registry";
 
 // Bank-side seeding from the repository fixtures. The bank stores what a bank would know (accounts, posted
 // history, linked subscriptions, goals); provider state lives only in the merchant process.
@@ -35,6 +36,7 @@ export function deleteTenantRows(db: DatabaseSync, tenantId: string) {
     run(db, "DELETE FROM ledger_lines WHERE entry_id IN (SELECT id FROM ledger_entries WHERE tenant_id=?)", tenantId);
     run(db, "DELETE FROM task_blocks WHERE task_id IN (SELECT id FROM tasks WHERE tenant_id=?)", tenantId);
     run(db, "DELETE FROM dispatch_journal WHERE attempt_id IN (SELECT id FROM attempts WHERE tenant_id=?)", tenantId);
+    deleteExtTenantRows(db, tenantId);
     for (const t of TENANT_TABLES) run(db, `DELETE FROM ${t} WHERE tenant_id=?`, tenantId);
     run(db, "DELETE FROM tenants WHERE id=?", tenantId);
   });
@@ -71,6 +73,7 @@ export async function seedTenant(db: DatabaseSync, tenantId: string, customer: C
       );
     }
     run(db, "INSERT OR REPLACE INTO system_status(key, value_json, updated_at) VALUES (?,?,?)", `directory:${tenantId}`, JSON.stringify(merchant.directory), new Date().toISOString());
+    seedExtensions(db, { tenantId, customer, contexts: r.contexts });
     return { ...r, linkedAccounts: merchant.tokens.length };
   });
   return { tenantId, customer, userId: result.userId, contexts: result.contexts, linkedAccounts: result.linkedAccounts };

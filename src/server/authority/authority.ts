@@ -213,6 +213,9 @@ export function approveProposal(
  */
 export const SCHEDULED_GRANT_GRACE_DAYS = 14;
 function scheduledGrantExpiry(spec: ActionSpec, nowMs_: number): string | null {
+  // An exit plan's conditional stop is useless after the provider's cancel deadline, so its grant ends exactly there.
+  const exitDeadline = spec.capability === "E2" && spec.operation === "STOP_RENEWAL" ? (spec.params as any)?.exitPlan?.terms?.cancelDeadline : null;
+  if (typeof exitDeadline === "string" && Number.isFinite(Date.parse(exitDeadline))) return toLocalIso(Math.max(nowMs_, Date.parse(exitDeadline)));
   const at = spec.route === "BANK_INTERNAL" && spec.operation === "INTERNAL_TRANSFER" ? (spec.params as any)?.executeAt : null;
   if (typeof at !== "string") return null;
   const ms = Date.parse(at);

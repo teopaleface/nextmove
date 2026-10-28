@@ -47,6 +47,7 @@ import { seedTenant, tenantExists } from "../scenarios/seed";
 import { merchantAdmin } from "../merchant-client";
 import { formatMoney } from "../../shared/money";
 import { inWindow } from "../../shared/time";
+import { EXTENSIONS, runExtLabs } from "../extensions/registry";
 
 // One server-side router for every /api route. The session (tenant, user, active context) is derived from the
 // HttpOnly cookie on each request; mutations require same-origin and the per-session CSRF token. Object access
@@ -461,7 +462,7 @@ post("/tasks/:id/answer", async (c) => {
 });
 
 /* ------------------------------------------------------------------------------ facts / preferences */
-const FACT_KEY = /^(t1|a8|t3|agent):[A-Za-z0-9_:+.-]{1,80}$|^student_id_number$/;
+const FACT_KEY = /^(t1|a8|t3|agent|e2):[A-Za-z0-9_:+.-]{1,80}$|^student_id_number$/;
 post("/facts", async (c) => {
   const ses = s(c);
   const b = await c.body();
@@ -638,6 +639,20 @@ post("/labs/card-attempt", async (c) => {
   if (!r) throw new HttpError(404, "NOT_FOUND", "This merchant is not under Trial Shield here");
   return r;
 });
+// Wired extension modules: synthetic events (a charge after cancellation, a price rise, a card update inquiry...).
+post("/labs/ext", async (c) => {
+  requireLabs();
+  const ses = s(c);
+  const b = await c.body();
+  const body = typeof b?.body === "object" && b.body && !Array.isArray(b.body) ? (b.body as Record<string, unknown>) : {};
+  return runExtLabs(c.db, ses, String(b?.module ?? ""), String(b?.action ?? ""), body);
+});
+for (const m of EXTENSIONS) {
+  for (const r of m.routes ?? []) {
+    const register = r.method === "GET" ? get : post;
+    register(`/ext/${m.key}${r.path}`, (c) => r.fn({ db: c.db, session: s(c), params: c.params, url: c.url, body: c.body }));
+  }
+}
 post("/labs/clock", async (c) => {
   requireLabs();
   const ses = s(c);

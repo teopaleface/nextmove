@@ -12,14 +12,16 @@ import { CASH_AUTOPILOT_CAPS } from "./cash-autopilot";
 import { T4 } from "./trial-shield";
 import { HIDDEN_LOSS_CAPS } from "./hidden-losses";
 import { O9 } from "./financial-airbag";
+import { EXT_CAPABILITIES, EXT_CAPABILITY_ORDER } from "../extensions/registry";
+import { isExtOperation } from "../extensions/types";
 import { makeEnv, type Analysis, type CapabilityDef } from "./core";
 
 const O1_ALEX: CapabilityDef = { id: "O1", title: "Goals: phone now, home later", short: "Home readiness with or without the new phone", group: "Goals", customer: "alex", contextKind: "PERSONAL", keywords: ["goal", "home", "house", "phone", "save", "afford", "down payment"], analyze: O1_PERSONAL };
 const O1_LAZIZ: CapabilityDef = { id: "O1", title: "Goals: the 40,000 RON order", short: "Business conditions for a large order", group: "Goals", customer: "laziz", contextKind: "BUSINESS", keywords: ["goal", "order", "afford", "big order", "new shop", "expand"], analyze: O1_BUSINESS };
 
-export const CAPABILITIES: CapabilityDef[] = [O1_ALEX, ...ALEX_SUBSCRIPTION_CAPS, T4, ...ALEX_MONEY_CAPS, ...HIDDEN_LOSS_CAPS, O6_ALEX, ...CASH_AUTOPILOT_CAPS, O9, O1_LAZIZ, ...LAZIZ_CAPS];
+export const CAPABILITIES: CapabilityDef[] = [O1_ALEX, ...ALEX_SUBSCRIPTION_CAPS, T4, ...ALEX_MONEY_CAPS, ...HIDDEN_LOSS_CAPS, O6_ALEX, ...CASH_AUTOPILOT_CAPS, O9, O1_LAZIZ, ...LAZIZ_CAPS, ...EXT_CAPABILITIES];
 
-export const CAPABILITY_ORDER = ["O1", "O2", "O3", "O4", "O5", "O6", "O7", "O8", "O9", "T1", "T2", "T3", "T4", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13", "A14", "A15", "A16", "A17", "A18"];
+export const CAPABILITY_ORDER = ["O1", "O2", "O3", "O4", "O5", "O6", "O7", "O8", "O9", "T1", "T2", "T3", "T4", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13", "A14", "A15", "A16", "A17", "A18", ...EXT_CAPABILITY_ORDER];
 
 export function customerOf(db: DatabaseSync, tenantId: string): "alex" | "laziz" {
   return (one<any>(db, "SELECT base_customer FROM tenants WHERE id=?", tenantId)?.base_customer ?? "alex") as "alex" | "laziz";
@@ -85,6 +87,8 @@ export async function proposeFromCapability(db: DatabaseSync, session: Session, 
     const c = byKey.get(k);
     if (!c) throw new HttpError(400, "UNKNOWN_CANDIDATE", "One of the selected actions is no longer offered. Refresh and try again.");
     if (!c.available) throw new HttpError(409, "NOT_AVAILABLE", c.unavailableReason ?? "This action is not available");
+    // Extension operations run only inside the bank; refuse a mis-routed candidate before it can become a proposal.
+    if (c.spec.operation.startsWith("EXT_") && (c.spec.route !== "BANK_INTERNAL" || !isExtOperation(c.spec.operation))) throw new HttpError(500, "BAD_CANDIDATE", "This action is misconfigured and was not offered");
     want.add(k);
     for (const d of c.spec.dependsOn) if (byKey.has(d)) add(d);
   };

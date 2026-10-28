@@ -10,6 +10,7 @@ import { browserStopRenewal } from "./browser";
 import { recordConfirmed, recordSettled } from "./effects";
 import { reconcileInternalTransfer, runInternalTransfer, transferWait } from "./internal-transfer";
 import { SHIELD_OPERATIONS, runShieldDecision } from "../bank/trial-shield";
+import { extPreDispatch, runExtOperation } from "../extensions/registry";
 import { enqueueJob, finishJob, renewLease, type Job } from "./jobs";
 import { taskEvent, taskIdForAction } from "../agent/events";
 import type { MerchantContractView, OperationResponse } from "../../shared/merchant-contract";
@@ -108,6 +109,13 @@ export async function runActionJob(db: DatabaseSync, job: Job, ctx: WorkerCtx): 
     const wait = transferWait(db, action, spec);
     if (wait) return void finishJob(db, job, ctx.workerId, { status: "QUEUED", availableAt: wait.availableAt });
   }
+  // A conditional action held by an extension (an exit plan's stop) waits or closes here; it can never skip the gate.
+  const held = await extPreDispatch({ db, action, spec, grant });
+  if (held && "wait" in held) return void finishJob(db, job, ctx.workerId, { status: "QUEUED", availableAt: held.wait });
+  if (held) {
+    tx(db, () => recordSettled(db, action.id, null, held.settle, { reason: held.reason, ...(held.detail ?? {}) }));
+    return void finishJob(db, job, ctx.workerId, { status: "DONE" });
+  }
 
   const ids = attemptIds(action, grant.id);
   const attemptId = shortId("att");
@@ -125,6 +133,7 @@ export async function runActionJob(db: DatabaseSync, job: Job, ctx: WorkerCtx): 
   try {
     if (spec.route === "PARTNER_API") await runPartnerApi(db, action, spec, attemptId, ids, authorize, ctx);
     else if (spec.route === "ISOLATED_BROWSER") await runBrowser(db, action, spec, attemptId, ids, authorize, ctx);
+    else if (spec.operation.startsWith("EXT_") && spec.route !== "BANK_INTERNAL") tx(db, () => recordSettled(db, action.id, attemptId, "BLOCKED", { reason: "Extension steps run only inside the bank; nothing was sent" }));
     else if (spec.route === "BANK_INTERNAL") await runBankInternal(db, action, spec, attemptId, authorize);
     else tx(db, () => recordSettled(db, action.id, attemptId, "BLOCKED", { reason: "Preparation-only actions are not executed" }));
   } catch (e: any) {
@@ -340,6 +349,7 @@ async function runBankInternal(db: DatabaseSync, action: any, spec: ActionSpec, 
   const gate = await authorize();
   if (!gate.ok) return gateDenied(db, action.id, attemptId, gate.reason);
   if (SHIELD_OPERATIONS.has(spec.operation)) return runShieldDecision(db, action, spec, attemptId);
+  if (spec.operation.startsWith("EXT_")) return runExtOperation({ db, action, spec, attemptId });
   if (spec.operation === "CARD_FREEZE") {
     const acct = one<any>(db, "SELECT * FROM accounts WHERE id=? AND tenant_id=? AND context_id=?", spec.params.accountId, action.tenant_id, action.context_id);
     const card = acct?.card_json ? JSON.parse(acct.card_json) : null;
@@ -362,9 +372,14 @@ async function runBankInternal(db: DatabaseSync, action: any, spec: ActionSpec, 
     );
     return;
   }
+  // Only the two money operations with a ledger effect in recordConfirmed fall through here; anything else fails closed.
+  if (spec.operation !== "PAYMENT" && spec.operation !== "OWNER_TRANSFER") return void tx(db, () => recordSettled(db, action.id, attemptId, "BLOCKED", { reason: "This operation has no bank-internal handler" }));
   const amount = Number(spec.params.amountMinor);
   if (!Number.isSafeInteger(amount) || amount <= 0) return void tx(db, () => recordSettled(db, action.id, attemptId, "REFUSED", { reason: "The approved amount is not a positive whole number of bani" }));
-  const from = one<any>(db, "SELECT * FROM accounts WHERE id=? AND tenant_id=?", spec.params.fromAccountId, action.tenant_id);
+  // A payment debits the approving context's own account; the owner transfer deliberately crosses contexts within the tenant.
+  const from = spec.operation === "PAYMENT"
+    ? one<any>(db, "SELECT * FROM accounts WHERE id=? AND tenant_id=? AND context_id=?", spec.params.fromAccountId, action.tenant_id, action.context_id)
+    : one<any>(db, "SELECT * FROM accounts WHERE id=? AND tenant_id=?", spec.params.fromAccountId, action.tenant_id);
   if (!from) return void tx(db, () => recordSettled(db, action.id, attemptId, "REFUSED", { reason: "Source account not found" }));
   const { balanceOf } = await import("../bank/ledger");
   if (balanceOf(db, from.id) < amount) return void tx(db, () => recordSettled(db, action.id, attemptId, "REFUSED", { reason: "Insufficient funds in the source account" }));

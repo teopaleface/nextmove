@@ -174,3 +174,42 @@ The original checkout and its existing demo data are separate. Historical `disco
 ### Remaining verification
 
 Real microphone capture, speech-service availability and audible speaker output were not exercised. They need a human device check; no claim of real audio acceptance is made. Recordings, the evidence manifest and long/live-model E2E remain postponed as instructed. The earlier unrelated open items in checkpoints 2–3 remain tracked there.
+
+## Checkpoint 5 — extension modules wired into the app (branch `feat/extensions`, 2026-10-28)
+
+The nine pure modules in `extensions/src` (commit `aa3d345`) are wired through one plug-in contract, `src/server/extensions/types.ts`. Each module supplies capabilities with server-built candidates, its own `ext_*` tables (each with `tenant_id`), and `EXT_*` operations. Those operations run only on `BANK_INTERNAL`, after the dispatch gate has consumed the grant. Modules may also add seed data (additive only), Labs simulations and authenticated `/api/ext/<module>` routes. No module can create authority: a candidate still becomes an exact proposal, approval still issues a grant, and the worker still runs the final gate.
+
+### Delivered
+
+- **E1 Cancellation guarantee** (Alex): a charge after a provider-confirmed stop (Labs) can be disputed. `EXT_FILE_DISPUTE` re-checks the evidence packet and posts a provisional credit, never more than the disputed amount. Card-network rulings come from Labs.
+- **E2 Exit plan** (Alex): one exact, conditional stop of renewal, e.g. "stop FitFlow unless I used it 4 times". The worker holds it until 09:00 on the check day and then decides with the pure module. Enough use closes it unsent. Phone-only data asks the customer. Changed terms or a missed deadline close it unsent. A stop goes through the normal route and gate. The grant lasts until the provider deadline.
+- **E3 Retention offers** (Alex): merchant offers carry Ed25519 signatures, and the private key is in a 0600 keystore file. Merchant text is quoted as untrusted data. Accepting re-verifies the offer and may withdraw only the stop that was shown at approval.
+- **E4 Merchant insights** (Alex): synthetic cohort aggregates, read-only, with a minimum cohort of 20.
+- **E5 Price consent gate** (Alex): a subscription ceiling. Labs charges above it are soft-declined, and the customer is asked.
+- **E6 New card** (Alex): a KEEP/DROP list per merchant for the card updater. Merchants get only the new card reference and last 4 digits.
+- **E7 / E7H Business move** (Laziz): consent on the household side, then repayment from the business side, using balanced internal transfers. The VAT note is labelled as information, not tax advice.
+- **E8 Cancellation certificate** (Alex): an Ed25519 certificate with selective disclosure and per-tenant issuers. It is NextMove's statement, not the provider's.
+- **E9 Shared split** (Laziz household): weighted split requests. No money moves without a payment from the member.
+
+### Checks
+
+- `npm run typecheck`: pass. `npm test`: **228 tests passed in 31 files**. `extensions` package `npm run check`: 304 passed.
+- An independent read-only security review raised six findings. Fixed:
+  - accepting a retention offer could withdraw a stop approved later; the stop id is now bound into the approval
+  - the price-ceiling copy overclaimed enforcement; it now says the check covers the simulated charges on its page
+  - re-approving an expired business-move consent did not renew it
+  - the exit plan read the provider on every poll while waiting for an answer
+  - price ceilings were read across all contexts; they are now scoped to the context
+  - E1's simulated charge ignored a frozen card
+- Core hardening:
+  - an unrecognised `BANK_INTERNAL` operation now settles BLOCKED instead of being confirmed
+  - the PAYMENT source account is now scoped to the context
+  - an `EXT_*` candidate must be `BANK_INTERNAL` at propose time
+
+### Open
+
+- Existing tenants created before this checkpoint need **Labs → Reset** (or a separate copy) for the extension seed data. The shared Alex and Laziz demo tenants were reset on 2026-10-28.
+- Per-run merchant and certificate key files under `<dataDir>/keystore` are not deleted when a tenant is reset.
+- The certificate GET route can write a revocation sweep.
+- The simulated merchant does not apply an accepted offer price or a price ceiling on its side; only bank records and the forecast change.
+- The live-model browser E2E for E1–E9 has not been run.
