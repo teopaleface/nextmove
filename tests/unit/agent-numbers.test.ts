@@ -1,0 +1,21 @@
+import { describe, expect, it } from "vitest";
+import { checkNumbers } from "../../src/server/agent/orchestrator";
+
+// The final-answer guard: every amount the model writes must be a number NextMove computed or the customer wrote.
+
+const allowed = new Set(["2050", "20.50", "12.99", "1500", "1500.00"]);
+
+describe("checkNumbers", () => {
+  it("accepts allowed amounts in English and Romanian formats", () => {
+    for (const t of ["2,050 RON", "1.500 RON", "20.50 RON", "1,500.00 RON", "1.500,00 lei", "12.99"]) expect(checkNumbers(t, allowed), t).toEqual([]);
+  });
+
+  it("flags amounts NextMove never computed, including k-suffixed and small ones", () => {
+    for (const t of ["12.345 lei", "5k RON", "29.99 RON", "3 RON", "RON 7"]) expect(checkNumbers(t, allowed), t).not.toEqual([]);
+  });
+
+  it("lets day numbers and years through in prose but not next to a currency", () => {
+    for (const t of ["on the 15th", "in 2026", "within 3 days"]) expect(checkNumbers(t, allowed), t).toEqual([]);
+    expect(checkNumbers("2026 lei", allowed)).toEqual(["2026"]);
+  });
+});

@@ -145,7 +145,9 @@ export function approveProposal(
     if (p.status !== "READY") throw new HttpError(409, p.status === "OUTDATED" ? "TERMS_CHANGED" : "NOT_READY", p.status === "OUTDATED" ? `This plan needs a fresh check: ${p.outdated_reason ?? "terms changed"}` : `Proposal is ${p.status.toLowerCase()}`);
     const now = nowMs(db, session.tenantId);
     if (now > toMs(p.ready_expires_at)) {
-      run(db, "UPDATE proposals SET status='EXPIRED', decided_at=? WHERE id=?", nowIso(db, session.tenantId), p.id);
+      const at = nowIso(db, session.tenantId);
+      run(db, "UPDATE proposals SET status='EXPIRED', decided_at=? WHERE id=?", at, p.id);
+      run(db, "UPDATE proposal_actions SET status='EXPIRED', updated_at=? WHERE proposal_id=? AND status='PROPOSED'", at, p.id);
       return { refused: new HttpError(409, "PROPOSAL_EXPIRED", "This plan needs a fresh check: the proposal expired.") };
     }
     const actions = all<any>(db, "SELECT * FROM proposal_actions WHERE proposal_id=? ORDER BY ordinal", p.id);

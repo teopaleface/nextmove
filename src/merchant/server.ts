@@ -199,7 +199,7 @@ export function createMerchantServer(opts: MerchantServerOptions) {
       }
       mm = rest.match(/^offers\/([^/]+)$/);
       if (method === "GET" && mm) {
-        const offer = mget<any>(db, "SELECT * FROM m_offers WHERE tenant_id=? AND id=? AND current=1", t, decodeURIComponent(mm[1]));
+        const offer = mget<any>(db, "SELECT * FROM m_offers WHERE tenant_id=? AND merchant_id=? AND id=? AND current=1", t, merchantId, decodeURIComponent(mm[1]));
         if (!offer) return send(res, 404, { error: "NOT_FOUND" });
         return send(res, 200, { offer: { id: offer.id, revision: offer.revision, terms: JSON.parse(offer.terms_json), publishedAt: offer.published_at }, observedAt: nowIso });
       }

@@ -193,7 +193,7 @@ The nine pure modules in `extensions/src` (commit `aa3d345`) are wired through o
 
 ### Checks
 
-- `npm run typecheck`: pass. `npm test`: **228 tests passed in 31 files**. `extensions` package `npm run check`: 304 passed.
+- `npm run typecheck`: pass. `npm test`: **236 tests passed in 33 files** (after the second audit; 228 before). `extensions` package `npm run check`: 306 passed (304 before).
 - An independent read-only security review raised six findings. Fixed:
   - accepting a retention offer could withdraw a stop approved later; the stop id is now bound into the approval
   - the price-ceiling copy overclaimed enforcement; it now says the check covers the simulated charges on its page
@@ -213,3 +213,42 @@ The nine pure modules in `extensions/src` (commit `aa3d345`) are wired through o
 - The certificate GET route can write a revocation sweep.
 - The simulated merchant does not apply an accepted offer price or a price ceiling on its side; only bank records and the forecast change.
 - The live-model browser E2E for E1–E9 has not been run.
+
+### Second full audit (2026-10-28)
+
+Four read-only reviewers covered the core server, bank and merchant, the extensions, and the agent, model and UI. Also: `npm audit --omit=dev` found 0 vulnerabilities; a secret scan of the full git history was clean.
+
+**Fixed** (regression tests in `tests/integration/audit-fixes.test.ts`, `tests/unit/agent-numbers.test.ts`, and the E8, trial shield and E1 suites):
+
+- Text in a numeric capability input produced NaN plans (O7/O8) and could crash the server. It now falls back to the default, and `*Minor` inputs are rounded.
+- Trial Shield could post an allowed charge with no money in the account; it now declines with "not enough money". Its decision is one transaction, so two concurrent decisions cannot lose an update.
+- `postCardOrTransfer` now checks that the account belongs to the tenant and context.
+- An expired payment draft blocked paying the same bill indefinitely. Expired drafts no longer count, and approving one after expiry closes its actions.
+- Revoking a permission now revokes its watches in the permission's own context, not the session's.
+- A lost worker lease settled the action and stranded the approval. The job is now requeued under the same fence.
+- An inbox credit needs a transfer id and cannot exceed the amount being recovered.
+- Watches for offer terms and price changes are scoped to the context.
+- The model's CLI error text is shown only on `/dev/status`, and that page lists only the tenant's own model calls.
+- Agent stop races: a stopped task closes its open questions, refuses late answers, and does not run a tool or prepare a proposal after the stop.
+- Numbers chosen by the model are kept only if the customer wrote them. The final-answer number check reads English and Romanian formats and the "k" suffix, and allows day numbers and years only in prose.
+- E8: a certificate must be on the bank's register (`NOT_ON_RECORD` otherwise). A revoked certificate no longer verifies again after a Labs reset.
+- E1: a final credit below the provisional one is reversed. A partial merchant refund goes to review instead of withdrawing the dispute.
+- `EXT_*` handlers run in one transaction. A failure rolls back and settles BLOCKED ("nothing was changed") instead of UNKNOWN plus a merchant reconcile.
+- E3: an offer claiming to reply to a counter-offer is refused; the bank never sends counter-offers, so this closed a way around the unrequested-offer limit.
+- The Trial Shield copy names the real paying account and no longer claims that own-account transfers are unsupported. The merchant's offers list is filtered by merchant.
+
+**Not fixed (accepted for the demo, or later work):**
+
+- Merchant `/m/<id>/login` needs no credentials or tenant (simulated merchant). `/__inspect` is protected only by loopback.
+- Merchant PAUSE / CHANGE_BILLING_DATE month and DST maths (`src/merchant/ops.ts`, `src/server/finance/capabilities.ts`).
+- The partner signature does not cover method and path. The inbox issuer is self-declared under a shared HMAC key.
+- Reconcile does not read bank records for `BANK_INTERNAL` operations other than INTERNAL_TRANSFER; they end UNKNOWN.
+- Upload and body size limits are checked after buffering.
+- `/labs/reset` does not revoke the old session. `/session/demo` can create unlimited tenants.
+- PLACE_ORDER above the max debit leaves the receipt and the status inconsistent.
+- Capability inputs from the model have no allowlist per capability. Free-text answers (Airbag stop/pause, A17/A18) are loosely bound to the question they answer.
+- ADR 0005 does not match `claude-cli.ts`: there is no `--restricted` flag or MCP allowlist yet.
+- Vision errors include sanitized stderr. The voice summary is cut at 1800 characters.
+- The review page's money totals add up all actions, not only the selected ones.
+- E1 and E8 use the merchant reference as the receipt id. After a reset, a re-issued E8 certificate can have the same id as the old one (the id comes from the receipt, issue time and key).
+- Accepting an offer while an E2 hold is pending can be refused. The exit plan's `recordStopOutcome` accepts any CONFIRMED receipt. E1 `assertMinor` allows negative credits.

@@ -160,10 +160,16 @@ function gateDenied(db: DatabaseSync, actionId: string, attemptId: string, reaso
   // ALREADY_EXECUTED: when the other in-flight attempt belongs to this same action, that attempt settles the action
   // (reconciliation); when it belongs to a different approval of the same change, this action is closed unsent.
   const sameAction = reason === "ALREADY_EXECUTED" && Boolean(one<any>(db, `SELECT 1 FROM attempts WHERE action_id=? AND id != ? AND status IN ('DISPATCH_AUTHORIZED','SENT','CONFIRMED','PENDING','UNKNOWN')`, actionId, attemptId));
-  const status = reason === "MANDATE_REVOKED" || reason === "EPOCH_CHANGED" ? "REVOKED" : reason === "GRANT_EXPIRED" ? "EXPIRED" : reason === "ALREADY_EXECUTED" ? (sameAction ? null : "NOT_STARTED") : "BLOCKED";
+  // LEASE_LOST: this worker's job was recovered by another; that worker owns the action now, so only close this attempt.
+  const status = reason === "LEASE_LOST" ? null : reason === "MANDATE_REVOKED" || reason === "EPOCH_CHANGED" ? "REVOKED" : reason === "GRANT_EXPIRED" ? "EXPIRED" : reason === "ALREADY_EXECUTED" ? (sameAction ? null : "NOT_STARTED") : "BLOCKED";
   tx(db, () => {
     run(db, "UPDATE attempts SET status='NOT_DISPATCHED', finished_at=?, outcome_json=? WHERE id=?", new Date().toISOString(), JSON.stringify({ gate: reason }), attemptId);
     if (status) recordSettled(db, actionId, null, status, { reason: gateReasonText(reason) });
+    // A lost lease not yet recovered goes back to the queue under this fence, so the approval is retried, never stranded.
+    if (reason === "LEASE_LOST") {
+      const a = one<any>(db, "SELECT job_id, fence FROM attempts WHERE id=?", attemptId);
+      if (a) run(db, "UPDATE jobs SET status='QUEUED', lease_owner=NULL, lease_expires_at=NULL, updated_at=? WHERE id=? AND fence=? AND status='LEASED'", new Date().toISOString(), a.job_id, a.fence);
+    }
   });
 }
 

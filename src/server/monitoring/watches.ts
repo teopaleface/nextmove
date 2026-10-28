@@ -68,7 +68,8 @@ async function check(db: DatabaseSync, w: any): Promise<{ result: string; next?:
   const client = new MerchantClient(db, w.tenant_id);
   switch (w.kind) {
     case "TRIAL_CONVERSION": {
-      const sub = one<any>(db, "SELECT * FROM subscriptions WHERE id=?", w.subject_ref);
+      const sub = one<any>(db, "SELECT * FROM subscriptions WHERE id=? AND tenant_id=? AND context_id=?", w.subject_ref, w.tenant_id, w.context_id);
+      if (!sub) return { result: "Subscription not found in this context" };
       if (!sub) return { result: "subscription missing", done: true };
       const r = await client.getContract(sub.merchant_id, sub.subscriber_account_id, sub.contract_id);
       if (!r.contract) return { result: `Provider could not be read (${r.status})` };
@@ -82,7 +83,8 @@ async function check(db: DatabaseSync, w: any): Promise<{ result: string; next?:
       return { result: `Trial becomes paid in ${Math.max(0, Math.round(hours))} hours`, next: Math.min(nextThreshold ?? now + 6 * HOUR, now + 6 * HOUR) };
     }
     case "OFFER_TERMS": {
-      const acct = one<any>(db, "SELECT subscriber_account_id FROM merchant_links WHERE tenant_id=? AND merchant_id=?", w.tenant_id, c.merchantId);
+      const acct = one<any>(db, "SELECT subscriber_account_id FROM merchant_links WHERE tenant_id=? AND context_id=? AND merchant_id=?", w.tenant_id, w.context_id, c.merchantId);
+      if (!acct) return { result: "No linked account with this provider in this context" };
       const o = await client.getOffer(c.merchantId, acct.subscriber_account_id, c.offerId);
       if (!o.offer) return { result: `Offer could not be read (${o.status})` };
       if (o.offer.revision > (c.knownRevision ?? 1)) {
@@ -96,7 +98,7 @@ async function check(db: DatabaseSync, w: any): Promise<{ result: string; next?:
     case "PRICE_CHANGE": {
       const sub = one<any>(db, "SELECT * FROM subscriptions WHERE id=?", w.subject_ref);
       const r = await client.getContract(sub.merchant_id, sub.subscriber_account_id, sub.contract_id);
-      const charges = all<any>(db, "SELECT id, amount_minor, booked_at FROM transactions WHERE tenant_id=? AND merchant_name=? AND status='POSTED' AND amount_minor<0 ORDER BY booked_at", w.tenant_id, sub.merchant_name).map((t) => ({ id: t.id, amountMinor: -t.amount_minor, bookedAt: t.booked_at }));
+      const charges = all<any>(db, "SELECT id, amount_minor, booked_at FROM transactions WHERE tenant_id=? AND context_id=? AND merchant_name=? AND status='POSTED' AND amount_minor<0 ORDER BY booked_at", w.tenant_id, w.context_id, sub.merchant_name).map((t) => ({ id: t.id, amountMinor: -t.amount_minor, bookedAt: t.booked_at }));
       const f = detectPriceChanges({ contractKey: sub.canonical_key, charges, notices: (r.contract?.details as any)?.priceHistory ?? [] });
       for (const x of f.findings) finding(db, w, x.dedupeKey, "PRICE_INCREASE", `${sub.merchant_name} price went up`, `${formatMoney(x.fromMinor)} → ${formatMoney(x.toMinor)} per month${x.explanation === "MERCHANT_NOTICE" ? " (the provider sent a notice)" : " without a notice"}.`, "A4", 3, { fromMinor: x.fromMinor, toMinor: x.toMinor });
       return { result: f.findings.length ? `${f.findings.length} price change${f.findings.length === 1 ? "" : "s"} found` : "No price change", next: now + 24 * HOUR };

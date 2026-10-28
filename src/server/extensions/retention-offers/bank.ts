@@ -70,6 +70,9 @@ function ed25519Valid(signed: SignedOffer, publicKeyPem: string): boolean {
  * the module a per-call secret that matches only if the public-key check passed. Every other rule is the module's.
  */
 export function verifySigned(db: DatabaseSync, tenantId: string, signed: SignedOffer, opts: { now: string; excludeReceivedAt?: string }): OfferVerification {
+  // This bank never sends counter-offers, so a "reply to a counter" cannot be one; counting it keeps the
+  // unrequested-offer limit from being skipped with a made-up counter id.
+  if (signed?.offer?.inReplyToCounterId !== undefined) return { ok: false, reason: "RATE_LIMITED" };
   const keyRows = all<any>(db, "SELECT * FROM ext_offer_merchant_key WHERE tenant_id=?", tenantId);
   const callSecret = randomBytes(32).toString("hex");
   const target = keyRows.find((k) => k.key_id === signed.keyId);

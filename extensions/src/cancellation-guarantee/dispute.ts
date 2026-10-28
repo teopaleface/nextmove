@@ -157,13 +157,15 @@ export function recordBankCredit(c: DisputeCase, event: BankCreditEvent): Transi
   if (event.amountMinor <= 0) return { ok: false, reason: 'INVALID_AMOUNT' };
   if (event.kind === 'PROVISIONAL' && c.state === 'AWAITING_FINAL_CREDIT') return { ok: false, reason: 'INVALID_STATE' };
 
-  // A final credit after a provisional one confirms money already posted; only the difference is new.
-  const newMoney = event.kind === 'FINAL' ? Math.max(0, event.amountMinor - c.provisionalMinor) : event.amountMinor;
-  const creditedMinor = event.kind === 'FINAL' ? c.creditedMinor + newMoney : c.creditedMinor + event.amountMinor;
+  // A final credit replaces the provisional one: only the difference moves, up when the final is larger and back
+  // down (a reversal) when it is smaller, so the customer ends with exactly the final amount.
+  const delta = event.kind === 'FINAL' ? event.amountMinor - c.provisionalMinor : event.amountMinor;
+  const creditedMinor = c.creditedMinor + delta;
   if (creditedMinor > c.packet.manifest.amountMinor) return { ok: false, reason: 'OVER_CREDIT' };
 
   const effects: DisputeEffect[] = [];
-  if (newMoney > 0) effects.push({ type: 'POST_CREDIT', eventId: event.eventId, amountMinor: newMoney, currency: event.currency, provisional: event.kind === 'PROVISIONAL' });
+  if (delta > 0) effects.push({ type: 'POST_CREDIT', eventId: event.eventId, amountMinor: delta, currency: event.currency, provisional: event.kind === 'PROVISIONAL' });
+  if (delta < 0) effects.push({ type: 'REVERSE_CREDIT', eventId: event.eventId, amountMinor: -delta, currency: event.currency });
   effects.push({ type: 'NOTIFY_CUSTOMER', message: event.kind === 'FINAL' ? 'DISPUTE_WON' : 'PROVISIONAL_CREDIT_POSTED' });
   return {
     ok: true,
@@ -217,6 +219,17 @@ export interface MerchantRefundEvent {
 export function recordMerchantRefund(c: DisputeCase, event: MerchantRefundEvent): Transition {
   if (c.appliedEventIds.includes(event.eventId)) return { ok: true, next: c, effects: [], duplicate: true };
   const applied = [...c.appliedEventIds, event.eventId];
+  try {
+    assertMinor(event.amountMinor);
+  } catch {
+    return { ok: false, reason: 'INVALID_AMOUNT' };
+  }
+  if (event.amountMinor <= 0) return { ok: false, reason: 'INVALID_AMOUNT' };
+  // Only a refund of the whole disputed amount ends the dispute. A partial one leaves money still owed, so a
+  // person decides how much to keep disputing; nothing is withdrawn automatically.
+  if (event.amountMinor < c.packet.manifest.amountMinor && ['PREPARED', 'APPROVED', 'SUBMITTED', 'AWAITING_FINAL_CREDIT'].includes(c.state)) {
+    return { ok: true, next: { ...c, state: 'DOUBLE_RECOVERY_REVIEW', appliedEventIds: applied }, effects: [{ type: 'FLAG_DOUBLE_RECOVERY', eventId: event.eventId, amountMinor: event.amountMinor }] };
+  }
   if (c.state === 'PREPARED' || c.state === 'APPROVED') {
     return { ok: true, next: { ...c, state: 'MERCHANT_REFUNDED', appliedEventIds: applied }, effects: [{ type: 'NOTIFY_CUSTOMER', message: 'MERCHANT_REFUNDED' }] };
   }

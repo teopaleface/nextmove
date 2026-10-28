@@ -5,7 +5,8 @@ import { createProposal } from "../authority/authority";
 import { DEFAULT_CONSEQUENCES, type ActionSpec } from "../authority/actions";
 import { accountsFor, balanceOf } from "./ledger";
 import { shortId } from "../canonical";
-import { nowIso } from "../clock";
+import { nowIso, nowMs } from "../clock";
+import { toMs } from "../../shared/time";
 import { formatMoney } from "../../shared/money";
 import { proposalView } from "../capabilities/registry";
 
@@ -25,9 +26,7 @@ export function payees(db: DatabaseSync, s: Session) {
     s.tenantId,
     s.contextId,
   );
-  const pending = new Set(
-    all<any>(db, "SELECT subject_ref FROM proposal_actions WHERE tenant_id=? AND operation='PAYMENT' AND status IN ('PROPOSED','APPROVED','EXECUTING','PENDING','UNKNOWN')", s.tenantId).map((r) => r.subject_ref),
-  );
+  const pending = new Set(openPayments(db, s.tenantId).map((r) => r.subject_ref));
   return items.map((f) => ({
     forecastItemId: f.id,
     payee: f.merchant_name ?? f.label.replace(/ (bill|payment)$/i, ""),
@@ -38,13 +37,27 @@ export function payees(db: DatabaseSync, s: Session) {
   }));
 }
 
+/**
+ * Payments that still hold a bill: approved or running ones, and drafts that can still be approved.
+ * A draft whose proposal expired or was decided otherwise no longer blocks a fresh one.
+ */
+function openPayments(db: DatabaseSync, tenantId: string, subjectRef?: string) {
+  const now = nowMs(db, tenantId);
+  return all<any>(
+    db,
+    `SELECT a.subject_ref, a.status, p.status AS proposal_status, p.ready_expires_at FROM proposal_actions a JOIN proposals p ON p.id=a.proposal_id
+     WHERE a.tenant_id=? AND a.operation='PAYMENT' AND a.status IN ('PROPOSED','APPROVED','EXECUTING','PENDING','UNKNOWN')${subjectRef ? " AND a.subject_ref=?" : ""}`,
+    ...(subjectRef ? [tenantId, subjectRef] : [tenantId]),
+  ).filter((r) => r.status !== "PROPOSED" || (r.proposal_status === "READY" && now <= toMs(r.ready_expires_at)));
+}
+
 export function paymentDraft(db: DatabaseSync, s: Session, input: { forecastItemId: string; fromAccountId: string; taskId?: string | null }) {
   const item = one<any>(db, "SELECT f.*, sub.merchant_name, sub.merchant_id FROM forecast_items f LEFT JOIN subscriptions sub ON sub.id=f.subscription_id WHERE f.id=? AND f.tenant_id=?", input.forecastItemId, s.tenantId);
   if (!item || item.context_id !== s.contextId) throw new HttpError(404, "NOT_FOUND", "Bill not found in this context");
   if (item.status !== "SCHEDULED") throw new HttpError(409, "ALREADY_PAID", "This bill is no longer scheduled");
   const from = accountsFor(db, s.tenantId, s.contextId).find((a) => a.id === input.fromAccountId);
   if (!from) throw new HttpError(404, "NOT_FOUND", "Account not found in this context");
-  const open = one<any>(db, "SELECT id FROM proposal_actions WHERE tenant_id=? AND operation='PAYMENT' AND subject_ref=? AND status IN ('PROPOSED','APPROVED','EXECUTING','PENDING','UNKNOWN')", s.tenantId, item.id);
+  const open = openPayments(db, s.tenantId, item.id).length > 0;
   if (open) throw new HttpError(409, "ALREADY_IN_PROGRESS", "A payment for this bill is already waiting for approval or running");
   const amount = -Number(item.amount_minor);
   const payee = item.merchant_name ?? String(item.label).replace(/ (bill|payment)$/i, "");

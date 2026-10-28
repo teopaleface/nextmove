@@ -594,7 +594,7 @@ post("/permissions/:id/revoke", (c) => {
     if (p.kind === "MONITOR") {
       // A monitoring permission covers the watches on the same provider: matched on the label, subject or condition.
       const provider = String(p.source).toLowerCase().split(" ")[0];
-      for (const w of all<any>(c.db, "SELECT id, label, subject_ref, condition_json FROM watches WHERE tenant_id=? AND context_id=? AND status='ACTIVE'", ses.tenantId, ses.contextId)) {
+      for (const w of all<any>(c.db, "SELECT id, label, subject_ref, condition_json FROM watches WHERE tenant_id=? AND context_id=? AND status='ACTIVE'", ses.tenantId, p.context_id)) {
         if ([w.label, w.subject_ref, w.condition_json].some((x) => String(x ?? "").toLowerCase().includes(provider))) {
           run(c.db, "UPDATE watches SET status='REVOKED', last_result='permission revoked' WHERE id=?", w.id);
           watches++;
@@ -676,8 +676,8 @@ get("/dev/status", (c) => {
   const ses = s(c);
   return {
     features: availabilityReport(),
-    model: lastModelStatus(c.db),
-    modelCalls: all<any>(c.db, "SELECT id, purpose, model, status, duration_ms, input_chars, image_count, output_chars, cost_usd, error, created_at FROM model_calls WHERE tenant_id=? OR tenant_id IS NULL ORDER BY created_at DESC LIMIT 25", ses.tenantId),
+    model: lastModelStatus(c.db, true),
+    modelCalls: all<any>(c.db, "SELECT id, purpose, model, status, duration_ms, input_chars, image_count, output_chars, cost_usd, error, created_at FROM model_calls WHERE tenant_id=? ORDER BY created_at DESC LIMIT 25", ses.tenantId),
     worker: workerStatus(c.db),
     jobs: all<any>(c.db, "SELECT kind, status, COUNT(*) n FROM jobs WHERE tenant_id=? GROUP BY kind, status", ses.tenantId),
     inbox: all<any>(c.db, "SELECT issuer, event_id, kind, received_at, applied_at, result FROM inbox_events WHERE tenant_id=? ORDER BY received_at DESC LIMIT 20", ses.tenantId),

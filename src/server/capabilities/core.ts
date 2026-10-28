@@ -240,7 +240,13 @@ export function preference(env: CapEnv, key: string): any {
 
 export function inputOr<T>(env: CapEnv, key: string, fallback: T): T {
   const v = env.inputs[key];
-  return (v === undefined || v === null || v === "" ? fallback : v) as T;
+  if (v === undefined || v === null || v === "") return fallback;
+  // A numeric field never yields NaN or a fractional amount: unparseable input falls back, money rounds to whole bani.
+  if (typeof fallback === "number") {
+    const n = Number(v);
+    return (Number.isFinite(n) ? (key.endsWith("Minor") ? Math.round(n) : n) : fallback) as T;
+  }
+  return v as T;
 }
 
 export const PROVENANCE: Record<string, string> = {

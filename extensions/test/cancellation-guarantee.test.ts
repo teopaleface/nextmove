@@ -311,6 +311,14 @@ describe('dispute lifecycle', () => {
     assert.deepEqual(final.effects[0], { type: 'POST_CREDIT', eventId: 'ev-f', amountMinor: 2900, currency: 'RON', provisional: false });
   });
 
+  it('a final credit smaller than the provisional one reverses the excess', () => {
+    const provisional = ok(recordBankCredit(submitted(), { eventId: 'ev-p', kind: 'PROVISIONAL', amountMinor: 7900, currency: 'RON' })).next;
+    const final = ok(recordBankCredit(provisional, { eventId: 'ev-f', kind: 'FINAL', amountMinor: 3000, currency: 'RON' }));
+    assert.equal(final.next.state, 'WON');
+    assert.equal(final.next.creditedMinor, 3000);
+    assert.deepEqual(final.effects[0], { type: 'REVERSE_CREDIT', eventId: 'ev-f', amountMinor: 4900, currency: 'RON' });
+  });
+
   it('never credits more than the disputed amount', () => {
     assert.deepEqual(recordBankCredit(submitted(), { eventId: 'ev', kind: 'PROVISIONAL', amountMinor: 7901, currency: 'RON' }), { ok: false, reason: 'OVER_CREDIT' });
     const half = ok(recordBankCredit(submitted(), { eventId: 'ev-1', kind: 'PROVISIONAL', amountMinor: 4000, currency: 'RON' })).next;
@@ -334,6 +342,14 @@ describe('dispute lifecycle', () => {
     const refunded = ok(recordMerchantRefund(submitted(), { eventId: 'mr-1', amountMinor: 7900 }));
     assert.equal(refunded.next.state, 'MERCHANT_REFUNDED');
     assert.deepEqual(refunded.effects[0], { type: 'WITHDRAW_DISPUTE', networkRef: 'NET-1' });
+  });
+
+  it('a partial merchant refund goes to review instead of withdrawing the dispute', () => {
+    const partial = ok(recordMerchantRefund(submitted(), { eventId: 'mr-1', amountMinor: 100 }));
+    assert.equal(partial.next.state, 'DOUBLE_RECOVERY_REVIEW');
+    assert.deepEqual(partial.effects, [{ type: 'FLAG_DOUBLE_RECOVERY', eventId: 'mr-1', amountMinor: 100 }]);
+    assert.ok(!partial.effects.some((e) => e.type === 'WITHDRAW_DISPUTE'));
+    assert.deepEqual(recordMerchantRefund(submitted(), { eventId: 'mr-2', amountMinor: 0 }), { ok: false, reason: 'INVALID_AMOUNT' });
   });
 
   it('flags double recovery when the merchant refunds after the bank already credited', () => {

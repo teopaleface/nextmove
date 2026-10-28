@@ -104,6 +104,13 @@ describe("T4 decisions", () => {
     const next = await attempt(a, "lingualeap");
     expect(next.decision).toBe("APPROVE");
     expect(balance(stack, `${t}:daily`)).toBe(daily - 11800);
+    // An allowed merchant still cannot overdraw the account: the charge is declined and nothing posts.
+    stack.exec("UPDATE accounts SET opening_minor=opening_minor-? WHERE id=?", daily - 11800 - 100, `${t}:daily`);
+    const short = await a.post("/api/labs/card-attempt", { merchantId: "lingualeap" });
+    expect(short.status).toBe(200);
+    expect(short.json.transactionId).toBeNull();
+    expect(short.text).toContain("not enough money");
+    expect(balance(stack, `${t}:daily`)).toBe(100);
   });
 
   it("a stale proposal is outdated when its hold expires before approval", async () => {

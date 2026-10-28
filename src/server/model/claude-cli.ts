@@ -218,7 +218,8 @@ function sanitizeError(s: string) {
   return s.replace(/sk-[A-Za-z0-9_-]{10,}/g, "[redacted]").replace(/\s+/g, " ").trim().slice(0, 300);
 }
 
-export function lastModelStatus(db: DatabaseSync) {
+/** Model health for display. Without `detail` (the unauthenticated health and session routes) CLI error text is left out. */
+export function lastModelStatus(db: DatabaseSync, detail = false) {
   const last = one<any>(db, "SELECT value_json, updated_at FROM system_status WHERE key='model:last'");
   const smoke = one<any>(db, "SELECT value_json, updated_at FROM system_status WHERE key='model:smoke'");
   const calls = one<any>(db, "SELECT COUNT(*) n, SUM(CASE WHEN status='OK' THEN 1 ELSE 0 END) ok, SUM(image_count) images FROM model_calls");
@@ -226,7 +227,7 @@ export function lastModelStatus(db: DatabaseSync) {
     configuredModel: config.model,
     planner: config.planner,
     last: last ? JSON.parse(last.value_json) : null,
-    smoke: smoke ? JSON.parse(smoke.value_json) : null,
+    smoke: smoke ? (({ error, ...rest }) => (detail ? { error, ...rest } : rest))(JSON.parse(smoke.value_json)) : null,
     totals: { calls: calls?.n ?? 0, ok: calls?.ok ?? 0, images: calls?.images ?? 0 },
   };
 }

@@ -62,7 +62,12 @@ export async function runExtOperation(c: ExtActionContext) {
   if (!h || c.spec.route !== "BANK_INTERNAL") {
     return void tx(c.db, () => recordSettled(c.db, c.action.id, c.attemptId, "BLOCKED", { reason: "This step has no bank handler in this build; nothing was changed" }));
   }
-  return h(c);
+  try {
+    tx(c.db, () => h(c));
+  } catch (e: any) {
+    // The handler's whole unit of work rolled back with it, so this is known to have changed nothing (not UNKNOWN).
+    tx(c.db, () => recordSettled(c.db, c.action.id, c.attemptId, "BLOCKED", { reason: "The bank step failed and was rolled back; nothing was changed", error: String(e?.message ?? e).slice(0, 200) }));
+  }
 }
 
 /** Executor hook before an attempt is created: a module may hold its conditional action (wait) or close it unsent. */

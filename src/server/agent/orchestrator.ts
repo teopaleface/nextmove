@@ -14,7 +14,7 @@ import { revokeMandate } from "../authority/authority";
 import { formatMoney } from "../../shared/money";
 import { roadblocksFromText } from "../finance/route";
 import type { WorkerCtx } from "../execution/executor";
-import { ensureSimulation, showSimulation, simulatedSimulationDecision } from "./simulations";
+import { ensureSimulation, numbersIn, showSimulation, simulatedSimulationDecision } from "./simulations";
 import { SIMULATION_KINDS } from "../../shared/simulations";
 
 // Agent tasks. Each step the planner chooses exactly one typed tool; arguments are validated by code and every
@@ -95,6 +95,7 @@ export function answerQuestion(db: DatabaseSync, session: Session, taskId: strin
   return tx(db, () => {
     const task = one<any>(db, "SELECT * FROM tasks WHERE id=? AND tenant_id=?", taskId, session.tenantId);
     if (!task || task.user_id !== session.userId) throw new HttpError(404, "NOT_FOUND", "Not found");
+    if (["DONE", "FAILED", "STOPPED"].includes(task.state)) throw new HttpError(409, "TASK_CLOSED", "This task has ended. Start a new one to continue.");
     const q = one<any>(db, "SELECT * FROM task_questions WHERE id=? AND task_id=?", questionId, taskId);
     if (!q) throw new HttpError(404, "NOT_FOUND", "Not found");
     if (q.status !== "OPEN") return { already: true };
@@ -156,6 +157,14 @@ async function runTool(db: DatabaseSync, task: any, session: Session, d: Decisio
       // otherwise the capability keeps asking, so a planner cannot supply the answer itself.
       const answered = one<any>(db, "SELECT 1 AS ok FROM task_questions WHERE task_id=? AND status='ANSWERED' LIMIT 1", task.id);
       if (!answered) for (const k of CUSTOMER_ANSWER_INPUTS) delete inputs[k];
+      // A planner-supplied number counts only when the customer wrote it (in the request or an answer); a money field
+      // may be written in RON. Otherwise the capability keeps its own default, so the model cannot pick amounts.
+      const written = numbersIn([task.request_text, ...all<any>(db, "SELECT answer_json FROM task_questions WHERE task_id=? AND status='ANSWERED'", task.id).map((q) => String(json(q.answer_json, "")))].join(" "));
+      for (const [k, v] of Object.entries(inputs)) {
+        if (typeof v !== "number") continue;
+        const n = Math.abs(v);
+        if (!(written.has(n) || (k.endsWith("Minor") && written.has(n / 100)))) delete inputs[k];
+      }
       const a = await analyzeCapability(db, session, String(d.capabilityId), inputs);
       setBlock(db, task.id, `analysis:${a.capability}`, 10, "analysis", { capability: a.capability, inputs });
       return { result: compactAnalysis(a) };
@@ -170,6 +179,11 @@ async function runTool(db: DatabaseSync, task: any, session: Session, d: Decisio
       // Re-run with the inputs of this task's last analysis of the same capability, so the proposal matches what was analysed.
       const analysed = json<any>(one<any>(db, "SELECT payload_json FROM task_blocks WHERE task_id=? AND block_key=?", task.id, `analysis:${d.capabilityId}`)?.payload_json, null);
       const p = await proposeFromCapability(db, session, String(d.capabilityId), d.candidateKeys ?? [], analysed?.inputs ?? {}, task.id);
+      if (one<any>(db, "SELECT state FROM tasks WHERE id=?", task.id)?.state === "STOPPED") {
+        run(db, "UPDATE proposals SET status='DECLINED', decided_at=? WHERE id=? AND status='READY'", new Date().toISOString(), p.id);
+        run(db, "UPDATE proposal_actions SET status='NOT_STARTED', updated_at=? WHERE proposal_id=? AND status='PROPOSED'", new Date().toISOString(), p.id);
+        return { result: { stopped: true }, stop: "DONE" };
+      }
       setBlock(db, task.id, "proposal", 30, "proposal", { proposalId: p.id });
       return { result: { proposalId: p.id, actions: p.actions.map((a: any) => a.display.title), totals: p.totals, status: p.status }, stop: "PROPOSAL" };
     }
@@ -205,11 +219,18 @@ function allowedNumbers(steps: Step[], request: string) {
 
 export function checkNumbers(text: string, allowed: Set<string>) {
   const bad: string[] = [];
-  for (const m of text.matchAll(/\d[\d,]*(?:\.\d+)?/g)) {
-    const n = m[0].replace(/,/g, "");
-    const plain = n.replace(/\.00$/, "");
-    if (allowed.has(n) || allowed.has(plain) || Number(n) <= 31 || /^20\d\d$/.test(n)) continue;
-    bad.push(m[0]);
+  for (const m of text.matchAll(/(\d(?:[\d.,]*\d)?)(\s?[kK]\b)?/g)) {
+    const raw = m[1];
+    const thousands = Boolean(m[2]);
+    const after = text.slice(m.index! + m[0].length, m.index! + m[0].length + 5);
+    const before = text.slice(Math.max(0, m.index! - 5), m.index!);
+    const money = /^\s?(ron|lei|eur|€)/i.test(after) || /(ron|lei|eur|€)\s?$/i.test(before);
+    // Read the token both ways: 2,050.5 (English) and 2.050,5 (Romanian). It passes if either reading is a NextMove number.
+    const readings = [raw.replace(/,/g, ""), raw.replace(/\./g, "").replace(/,/g, ".")].map((n) => (thousands ? String(Number(n) * 1000) : n));
+    if (readings.some((n) => allowed.has(n) || allowed.has(n.replace(/\.00$/, "")) || allowed.has(Number(n).toFixed(2)))) continue;
+    // Day numbers and years are fine in prose, but never as an amount.
+    if (!money && !thousands && /^\d+$/.test(raw) && (Number(raw) <= 31 || /^20\d\d$/.test(raw))) continue;
+    bad.push(m[0].trim());
   }
   return bad;
 }
@@ -277,6 +298,8 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
       if (d.tool === "analyze" && (!d.capabilityId || !ids.includes(d.capabilityId))) d = { tool: "find_capability", query: task.request_text, reason: "Capability not available here" };
       if (d.tool === "prepare_proposal" && (!d.capabilityId || !ids.includes(d.capabilityId))) d = { tool: "final_answer", reason: "Invalid capability", text: "I could not prepare that here." };
       d = ensureSimulation(d, task.request_text, steps, customerOf(db, task.tenant_id) === "alex" && session.contextKind === "PERSONAL");
+      // Stop may have been pressed while the model was thinking: nothing new is prepared after that.
+      if (one<any>(db, "SELECT state FROM tasks WHERE id=?", task.id)?.state === "STOPPED") break;
       let out: { result: any; stop?: string };
       try {
         out = await runTool(db, task, session, d);
@@ -348,6 +371,7 @@ export function stopAgentTask(db: DatabaseSync, session: Session, taskId: string
   }
   tx(db, () => {
     run(db, "UPDATE jobs SET status='DONE', last_error='stopped by customer', updated_at=? WHERE kind='AGENT' AND ref_id=? AND status='QUEUED'", new Date().toISOString(), taskId);
+    run(db, "UPDATE task_questions SET status='CLOSED' WHERE task_id=? AND status='OPEN'", taskId);
     run(db, "UPDATE tasks SET state='STOPPED', summary=?, updated_at=? WHERE id=?", alreadyStarted ? `You stopped this task. ${alreadyStarted} request${alreadyStarted === 1 ? " was" : "s were"} already with the provider and may still finish.` : "You stopped this task. Anything already confirmed stays done.", new Date().toISOString(), taskId);
     taskEvent(db, { taskId, tenantId: session.tenantId, kind: "stop", label: `You stopped the task${revoked ? `; ${revoked} approved action${revoked === 1 ? "" : "s"} will not start` : ""}`, evidence: "CUSTOMER_APPROVAL" });
   });

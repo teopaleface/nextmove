@@ -72,6 +72,10 @@ export function postCardOrTransfer(
     data?: Record<string, unknown>;
   },
 ): { transactionId: string; duplicate: boolean } {
+  // The transaction's context is the account's own, never the caller's say-so.
+  const acct = one<{ context_id: string }>(db, "SELECT context_id FROM accounts WHERE id=? AND tenant_id=?", input.accountId, input.tenantId);
+  if (!acct) throw new Error("Account not found for this tenant");
+  if (acct.context_id !== input.contextId) throw new Error("Account belongs to a different context");
   const { entryId, duplicate } = post(db, {
     tenantId: input.tenantId,
     sourceEventId: input.sourceEventId,

@@ -67,7 +67,7 @@ async function savingsBase(env: CapEnv) {
 }
 
 const NUM = /\d[\d,]*(?:\.\d+)?/g;
-const numbersIn = (text: string) => new Set([...text.matchAll(NUM)].map((m) => Number(m[0].replace(/,/g, ""))));
+export const numbersIn = (text: string) => new Set([...text.matchAll(NUM)].map((m) => Number(m[0].replace(/,/g, ""))));
 
 /** Values the customer actually wrote, read from their request (the simulated planner uses this too). */
 export function valuesFromText(text: string) {

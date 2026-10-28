@@ -24,7 +24,8 @@ export interface ExtActionContext {
  * recordSettled (inside tx), re-check every precondition against current bank state (fail closed), and scope
  * every read and write to action.tenant_id and action.context_id.
  */
-export type ExtOperationHandler = (c: ExtActionContext) => void | Promise<void>;
+/** Synchronous by contract: the registry runs it in one bank transaction, so a failure leaves nothing changed. */
+export type ExtOperationHandler = (c: ExtActionContext) => void;
 
 /**
  * A conditional, pre-approved action (an exit plan's stop) is held by its module before any attempt exists. The hook can

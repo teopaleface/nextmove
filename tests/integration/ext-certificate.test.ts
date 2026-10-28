@@ -135,4 +135,25 @@ describe("E8 issue, disclose, verify, withdraw", () => {
     expect(e8.numbers).toMatchObject({ valid: 0, withdrawn: 1 });
     expect(e8.candidates).toEqual([]);
   });
+
+  it("does not revive a withdrawn certificate after a Labs reset re-registers the same key", async () => {
+    const a = await stack.login("alex");
+    const t = a.tenantId;
+    await stopDashEats(a);
+    expect((await issue(a)).done.status).toBe("CONFIRMED");
+    const old = stack.q1<any>("SELECT * FROM ext_certificate WHERE tenant_id=?", t)!;
+    const demoNow = await stack.clock(a, 60);
+    stack.exec("UPDATE subscriptions SET state='ACTIVE', last_observed_at=? WHERE id=?", demoNow, old.subscription_id);
+    expect((await verify(a, old.holder_copy)).json).toMatchObject({ ok: false, reason: "REVOKED" });
+
+    expect((await a.post("/api/labs/reset", {})).status).toBe(200);
+    a.csrf = (await a.json("/api/session")).csrfToken; // the reset signs in again with a fresh session
+    await stack.clock(a, 5); // certificate ids are derived from the issue time; a later one is a different certificate
+    await stopDashEats(a);
+    expect((await issue(a)).done.status).toBe("CONFIRMED");
+    const fresh = stack.q1<any>("SELECT * FROM ext_certificate WHERE tenant_id=?", t)!;
+    expect(fresh.cert_id).not.toBe(old.cert_id);
+    expect((await verify(a, fresh.holder_copy)).json.ok).toBe(true);
+    expect((await verify(a, old.holder_copy)).json).toMatchObject({ ok: false, reason: "NOT_ON_RECORD" });
+  });
 });

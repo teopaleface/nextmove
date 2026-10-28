@@ -120,8 +120,10 @@ function applyEvent(db: DatabaseSync, ev: MerchantEvent): string {
       if (ev.issuer !== "payment-network") return "ignored: credits only come from the payment network";
       const amount = Number(d.amountMinor);
       if (!Number.isSafeInteger(amount) || amount <= 0) return "ignored: invalid amount";
+      if (typeof d.transferId !== "string" || !d.transferId) return "ignored: a credit needs its transfer id";
       const rec = d.caseId ? one<any>(db, "SELECT * FROM recoveries WHERE tenant_id=? AND (json_extract(data_json,'$.caseId')=? OR reference=?)", t, d.caseId, d.reference ?? "") : d.reference ? one<any>(db, "SELECT * FROM recoveries WHERE tenant_id=? AND reference=?", t, d.reference) : null;
       if (rec) {
+        if (rec.amount_minor != null && amount > Number(rec.amount_minor)) return "ignored: credit is larger than the amount being recovered";
         const acct = one<any>(db, "SELECT id FROM accounts WHERE tenant_id=? AND context_id=? AND kind='CURRENT' ORDER BY ordinal LIMIT 1", t, rec.context_id);
         const posted = postCardOrTransfer(db, { tenantId: t, contextId: rec.context_id, accountId: acct.id, sourceEventId: `credit:${d.transferId}`, amountMinor: amount, merchantName: rec.merchant_name, merchantId: rec.merchant_id, category: "Refund", reference: d.reference ?? d.transferId, bookedAt: at, note: `Credit for ${rec.kind.toLowerCase().replace(/_/g, " ")}` });
         if (!posted.duplicate) {

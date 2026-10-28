@@ -305,7 +305,7 @@ CREATE TABLE IF NOT EXISTS task_questions (
   text TEXT NOT NULL,
   options_json TEXT NOT NULL,
   answer_json TEXT,
-  status TEXT NOT NULL,           -- OPEN | ANSWERED
+  status TEXT NOT NULL,           -- OPEN | ANSWERED | CLOSED
   created_at TEXT NOT NULL,
   answered_at TEXT,
   UNIQUE (task_id, question_key)

@@ -32,7 +32,7 @@ export const SHIELD_CATALOG: Record<string, { merchantName: string; category: st
 };
 
 export type ShieldState = "WATCHING" | "HELD" | "BLOCKED" | "ALLOWED";
-export type AttemptOutcome = "HELD" | "DECLINED_BLOCKED" | "DECLINED_ALREADY_HELD" | "DECLINED_CARD_FROZEN" | "APPROVED" | "EXPIRED_DECLINED" | "RELEASED_BY_BLOCK" | "POSTED_BY_ALLOW";
+export type AttemptOutcome = "HELD" | "DECLINED_BLOCKED" | "DECLINED_ALREADY_HELD" | "DECLINED_CARD_FROZEN" | "DECLINED_INSUFFICIENT_FUNDS" | "APPROVED" | "EXPIRED_DECLINED" | "RELEASED_BY_BLOCK" | "POSTED_BY_ALLOW";
 
 export interface ShieldHold {
   transactionId: string;
@@ -286,6 +286,11 @@ export function cardAttempt(db: DatabaseSync, input: { tenantId: string; context
         message = "Declined: the card is frozen.";
         break;
       case "APPROVE": {
+        if (balanceOf(db, acct.id) < amount) {
+          log("DECLINED_INSUFFICIENT_FUNDS");
+          message = "Declined: not enough money in the account.";
+          break;
+        }
         const r = postCardOrTransfer(db, { tenantId: w.tenantId, contextId: w.contextId, accountId: acct.id, sourceEventId: `shield:${reference}`, amountMinor: -amount, merchantName: c.merchantName, merchantId: c.merchantId, category: c.category, reference, bookedAt: at, note: "You allowed this merchant after a trial" });
         transactionId = r.transactionId;
         log("APPROVED");
@@ -343,6 +348,11 @@ export const SHIELD_OPERATIONS = new Set(["MERCHANT_BLOCK", "HOLD_ALLOW"]);
 
 /** Execute an approved Trial Shield decision after the dispatch gate. Runs entirely inside the bank. */
 export function runShieldDecision(db: DatabaseSync, action: any, spec: ActionSpec, attemptId: string) {
+  // One transaction from read to write, so a card attempt committed meanwhile cannot be overwritten by a stale watch.
+  return tx(db, () => decideShield(db, action, spec, attemptId));
+}
+
+function decideShield(db: DatabaseSync, action: any, spec: ActionSpec, attemptId: string) {
   const t = action.tenant_id;
   const w = shieldWatch(db, t, action.context_id, String(spec.params.merchantId ?? ""));
   if (!w || w.id !== spec.params.watchId) return void tx(db, () => recordSettled(db, action.id, attemptId, "REFUSED", { reason: "This merchant is not under Trial Shield in this context" }));

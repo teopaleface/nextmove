@@ -157,6 +157,7 @@ export function getCertificate(db: DatabaseSync, session: Session, certId: strin
 
 const REASON_TEXT: Record<string, string> = {
   MALFORMED: "This is not a NextMove certificate",
+  NOT_ON_RECORD: "This bank has no record of issuing this certificate",
   UNSUPPORTED_VERSION: "Unsupported certificate version",
   UNKNOWN_KEY: "Signed with a key this bank does not know",
   KEY_COMPROMISED: "The signing key was withdrawn",
@@ -176,6 +177,10 @@ export function verifyPresented(db: DatabaseSync, session: Session, body: any) {
   if (typeof text !== "string" || text.length === 0 || text.length > MAX_PRESENTED_LENGTH || !/^[A-Za-z0-9_.~-]+$/.test(text)) throw new HttpError(400, "BAD_INPUT", `certificate must be the certificate text (at most ${MAX_PRESENTED_LENGTH} characters)`);
   const list = sweep(db, session.tenantId);
   const now = iso(nowIso(db, session.tenantId));
-  const result = list ? verifyCertificate(text, { trustedKeys: trustedKeys(db, session.tenantId), revocationList: list, now }) : ({ ok: false, reason: "UNKNOWN_KEY" } as const);
+  const checked = list ? verifyCertificate(text, { trustedKeys: trustedKeys(db, session.tenantId), revocationList: list, now }) : ({ ok: false, reason: "UNKNOWN_KEY" } as const);
+  // A valid signature is not enough: the bank vouches only for certificates still in its own issued register, so
+  // one whose record was revoked or erased (for example by a Labs reset) is refused even though the key survives.
+  const onRecord = checked.ok ? one<any>(db, "SELECT revoked_at FROM ext_certificate WHERE tenant_id=? AND cert_id=?", session.tenantId, checked.certId) : null;
+  const result = !checked.ok ? checked : !onRecord ? ({ ok: false, reason: "NOT_ON_RECORD" } as const) : onRecord.revoked_at ? ({ ok: false, reason: "REVOKED" } as const) : checked;
   return { ...result, ...(result.ok ? {} : { message: REASON_TEXT[result.reason] ?? result.reason }), checkedAt: now, statement: STATEMENT };
 }

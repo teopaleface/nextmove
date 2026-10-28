@@ -14,6 +14,7 @@ const OUTCOME_LABEL: Record<string, string> = {
   DECLINED_BLOCKED: "Tried again: declined (blocked)",
   DECLINED_ALREADY_HELD: "Tried again while on hold: declined",
   DECLINED_CARD_FROZEN: "Declined: card frozen",
+  DECLINED_INSUFFICIENT_FUNDS: "Declined: not enough money",
   APPROVED: "Charge approved (you allowed this merchant)",
   EXPIRED_DECLINED: `No decision in ${HOLD_HOURS} h: declined`,
   RELEASED_BY_BLOCK: "You blocked it: hold released",
@@ -49,6 +50,7 @@ function decisionCandidates(env: CapEnv, w: ShieldWatch, card: string): Candidat
   const h = w.c.hold!;
   const name = w.c.merchantName;
   const differs = w.c.advertisedMinor != null && w.c.advertisedMinor !== h.amountMinor;
+  const payFrom = one<{ name: string }>(env.db, "SELECT a.name FROM transactions t JOIN accounts a ON a.id=t.account_id WHERE t.id=? AND t.tenant_id=?", h.transactionId, env.tenantId)?.name ?? "your card account";
   const params = { watchId: w.id, merchantId: w.c.merchantId, holdTransactionId: h.transactionId, amountMinor: h.amountMinor, advertisedMinor: w.c.advertisedMinor, heldAt: h.heldAt, expiresAt: h.expiresAt };
   const base = { route: "BANK_INTERNAL" as const, capability: "T4", merchantId: w.c.merchantId, merchantName: name, subjectRef: h.transactionId, params };
   const shared = [
@@ -94,7 +96,7 @@ function decisionCandidates(env: CapEnv, w: ShieldWatch, card: string): Candidat
         display: display(
           `Allow the ${money(h.amountMinor)} ${name} payment`,
           `Post the held charge as a normal payment. Later ${name} charges go through as usual.`,
-          [...shared, { label: "Pays now", value: `${money(h.amountMinor)} from Daily account` }, { label: "After this", value: `${name} is no longer held` }],
+          [...shared, { label: "Pays now", value: `${money(h.amountMinor)} from ${payFrom}` }, { label: "After this", value: `${name} is no longer held` }],
           differs ? `${name} asked for ${money(h.amountMinor)}, not the advertised ${money(w.c.advertisedMinor!)}. You approve exactly ${money(h.amountMinor)}.` : `You approve exactly ${money(h.amountMinor)}. Nothing more can be posted from this hold.`,
           "Approve payment",
           "Not now",
@@ -195,7 +197,7 @@ export const T4: CapabilityDef = {
     const lastAllow = one<any>(env.db, "SELECT r.id, r.issuer_reference FROM receipts r WHERE r.tenant_id=? AND r.context_id=? AND r.operation='HOLD_ALLOW' ORDER BY r.verified_at DESC LIMIT 1", env.tenantId, env.contextId);
     const avoidedLast = lastBlock ? Number(JSON.parse(lastBlock.r.money_effect_json).details?.avoidedMinor ?? 0) : 0;
 
-    if (lastBlock && !held.length && avoidedLast) blocks.splice(1, 0, { kind: "note", tone: "info", text: `Follow-up idea: move the ${money(avoidedLast)} you kept into Savings. NextMove doesn't prepare transfers between your own accounts yet, so this stays your call.` });
+    if (lastBlock && !held.length && avoidedLast) blocks.splice(1, 0, { kind: "note", tone: "info", text: `Follow-up idea: move the ${money(avoidedLast)} you kept into Savings. This stays your call.` });
 
     const labs: NonNullable<Analysis["labs"]> = [];
     for (const w of watches) {
