@@ -1,0 +1,20 @@
+Use case: ui-mockup.
+Use the attached NextMove image as the EDIT TARGET and exact style/layout template. Replace all four phone interiors with four new MOBILE screens. Preserve the original fictional NextMove identity, yellow #FEE600 accents, ink #151515, warm ivory #F7F7F2, white cards, font hierarchy, rounded cards, thin separators, clean outline icons and four-column full-phone composition. Front-facing flat UI, entire status and bottom safe areas visible; no hands, perspective, huge hardware frames, desktop UI or additional marketing text. All copy ENGLISH and accurate. Small Demo tag. Reference phone design is390x844. Captions below the screens: "09 Confirmed result", "10 Goals", "11 Purchase decision", "12 Home plan".
+
+SCREEN 9 CONFIRMED RESULT:
+A calm receipt screen with a small green check, header "Renewal stopped", subtitle "Confirmed by FitFlow". Main amount "79 RON" and label "Future charge avoided". Short line "The 30 Oct renewal is off." Receipt details in a white card: "Access until 30 Oct", "Cancellation cost 0.00 RON", "Reference NF-1047". A separate bank-effect card: "Next 30 days 163 RON", "Total balance 110,000 RON", status "Unchanged". Small reminder "Only FitFlow changed. Other options await review." Bottom yellow CTA "View updated payments", secondary link "View confirmation". No confetti, no refund label, no153saved label, no increase in account balance. It is a confirmed merchant receipt distinct from the earlier pending screen.
+
+SCREEN 10 GOALS:
+Home/Activity/Goals/Agent bottom navigation, Goals selected. Title "Your goals", small add button. Hero white goal card "Home readiness", large "110,000 / 130,000 RON", a yellow progress bar around85%, "20,000 RON to go". Below: "6,000 RON / month" and "4 monthly contributions". Small line "Includes a 30,000 RON reserve". A helpful agent card "Planning a purchase?", supporting "See what changes for your home goal.", yellow CTA "Test a decision". A discreet "Based on your current assumptions" disclosure. Goal is a plan based on the same liquid funds, not an extra account or a guarantee of mortgage approval.
+
+SCREEN 11 PURCHASE DECISION:
+Goals selected, title "Phone now, home later?". Subtitle "Priority: keep my home timeline". Compact assumption row "Home target130,000 RON", "Save6,000/month". Three readable vertically stacked choice cards:
+"No purchase" with "4 contributions";
+"Phone · 6,000 RON" with "5 contributions" and "1 more month";
+"Phone · 3,500 RON" with "4 contributions", selected thin yellow border and badge "Fits your priority".
+A short result "The lower-cost phone keeps the same timeline." Link "View calculation". Bottom yellow button "Save comparison". This is planning, not purchasing; do not show an executed payment or treat79avoidedtrial as an immediate savings deposit.
+
+SCREEN 12 HOME PLAN:
+Goals selected, back/header "Your home plan". Main white summary "20,000 RON to go" with "4 monthly contributions". Target breakdown rows: "Down payment90,000 RON", "Purchase costs10,000 RON", "Protected reserve30,000 RON", total "Target130,000 RON". Below a section "After buying" with "Income12,000", "Other spending6,000", "Loan payment3,400", result "2,600 RON / month". A pale warning card "If income falls by3,000 RON", result "-400 RON / month". Small labels "Illustrative payment" and "Eligibility not assessed". Yellow CTA "Prepare bank checklist". Use concise aligned numbers, legible text and enough whitespace. A supplied loan-payment assumption is not a verified mortgage offer.
+
+Keep the exact coherent screen style from the reference and full comfortable phone proportions. Do not add unrelated numbers, real provider logos, long paragraphs, gradients, tiny side-by-side desktop charts or giant AI symbols. Consequential numbers above must be correct.

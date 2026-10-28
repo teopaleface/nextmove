@@ -1,0 +1,20 @@
+Use case: ui-mockup, consistent multi-screen continuation.
+The attached image is the EDIT TARGET and visual style/layout template for NextMove. Replace all four phone screen contents with the four NEXT mobile screens described below. Keep its original NextMove identity, warm ivory/white/yellow/black palette, typography, card style, spacing, thin borders, phone presentation and four-column composition. Produce a new separate design board; do not repeat the old home screens. Full portrait phone screens, front-on, entire top/status and bottom safe areas visible. Make all primary text and monetary amounts readable and accurate. Original fictional app, no Raiffeisen logo. English UI. Small "Demo" label in contextual header. Captions below screens exactly "05 Review evidence", "06 Compare options", "07 Approve action", "08 Agent browser". Bottom navigation where applicable: Home, Activity, Goals, Agent, with Agent selected. Confirmation and live browser may use full-screen sheets instead of tabs.
+
+SCREEN 5 REVIEW EVIDENCE:
+Back arrow, title "Review evidence". Two compact upload thumbnails "Screen Time" and "Subscription", with real-looking small line/bar chart graphics, not a photo. Parsed facts in a white card: "Streamly", "14 min this week", "Phone only", "49.00 RON / month". Clear question "Do you also use it elsewhere?" selected answer chip "Yes, on TV". A checked preference "Keep offline playback". Supporting line "We will compare benefits, not just screen time." Bottom yellow CTA "Compare options". Show factual editing/confirmation affordances rather than a huge chat bubble. The weekly phone usage is not treated as total monthly usage.
+
+SCREEN 6 COMPARE OPTIONS:
+Title "Your options", small "Next 30 days". Two neat summary amounts "Current 242 RON" and "Proposed 89 RON", with yellow emphasis on a result "153 RON potential reduction". Three distinct action rows:
+"Stop FitFlow trial" "79 RON" with descriptor "Future charge avoided";
+"Switch to Student bundle" "39 RON" descriptor "Replaces StudyPlus + Streamly";
+"Remove duplicate CloudBox" "35 RON" descriptor "After replacement storage is active".
+A benefit chip "Offline playback kept" and small source affordance "View terms & calculations". Short conditional label "If all 3 actions are confirmed". Main yellow CTA "Review actions". These three reductions total153, they are not cash refunded or bank balance increases.
+
+SCREEN 7 APPROVE ACTION:
+A full-height clean approval sheet with close/back, title "Cancel FitFlow trial". Merchant icon and label "FitFlow". Exact action summary in a white card: "Next charge" "79.00 RON on 30 Oct"; "Cancellation cost" "0.00 RON"; "Access until" "30 Oct"; "Effect" "Renewal will stop". Short note "Your current balance stays unchanged." At bottom a clear yellow button "Confirm cancellation" and secondary text button "Keep trial". Only this one trial action is being approved, not all3 actions. No success check yet, no premature completed status.
+
+SCREEN 8 AGENT BROWSER:
+Full-screen agent task title "Stopping FitFlow renewal", neutral status badge "Waiting for confirmation". A mobile-friendly live browser preview showing fictional merchant "FitFlow", domain "fitflow.example", account page with text "Cancellation request received" and "Processing". Beneath it a small labelled action timeline: checked "Opened account", checked "Sent approved request", current hollow/spinner step "Waiting for merchant". Controls "Pause", "Take over", and bottom action "Open live view". The page must be explicitly pending, not completed or confirmed. Include a modest live indicator in the browser card. It is a phone remote-browser sheet, NOT a desktop dashboard with sidebars.
+
+Keep the financial hierarchy and friendly precise banking feel of the reference. Short accurate copy, proper alignment, accessible contrast, clean outline icons, 16px-equivalent body. Avoid tiny tables, extra decorative slogans, unrelated balance figures, purple, gradients, oversized AI symbols, off-screen buttons, or official commercial logos.

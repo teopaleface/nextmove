@@ -1,0 +1,7 @@
+Edit this four-screen NextMove board with ONLY a precise transaction-date correction in the SECOND phone titled Activity. Preserve all layouts, colors, typography, other screens, amounts, merchant names and navigation exactly.
+Change the secondary date/time text for these four transaction rows:
+Streamly: replace "Today, 14:22" with "26 Oct, 14:22".
+StudyPlus: replace "Today, 10:14" with "26 Oct, 10:14".
+CloudBox: replace "Yesterday, 18:03" with "26 Oct, 09:03".
+Fresh Market: replace "28 Oct, 12:36" with "25 Oct, 12:36".
+The subscription payments occurred on26October; their next monthly renewal is26November inside the next30day forecast from28October. Do not show Today or Yesterday for those subscription rows. Do not change any financial amount, label, icon, screen position or other text. Output the full corrected four-screen board.

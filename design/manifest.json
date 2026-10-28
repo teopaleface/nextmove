@@ -1,0 +1,197 @@
+{
+  "name": "NextMove mobile design handoff",
+  "version": "2.0",
+  "status": "design_and_specification_not_implemented_application",
+  "referenceViewport": {
+    "width": 390,
+    "height": 844
+  },
+  "screenTemplates": 24,
+  "acceptedCapabilities": 22,
+  "generationMethod": "built_in_image_gen.imagegen",
+  "boards": [
+    {
+      "file": "mockups/01-banking-and-agent-v2.png",
+      "frames": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "width": 1983,
+      "height": 793,
+      "sha256": "bc75c5c89db2f158a13ca30b5d3d4459973d3a381638b3f54b6fb21ee469a451"
+    },
+    {
+      "file": "mockups/02-agent-workflow.png",
+      "frames": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "width": 1983,
+      "height": 793,
+      "sha256": "dccb69fdede569a5c89915ac05a51ba1909ad7d040174030c97c72801f694023"
+    },
+    {
+      "file": "mockups/03-results-and-goals.png",
+      "frames": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "width": 1983,
+      "height": 793,
+      "sha256": "6468348bb146be4df470965aecb2e027b44391c424ab5f4eeedf70c29e59f9d3"
+    },
+    {
+      "file": "mockups/04-business-recovery-and-travel.png",
+      "frames": [
+        13,
+        14,
+        15,
+        16
+      ],
+      "width": 1983,
+      "height": 793,
+      "sha256": "53dbdd44b8e3b7113da803150793f462a2ee90222ab92941cccb581eb9d01475"
+    }
+  ],
+  "nativePreview": {
+    "file": "mobile-preview.html",
+    "views": 16,
+    "additionalApprovalSheet": true,
+    "cssViewport": {
+      "width": 390,
+      "height": 844
+    },
+    "method": "native_HTML_CSS_rendered_with_T3_html_preview",
+    "state": "interactive_design_simulation_no_connected_AI_or_financial_services",
+    "gallery": "mockups/native-v2/index.html",
+    "screenshots": [
+      {
+        "view": "home",
+        "file": "mockups/native-v2/01-home.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "d6b6e725fb4726312608f03a3042daeb800ac4a3da27e9fe672cc4c66dc7a554"
+      },
+      {
+        "view": "activity",
+        "file": "mockups/native-v2/02-activity.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "3ae36599139b57adcb677ee730ddbcedbb8d1b23b1614d44564f568311d727df"
+      },
+      {
+        "view": "subscriptions",
+        "file": "mockups/native-v2/03-subscriptions.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "886cbb1629aef382f8049106d276235341d534c75b3a47244b575b0ef7b9dbea"
+      },
+      {
+        "view": "plan",
+        "file": "mockups/native-v2/04-plan.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "cc6b7e4e9d1745f86225bf8e121f8cad7cb188a7acc9b24a782d22d510289932"
+      },
+      {
+        "view": "agent",
+        "file": "mockups/native-v2/05-agent.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "a85631b708f4bb0b098001a3aab3e0b6a1ad1e30e8639509311a81c0c7da3ada"
+      },
+      {
+        "view": "evidence",
+        "file": "mockups/native-v2/06-evidence.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "182f11d3f36e08ffd2129bcbbb6c0e895a18b97d0cbb5244c985ba5488aa9c9a"
+      },
+      {
+        "view": "offer",
+        "file": "mockups/native-v2/07-offer.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "b118ea306e405f72b307ba01d008d646100e4a0866cc725471c0ff4f2f201765"
+      },
+      {
+        "view": "browser",
+        "file": "mockups/native-v2/08-browser.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "40acb6e0a00993d5891296222c86d632c149424a2bf79be346386be8c7423be3"
+      },
+      {
+        "view": "receipt",
+        "file": "mockups/native-v2/09-receipt.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "c6774d8798d45d33a1ff2a30a1f3014627acf61b928670e2b5cd0725467736af"
+      },
+      {
+        "view": "terms",
+        "file": "mockups/native-v2/10-terms.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "76d6e1782b845d16df1dd496d5dd44097852b6213d7587de5e711ae5ab1ff07f"
+      },
+      {
+        "view": "goals",
+        "file": "mockups/native-v2/11-goals.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "7d9bcf6096c87b5dcfdbea76a7504e712ca5c39ddf869624b4b9ad8c69045f17"
+      },
+      {
+        "view": "phone",
+        "file": "mockups/native-v2/12-phone.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "8be71057bbca1c12a63f89dc78c20cf846eaaa95a29007f7c5af9e9b5421eb24"
+      },
+      {
+        "view": "homeplan",
+        "file": "mockups/native-v2/13-homeplan.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "731968f535c923af517fbc693a83e3fe3bfd28910073bce2147de98f501095dd"
+      },
+      {
+        "view": "business",
+        "file": "mockups/native-v2/14-business.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "03ea32394717919771697e5f2dc10718d47c3c42cf8a3ccf04bb3d24bf8c8052"
+      },
+      {
+        "view": "businessplan",
+        "file": "mockups/native-v2/15-businessplan.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "3c6e32347d168025a9c781419505530cf748b9230e655271c701e6223932dfc1"
+      },
+      {
+        "view": "recovery",
+        "file": "mockups/native-v2/16-recovery.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "86d64fe0df104e939c9b35a66786a8eef3a5b8347ef383e5aa73e0ef09f50ed8"
+      },
+      {
+        "view": "approval",
+        "file": "mockups/native-v2/17-approval.png",
+        "width": 390,
+        "height": 844,
+        "sha256": "f1116934c5c8413db55add4d27e2392b1b78479abd6fc19cce81f95c6c404613"
+      }
+    ],
+    "sha256": "a4900a3b8187fd1e0972af9d3d75b71fa81b1a968840d86d33ccc66c0869309a"
+  },
+  "imageGenBoardRole": "earlier_composition_references_overridden_by_v2_component_style"
+}

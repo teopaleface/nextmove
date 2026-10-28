@@ -1,0 +1,5 @@
+# Server-side local Claude inference with explicit adapter status
+
+No application API key is present, while the developer's first-party Claude Code CLI is authenticated. For this local developer-operated demo, prefer a server-only Claude CLI adapter using its supported headless interface and current login, after a bounded capability smoke test; pass prompts through stdin with fixed argument arrays and tools disabled. Read only supported CLI output, never credentials or OAuth tokens. Keep requests scoped, bounded and separate from execution authority.
+
+An explicit API adapter may be enabled later through privately supplied configuration; no secret is committed or silently sourced from unrelated projects. If live inference is unavailable, expose that fact and offer a clearly labelled deterministic simulation/manual path. A scripted fallback must never be presented as a live model decision. This developer adapter is not a public hosted authentication design or an assumption of API credits from subscriptions.

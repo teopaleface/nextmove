@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "status": "synthetic_planning_fixtures_not_live_financial_advice",
+  "currency": "RON",
+  "moneyUnit": "bani",
+  "asOf": "2026-10-28",
+  "phoneAndHome": {
+    "profileId": "alex-personal",
+    "openingCashMinor": 11000000,
+    "homeDepositMinor": 9000000,
+    "closingAndMovingMinor": 1000000,
+    "protectedReserveMinor": 3000000,
+    "monthlySavingsBeforeHomeMinor": 600000,
+    "phonePriceMinor": 600000,
+    "alternativePhonePriceMinor": 350000,
+    "monthlyIncomeMinor": 1200000,
+    "monthlyOtherSpendingMinor": 600000,
+    "mockQuotedMortgagePaymentMinor": 340000,
+    "downsideIncomeReductionMinor": 300000,
+    "expected": {
+      "homeTargetMinor": 13000000,
+      "homeGapMinor": 2000000,
+      "contributionsWithoutPhone": 4,
+      "contributionsWithPhone": 5,
+      "contributionsWithAlternativePhone": 4,
+      "monthlyAfterHomeMinor": 260000,
+      "downsideMonthlyAfterHomeMinor": -40000
+    },
+    "assumptions": [
+      "Savings contributions are discrete equal monthly deposits, with no growth, price changes, or other cash events.",
+      "Mortgage payment is a fictional supplied quote, not an amortization calculation or approval.",
+      "Home down payment, transaction costs and reserve are user-supplied scenario values, not legal minimums.",
+      "Before-home savings and after-home residual are different periods; do not subtract a future mortgage while saving for the purchase."
+    ]
+  },
+  "businessOrder": {
+    "profileId": "laziz-products-business",
+    "openingCashMinor": 2600000,
+    "businessReserveMinor": 800000,
+    "ownerTransferId": "owner-transfer-01",
+    "inventory": {
+      "requiredUnits": 1000,
+      "onHandUnits": 200,
+      "unitMaterialCostMinor": 3000,
+      "expectedPurchaseUnits": 800,
+      "expectedPurchaseCostMinor": 2400000
+    },
+    "orderReceiptMinor": 4000000,
+    "expectedFinalCashBaselineMinor": 3400000,
+    "scenarios": [
+      {
+        "id": "baseline",
+        "events": [
+          {"id": "owner-transfer-01", "day": 3, "sequence": 1, "amountMinor": -400000, "kind": "owner_transfer"},
+          {"id": "existing-bills", "day": 7, "sequence": 1, "amountMinor": -1000000, "kind": "obligation"},
+          {"id": "existing-invoice", "day": 12, "sequence": 1, "amountMinor": 1200000, "kind": "receipt"},
+          {"id": "online-receipts", "day": 15, "sequence": 1, "amountMinor": 1000000, "kind": "receipt"}
+        ],
+        "expected": {"minimumCashMinor": 1200000, "finalCashMinor": 3400000, "feasible": true}
+      },
+      {
+        "id": "accept_unchanged",
+        "events": [
+          {"id": "stock-purchase", "day": 2, "sequence": 1, "amountMinor": -2400000, "kind": "supplier_payment"},
+          {"id": "owner-transfer-01", "day": 3, "sequence": 1, "amountMinor": -400000, "kind": "owner_transfer"},
+          {"id": "existing-bills", "day": 7, "sequence": 1, "amountMinor": -1000000, "kind": "obligation"},
+          {"id": "existing-invoice", "day": 12, "sequence": 1, "amountMinor": 1200000, "kind": "receipt"},
+          {"id": "online-receipts", "day": 15, "sequence": 1, "amountMinor": 1000000, "kind": "receipt"},
+          {"id": "order-receipt", "day": 30, "sequence": 1, "amountMinor": 4000000, "kind": "order_receipt"}
+        ],
+        "expected": {"minimumCashMinor": -1200000, "finalCashMinor": 5000000, "feasible": false}
+      },
+      {
+        "id": "deposit_and_early_collection",
+        "events": [
+          {"id": "order-deposit", "day": 1, "sequence": 1, "amountMinor": 1200000, "kind": "order_receipt"},
+          {"id": "stock-purchase", "day": 2, "sequence": 1, "amountMinor": -2400000, "kind": "supplier_payment"},
+          {"id": "owner-transfer-01", "day": 3, "sequence": 1, "amountMinor": -400000, "kind": "owner_transfer"},
+          {"id": "existing-invoice", "day": 5, "sequence": 1, "amountMinor": 1200000, "kind": "receipt"},
+          {"id": "existing-bills", "day": 7, "sequence": 1, "amountMinor": -1000000, "kind": "obligation"},
+          {"id": "online-receipts", "day": 15, "sequence": 1, "amountMinor": 1000000, "kind": "receipt"},
+          {"id": "order-balance", "day": 30, "sequence": 1, "amountMinor": 2800000, "kind": "order_receipt"}
+        ],
+        "expected": {"minimumCashMinor": 1000000, "finalCashMinor": 5000000, "feasible": true}
+      },
+      {
+        "id": "partial_reply",
+        "events": [
+          {"id": "order-deposit", "day": 1, "sequence": 1, "amountMinor": 1200000, "kind": "order_receipt"},
+          {"id": "stock-purchase", "day": 2, "sequence": 1, "amountMinor": -2400000, "kind": "supplier_payment"},
+          {"id": "owner-transfer-01", "day": 3, "sequence": 1, "amountMinor": -400000, "kind": "owner_transfer"},
+          {"id": "existing-invoice-part-1", "day": 5, "sequence": 1, "amountMinor": 400000, "kind": "receipt"},
+          {"id": "existing-bills", "day": 7, "sequence": 1, "amountMinor": -1000000, "kind": "obligation"},
+          {"id": "existing-invoice-part-2", "day": 12, "sequence": 1, "amountMinor": 800000, "kind": "receipt"},
+          {"id": "online-receipts", "day": 15, "sequence": 1, "amountMinor": 1000000, "kind": "receipt"},
+          {"id": "order-balance", "day": 30, "sequence": 1, "amountMinor": 2800000, "kind": "order_receipt"}
+        ],
+        "expected": {"minimumCashMinor": 400000, "finalCashMinor": 5000000, "feasible": false}
+      }
+    ],
+    "mockFundingOffers": [
+      {"id": "offer-a", "drawMinor": 420000, "drawDay": 6, "repayDay": 12, "feeMinor": 10000, "repaySequence": 2, "available": "assumed_not_approved", "expectedMinimumCashMinor": 820000, "expectedFinalCashMinor": 4990000},
+      {"id": "offer-b", "drawMinor": 420000, "drawDay": 6, "repayDay": 12, "feeMinor": 35000, "repaySequence": 2, "available": "assumed_not_approved", "expectedMinimumCashMinor": 820000, "expectedFinalCashMinor": 4965000}
+    ],
+    "householdLinkedEvents": [
+      {"id": "owner-transfer-01", "day": 3, "sequence": 1, "amountMinor": 400000, "kind": "owner_transfer"},
+      {"id": "personal-essential", "day": 4, "sequence": 1, "amountMinor": -350000, "kind": "obligation"}
+    ],
+    "assumptions": [
+      "All events are hypothetical and these are complete cash events only within the closed fixture.",
+      "Customer deposit and early collection are conditional on counterparties agreeing; reminders alone do not change receipts.",
+      "Same-day events are ordered by sequence. Day-12 receipt must settle before loan repayment in the feasible funding scenario.",
+      "Material already held has a cost of 6000 RON. Ending-cash delta is not accounting profit.",
+      "Loan principal is debt and cash, not revenue; repayment and fees are included.",
+      "The owner transfer is explicitly confirmed through an existing arrangement; no tax or legal classification is inferred."
+    ]
+  },
+  "newPretzelShop": {
+    "openingCashMinor": 10000000,
+    "ovenCashPriceMinor": 4500000,
+    "fitoutMinor": 2000000,
+    "premisesDepositMinor": 1000000,
+    "monthlyFixedMinor": 1500000,
+    "reserveMonths": 3,
+    "unitSellingPriceMinor": 600,
+    "unitVariableCostMinor": 200,
+    "operatingDaysPerMonth": 25,
+    "mockLease": {"initialMinor": 500000, "monthlyMinor": 150000, "months": 36, "ownershipAtEndIncluded": true},
+    "expected": {
+      "cashAfterCashPurchaseMinor": 2500000,
+      "cashPurchaseReserveMinor": 4500000,
+      "cashPurchaseReserveGapMinor": 2000000,
+      "cashPurchaseBreakEvenUnitsPerDay": 150,
+      "cashAfterLeaseInitialMinor": 6500000,
+      "leaseReserveMinor": 4950000,
+      "leaseBreakEvenUnitsPerDay": 165,
+      "nominalLeaseTotalMinor": 5900000
+    },
+    "assumptions": [
+      "All setup and operating amounts are invented inputs, not validated Romanian business costs or regulatory requirements.",
+      "Reserve is a declared policy, not a legal minimum or a guarantee of viability.",
+      "Break-even is a simplified contribution model without unmodeled taxes, seasonality, waste, or demand validation.",
+      "Lease is a mock offer; the stated ownership-at-end condition is part of that fiction. Total is undiscounted cash cost."
+    ]
+  }
+}

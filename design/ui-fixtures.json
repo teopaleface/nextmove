@@ -1,0 +1,213 @@
+{
+  "status": "fictional_design_fixture_not_a_live_account",
+  "currency": "RON",
+  "moneyUnit": "bani",
+  "asOf": "2026-10-28T09:41:00+02:00",
+  "profile": {
+    "id": "alex-personal",
+    "name": "Alex",
+    "student": true,
+    "protectedBenefit": "offline_playback"
+  },
+  "accounts": [
+    {
+      "id": "daily",
+      "name": "Daily account",
+      "balanceMinor": 1248000
+    },
+    {
+      "id": "savings",
+      "name": "Savings",
+      "balanceMinor": 9752000
+    }
+  ],
+  "totalLiquidMinor": 11000000,
+  "homeReadiness": {
+    "currentLiquidMinor": 11000000,
+    "targetMinor": 13000000,
+    "downPaymentMinor": 9000000,
+    "transactionCostsMinor": 1000000,
+    "protectedReserveMinor": 3000000,
+    "monthlyContributionMinor": 600000,
+    "phonePriceMinor": 600000,
+    "alternativePhonePriceMinor": 350000,
+    "contributionsBeforePhone": 4,
+    "contributionsAfterPhone": 5,
+    "contributionsAlternativePhone": 4,
+    "type": "planning_goal_not_an_additional_account"
+  },
+  "subscriptions": [
+    {
+      "id": "studyplus",
+      "merchant": "StudyPlus",
+      "monthlyMinor": 7900,
+      "state": "active",
+      "cloudStorageGb": 100,
+      "lastChargeAt": "2026-10-26T10:14:00+02:00",
+      "nextChargeAt": "2026-11-26T10:14:00+02:00"
+    },
+    {
+      "id": "streamly",
+      "merchant": "Streamly",
+      "monthlyMinor": 4900,
+      "state": "active",
+      "offlinePlayback": true,
+      "lastChargeAt": "2026-10-26T14:22:00+02:00",
+      "nextChargeAt": "2026-11-26T14:22:00+02:00"
+    },
+    {
+      "id": "cloudbox",
+      "merchant": "CloudBox",
+      "monthlyMinor": 3500,
+      "state": "active",
+      "cloudStorageGb": 100,
+      "lastChargeAt": "2026-10-26T09:03:00+02:00",
+      "nextChargeAt": "2026-11-26T09:03:00+02:00"
+    },
+    {
+      "id": "fitflow",
+      "merchant": "FitFlow",
+      "monthlyMinor": 7900,
+      "state": "trial",
+      "trialEnds": "2026-10-30T09:00:00+02:00",
+      "currentChargeMinor": 0,
+      "nextChargeAt": "2026-10-30T09:00:00+02:00"
+    }
+  ],
+  "usageEvidence": {
+    "device": "phone",
+    "periodDays": 7,
+    "streamlyMinutes": 14,
+    "cloudUsageGb": 70,
+    "otherDeviceUse": "user_confirms_TV",
+    "note": "Weekly phone usage alone does not establish monthly value or total cross-device use."
+  },
+  "mockBundle": {
+    "id": "student-bundle",
+    "name": "Student bundle",
+    "monthlyMinor": 8900,
+    "replaces": [
+      "studyplus",
+      "streamly"
+    ],
+    "includesCloudStorageGb": 100,
+    "offlinePlayback": true,
+    "studentStatusRequired": true,
+    "eligibilityAssumedThrough": "2027-06-30",
+    "termRevision": 1,
+    "status": "fictional_catalog_offer_not_a_verified_market_price",
+    "billingPeriod": "monthly",
+    "priceValidUntil": "2027-06-30",
+    "postPromotionMonthlyMinor": 12800,
+    "activationFeeMinor": 0,
+    "activationDateAssumed": "2026-11-26T08:00:00+02:00",
+    "replacementBillingDatesAlign": true,
+    "firstChargeAt": "2026-11-26T08:00:00+02:00",
+    "replacesRenewalsOn": "2026-11-26"
+  },
+  "proposedActions": [
+    {
+      "id": "cancel-fitflow",
+      "effect": "trial_charge_avoided",
+      "next30DaysReductionMinor": 7900,
+      "currentBalanceChangeMinor": 0
+    },
+    {
+      "id": "replace-with-bundle",
+      "effect": "existing_recurring_cost_reduction",
+      "next30DaysReductionMinor": 3900,
+      "requires": [
+        "offline_playback_retained",
+        "student_eligibility",
+        "replacement_dates_align"
+      ]
+    },
+    {
+      "id": "cancel-cloudbox",
+      "effect": "existing_recurring_cost_reduction",
+      "next30DaysReductionMinor": 3500,
+      "requires": [
+        "bundle_storage_active",
+        "data_preserved",
+        "replacement_dates_align"
+      ]
+    }
+  ],
+  "comparison": {
+    "horizon": "next_30_days",
+    "alignedBillingDatesAssumed": true,
+    "currentPaidMonthlyMinor": 16300,
+    "baselineIncludingTrialConversionMinor": 24200,
+    "allActionsOptimizedMinor": 8900,
+    "potentialReductionMinor": 15300,
+    "existingRecurringReductionMinor": 7400,
+    "futureTrialChargeAvoidedMinor": 7900,
+    "afterOnlyTrialCancellationMinor": 16300,
+    "allActionsAreNotYetExecuted": true,
+    "windowStartInclusive": "2026-10-28T09:41:00+02:00",
+    "windowEndExclusive": "2026-11-27T09:41:00+02:00",
+    "timezone": "Europe/Bucharest"
+  },
+  "trialCancellationReceipt": {
+    "merchant": "FitFlow",
+    "state": "confirmed",
+    "reference": "NF-1047",
+    "effectiveAt": "2026-10-28T09:45:00+02:00",
+    "accessUntil": "2026-10-30T09:00:00+02:00",
+    "nextChargeMinor": 0,
+    "avoidedChargeMinor": 7900,
+    "currentBalanceChangeMinor": 0,
+    "resultingTotalLiquidMinor": 11000000,
+    "resultingNext30DaysMinor": 16300,
+    "timezone": "Europe/Bucharest",
+    "requestedAt": "2026-10-28T09:42:00+02:00",
+    "confirmedAt": "2026-10-28T09:45:00+02:00"
+  },
+  "changedTermsExample": {
+    "offerId": "student-bundle",
+    "termRevision": 2,
+    "offlinePlayback": false,
+    "expected": "invalidate_unexecuted_plan_approval_and_recompare",
+    "existingCompletedTrialCancellationRemainsConfirmed": true
+  },
+  "assumptions": [
+    "All merchants, offers, account balances and confirmations are synthetic.",
+    "Billing dates are aligned for the teaching comparison; a real implementation must model dates, proration and overlap explicitly.",
+    "CloudBox reduction depends on replacement storage being active and sufficient before cancellation.",
+    "Total potential reduction 153 RON is 74 RON reduction in current paid recurring plans plus 79 RON future trial conversion avoided.",
+    "Avoided charges do not increase current bank balance and are not refunds or guaranteed annual savings.",
+    "Home-readiness planning includes all liquid accounts and its reserve; it is not extra money or a separately funded pocket.",
+    "Forecast window is28Oct09:41 to27Nov09:41 Europe/Bucharest, end-exclusive. Existing plans last charged26Oct and renew26Nov. Replacement bundle activates and charges26Nov08:00 before those renewals, with no immediate charge or overlap charge."
+  ],
+  "recoveryExample": {
+    "merchant": "StudioMart",
+    "amountMinor": 24900,
+    "state": "merchant_accepted_awaiting_bank_credit",
+    "expectedBy": "2026-10-31",
+    "reference": "SM-2048",
+    "currentBalanceChangeMinor": 0
+  },
+  "travelExample": {
+    "destination": "Barcelona",
+    "start": "2026-11-12",
+    "end": "2026-11-16",
+    "budgetMinor": 150000,
+    "mockOptions": [
+      {
+        "name": "DataPass",
+        "dataGb": 5,
+        "validDays": 7,
+        "costMinor": 2900
+      },
+      {
+        "name": "RoamPack",
+        "dataGb": 5,
+        "validDays": 7,
+        "costMinor": 4900
+      }
+    ],
+    "costDifferenceMinor": 2000,
+    "benefitEligibility": "unknown",
+    "paymentFees": "unknown"
+  }
+}
