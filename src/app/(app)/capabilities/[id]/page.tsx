@@ -80,11 +80,12 @@ export default function CapabilityPage({ params }: { params: Promise<{ id: strin
       {cap === "T4" ? <ShieldDecision key={data.candidates?.map((c: any) => c.key).join("|")} candidates={data.candidates ?? []} /> : null}
 
       <Section>
-        <AnalysisView a={data} onAnswer={answer} />
+        <AnalysisView a={cap === "O9" ? { ...data, blocks: data.blocks.filter((b: any) => b.kind === "metrics" || b.kind === "status") } : data} onAnswer={answer} />
       </Section>
 
       {data.inputs?.length ? (
-        <Section title="Assumptions you can change" id="assumptions">
+        <Section title={cap === "O9" ? "Choose what can wait" : "Assumptions you can change"} id="assumptions">
+          {cap === "O9" ? <p className="small muted">Essential bills, storage and student tools stay protected. Choose a service change, then review its exact terms before anything is sent.</p> : null}
           <InputsForm key={JSON.stringify(data.inputs.map((f: any) => [f.key, f.value]))} fields={data.inputs} onApply={apply} busy={recalc.busy} />
           <ErrorBox error={recalc.error} />
           {cap === "O1" ? (
@@ -115,6 +116,15 @@ export default function CapabilityPage({ params }: { params: Promise<{ id: strin
             </div>
           ) : null}
           <CandidatePicker key={data.candidates.map((c: any) => `${c.key}:${c.available}`).join("|")} capabilityId={cap} candidates={data.candidates} inputs={inputs} />
+        </Section>
+      ) : null}
+
+      {cap === "O9" ? (
+        <Section>
+          <details>
+            <summary className="label" style={{ minHeight: 44, cursor: "pointer", padding: "12px 0" }}>Protections and dated calculations</summary>
+            <AnalysisView a={{ ...data, blocks: data.blocks.filter((b: any) => b.kind !== "metrics" && b.kind !== "status") }} onAnswer={answer} />
+          </details>
         </Section>
       ) : null}
 

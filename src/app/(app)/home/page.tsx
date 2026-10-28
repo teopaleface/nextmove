@@ -61,6 +61,14 @@ export default function HomePage() {
         </Link>
       </nav>
 
+      {!business && session?.customer === "alex" ? (
+        <Section title="Financial Airbag" id="financial-airbag">
+          <Group>
+            <Row href="/capabilities/O9" title="Review optional spending" sub="Choose services to pause or stop renewing. Opening this review changes nothing." mark={<span className="mark" aria-hidden="true"><Icon.pause size={20} /></span>} />
+          </Group>
+        </Section>
+      ) : null}
+
       <ShieldAlert findings={data.findings} />
 
       {data.opportunity ? (
