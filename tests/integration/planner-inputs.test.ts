@@ -123,6 +123,30 @@ describe("planner inputs on the live path", () => {
     }
   });
 
+  it("a final answer before any tool ran is replaced by a read of the customer's data", async () => {
+    fs.writeFileSync(
+      path.join(dir, "scenario.json"),
+      JSON.stringify([
+        { tool: "final_answer", reason: "guess", text: "The analysis tools did not respond, so I have nothing to show." },
+        { tool: "final_answer", reason: "done", text: "Here is your PulseGym picture." },
+      ]),
+    );
+    const a = await stack.login("alex");
+    const w = await stack.worker({ env: { NEXTMOVE_PLANNER: "live", NEXTMOVE_CLAUDE_BIN: path.join(dir, "claude") } });
+    try {
+      const { taskId } = await a.ok("/api/tasks", { text: "Is PulseGym worth it?" });
+      const done = await view(a, taskId, ["NEEDS_APPROVAL", "DONE", "FAILED", "WAITING_USER"]);
+      const steps = JSON.parse(stack.q1<any>("SELECT payload_json FROM task_blocks WHERE task_id=? AND block_key='steps'", taskId)!.payload_json);
+      expect(steps[0]).toMatchObject({ tool: "analyze", by: "SIMULATED_PLANNER" });
+      expect(steps[0].result.capability).toBe("A17");
+      const events = stack.q<any>("SELECT label FROM task_events WHERE task_id=?", taskId).map((e) => e.label);
+      expect(events).toContain("The model answered before reading your data; NextMove reads it first");
+      expect(done.blocks.find((b: any) => b.key === "answer").payload.text).toBe("Here is your PulseGym picture.");
+    } finally {
+      await w.stop();
+    }
+  });
+
   it("the final answer cannot vouch for its own invented number", async () => {
     fs.writeFileSync(
       path.join(dir, "scenario.json"),

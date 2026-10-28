@@ -273,4 +273,6 @@ These are credentials and logins, left out on purpose: NextMove is a demo, not a
 
 **Story flows** (chained, each in an isolated tenant): stop FitFlow → certificate → charge after the stop → dispute → network rules for the customer; T4 hold → block; E3 signed offer → accept; E5 ceiling → higher charge declined → accept the new price; E6 card reissue → merchant list; E2 exit plan → check day → customer asked; E7 household and business approvals → repayment. All seven run end to end.
 
-**Checks:** `npx tsc --noEmit`: pass. `npm test`: **285 tests passed in 41 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.
+**Live model.** In a later sweep run the live model was answering again: 36 of the 45 requests ran on the LIVE planner, the rest fell back. Two live answers came before any tool had run ("the analysis tools did not respond"). A final answer before NextMove has read anything is now replaced, for that step, by the deterministic read, labelled as such in the task log; the model then continues with real data (test in `tests/integration/planner-inputs.test.ts`). Prerequisites are followed through the whole chain, so T3 no longer offers a renewal stop that needs the unverified student bundle.
+
+**Checks:** `npx tsc --noEmit`: pass. `npm test`: **286 tests passed in 41 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.

@@ -300,6 +300,17 @@ export function checkClaims(text: string, steps: { tool?: string; result: any }[
 /** One sentence with exactly one final full stop. */
 const sentence = (t?: string | null) => (t ? (/[.!?]["”’)]?$/.test(t.trim()) ? t.trim() : `${t.trim()}.`) : "");
 
+/** Candidates whose prerequisites are all in the set, directly or through other prerequisites. */
+function preparable(cands: any[]) {
+  for (let changed = true; changed; ) {
+    const keys = new Set(cands.map((c) => c.key));
+    const next = cands.filter((c) => (c.dependsOn ?? []).every((k: string) => keys.has(k)));
+    changed = next.length !== cands.length;
+    cands = next;
+  }
+  return cands;
+}
+
 const CHOOSE = "Choose one of the offered actions";
 const NOTHING = "Nothing for now";
 /** The planner asked the customer to pick one of a capability's offered actions (the last option is always NOTHING). */
@@ -334,21 +345,14 @@ function simulatedDecision(db: DatabaseSync, session: Session, task: any, steps:
   if (last.tool === "analyze") {
     if (last.result.error) return { tool: "final_answer", reason: "Analysis failed", text: `I could not read this right now: ${last.result.error}.` };
     // An action whose prerequisite cannot be prepared waits with it (e.g. activating a bundle before eligibility is checked).
-    let ready = last.result.candidates.filter((c: any) => c.available && c.defaultSelected);
-    for (let changed = true; changed; ) {
-      const keys = new Set(ready.map((c: any) => c.key));
-      const next = ready.filter((c: any) => (c.dependsOn ?? []).every((k: string) => keys.has(k)));
-      changed = next.length !== ready.length;
-      ready = next;
-    }
+    const ready = preparable(last.result.candidates.filter((c: any) => c.available && c.defaultSelected));
     if (ready.length && !last.result.done) return { tool: "prepare_proposal", capabilityId: last.result.capability, candidateKeys: ready.map((c: any) => c.key), reason: "Default available actions" };
     // Nothing ready because the capability needs the customer's answer: ask its own question once.
     const asked = new Set(steps.filter((s) => s.tool === "ask_user").map((s) => `${s.args?.capabilityId}:${s.args?.inputKey}`));
     const ask = (last.result.plannerInputs ?? []).find((p: any) => p.source === "answer" && plannerRule(last.result.capability, p.key)?.question && !asked.has(`${last.result.capability}:${p.key}`));
     if (ask && last.result.openQuestions?.length && !last.result.done) return { tool: "ask_user", capabilityId: last.result.capability, inputKey: ask.key, reason: "The capability needs the customer's answer" };
     // Several actions are possible but none is a safe default (block or allow, accept or stop): ask which one.
-    const open = new Set(last.result.candidates.filter((c: any) => c.available).map((c: any) => c.key));
-    const choices = last.result.candidates.filter((c: any) => open.has(c.key) && (c.dependsOn ?? []).every((k: string) => open.has(k)));
+    const choices = preparable(last.result.candidates.filter((c: any) => c.available));
     if (choices.length && choices.length <= 4 && !last.result.done && !steps.some(isChoice))
       return { tool: "ask_user", question: `${sentence(last.result.headline)} What should I prepare for your review?`, options: [...choices.map((c: any) => c.title), NOTHING], reason: CHOOSE };
     const blocked = last.result.candidates.filter((c: any) => !c.available).map((c: any) => `${c.title} (${String(c.unavailableReason ?? "not available").replace(/\.$/, "")})`);
@@ -395,9 +399,15 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
           run(db, "UPDATE tasks SET planner_mode='SIMULATED_FALLBACK' WHERE id=?", task.id);
         }
       }
+      let by = mode;
       if (!d) {
         d = simulatedDecision(db, session, task, steps);
         if (config.planner === "simulated") run(db, "UPDATE tasks SET planner_mode='SIMULATED' WHERE id=?", task.id);
+      } else if (d.tool === "final_answer" && !steps.some(fromTools)) {
+        // An answer before NextMove has read anything cannot rest on the customer's data: read first, then the model continues.
+        d = simulatedDecision(db, session, task, steps);
+        by = "SIMULATED_PLANNER";
+        taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: "planner", label: "The model answered before reading your data; NextMove reads it first", evidence: "SIMULATED_PLANNER" });
       }
       if (d.tool === "analyze" && (!d.capabilityId || !ids.includes(d.capabilityId))) d = { tool: "find_capability", query: task.request_text, reason: "Capability not available here" };
       if (d.tool === "prepare_proposal" && (!d.capabilityId || !ids.includes(d.capabilityId))) d = { tool: "final_answer", reason: "Invalid capability", text: "I could not prepare that here." };
@@ -410,11 +420,11 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
       } catch (e: any) {
         out = { result: { error: e instanceof HttpError ? e.message : "Tool failed" } };
       }
-      const step: Step = { tool: d.tool, args: { capabilityId: d.capabilityId, inputKey: d.inputKey, query: d.query, candidateKeys: d.candidateKeys, question: d.question, options: d.options, inputs: d.inputs, simulation: d.simulation }, by: mode, result: out.result };
+      const step: Step = { tool: d.tool, args: { capabilityId: d.capabilityId, inputKey: d.inputKey, query: d.query, candidateKeys: d.candidateKeys, question: d.question, options: d.options, inputs: d.inputs, simulation: d.simulation }, by, result: out.result };
       steps.push(step);
       setBlock(db, task.id, "steps", 0, "steps", steps);
       run(db, "UPDATE tasks SET step_count=? WHERE id=?", steps.length, task.id);
-      const evidence = mode === "LIVE_MODEL" ? "LIVE_MODEL" : "SIMULATED_PLANNER";
+      const evidence = by === "LIVE_MODEL" ? "LIVE_MODEL" : "SIMULATED_PLANNER";
       const label =
         d.tool === "analyze" ? `Calculated: ${out.result.headline ?? out.result.error}` :
         d.tool === "prepare_proposal" ? (out.result.proposalId ? `Prepared ${out.result.actions.length} action(s) for your approval` : `Could not prepare: ${out.result.error}`) :
