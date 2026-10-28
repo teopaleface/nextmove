@@ -139,3 +139,5 @@ The approval UI now distinguishes immediate actions from scheduled internal tran
 Existing demo sessions/data were preserved. For the newly added provider fixtures, start Alex with **Start a separate copy** on the sign-in screen; a fresh copy contains all extension fixtures. Existing tenants created before the extension are not automatically reseeded.
 
 Recordings, the evidence manifest and long/live browser E2E remain postponed by Teo. The earlier crash-recovery clock mismatch and the other open items above remain explicit; the full combined UI and long-lived scheduled behavior have not been revalidated in a browser in this pass. The untracked `jev-discord/` directory is unrelated and remains untouched.
+
+Final local smoke after integration: app source build `c05cdd9` is running in production mode on 127.0.0.1:3210, merchant on 3211, worker healthy. The startup live-model smoke succeeded on `claude-sonnet-5-5` (3.8 seconds). A newly created isolated Alex copy exposes T4, A15–A18 and O6–O8; all eight analysis endpoints returned HTTP 200. This was a short API smoke, not a browser E2E or recording. Current process IDs remain in `.data/pids.json`.
