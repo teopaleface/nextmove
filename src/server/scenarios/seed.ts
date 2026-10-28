@@ -11,6 +11,8 @@ import { merchantAdmin } from "../merchant-client";
 import { shortId } from "../canonical";
 import { canonicalKey, merchantAccountId, merchantContractId } from "../../shared/ids";
 import { toMs } from "../../shared/time";
+import { seedTrialShield } from "./trial-shield-seed";
+import { seedHiddenLosses } from "./hidden-losses-seed";
 
 // Bank-side seeding from the repository fixtures. The bank stores what a bank would know (accounts, posted
 // history, linked subscriptions, goals); provider state lives only in the merchant process.
@@ -166,6 +168,7 @@ function seedAlex(db: DatabaseSync, t: string) {
   insertAccount(db, { id: `${t}:savings`, tenantId: t, contextId: ctx, name: savings.name, kind: "SAVINGS", iban: "RO12 NXMV •••• 7730", ordinal: 1 });
   postHistory(db, t, ctx, `${t}:daily`, daily.balanceMinor, caps.alex.transactions);
   postHistory(db, t, ctx, `${t}:savings`, savings.balanceMinor, []);
+  seedHiddenLosses(db, t, ctx, `${t}:daily`); // A15–A18 fictional history; balances unchanged
 
   // Linked subscriptions (canonical UI dataset).
   const benefits: Record<string, object> = {
@@ -199,6 +202,9 @@ function seedAlex(db: DatabaseSync, t: string) {
     benefits: { dataGb: 100, hotspot: true, euRoamingGb: 4 }, data: { billingDay: mn.billingDay },
   });
   addForecastItem(db, { tenantId: t, contextId: ctx, dataset: "bills", subscriptionId: mnSub, kind: "BILL", label: "MobileNet bill", amountMinor: -mn.amountMinor, dueAt: mn.nextChargeAt, source: "fixture:capability-scenarios" });
+  // Rent for the cash autopilot (O7/O8): fictional landlord, paid from Daily.
+  const rent = readJson("demo/cash-autopilot.json").rent;
+  addForecastItem(db, { tenantId: t, contextId: ctx, dataset: "bills", kind: "BILL", label: rent.label, amountMinor: -rent.amountMinor, dueAt: rent.dueAt, source: "fixture:cash-autopilot", data: { payee: rent.payee } });
 
   // Independent 200-item stress inventory: only what the bank sees from recurring card payments.
   for (const rec of bulk.records) {
@@ -252,6 +258,7 @@ function seedAlex(db: DatabaseSync, t: string) {
   insertWatch(db, { tenantId: t, contextId: ctx, kind: "PRICE_CHANGE", subjectRef: `${t}:sub:streamly`, label: "Streamly price", condition: { merchantId: "streamly" }, nextCheckAt: FIXTURE_INSTANT });
   insertWatch(db, { tenantId: t, contextId: ctx, kind: "REFUND_DUE", subjectRef: `${t}:rec:studiomart`, label: "StudioMart refund", condition: { expectedBy: r.expectedBy, amountMinor: r.amountMinor }, nextCheckAt: FIXTURE_INSTANT });
   insertWatch(db, { tenantId: t, contextId: ctx, kind: "CREDIT_EXPIRY", subjectRef: `${t}:credit:booknook`, label: "BookNook credit", condition: { expiresAt: caps.alex.bookNookCredit.expiresAt, amountMinor: caps.alex.bookNookCredit.balanceMinor, warnDays: 21 }, nextCheckAt: FIXTURE_INSTANT });
+  seedTrialShield(db, t, ctx, `${t}:daily`);
 
   return { userId, contexts: [ctx] };
 }

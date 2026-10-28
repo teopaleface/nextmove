@@ -8,7 +8,7 @@ import { ErrorBox, Group, Row, Section, TaskStatus, useAction, Empty } from "@/u
 import { Icon } from "@/ui/icons";
 
 const SUGGESTIONS: Record<string, string[]> = {
-  "alex:PERSONAL": ["Can you stop the FitFlow trial before it charges me?", "Is the student bundle worth it for me?", "Am I paying twice for cloud storage?", "Can I buy a 6,000 RON phone and still reach my home goal?"],
+  "alex:PERSONAL": ["Can you stop the FitFlow trial before it charges me?", "Did anything try to charge me after a free trial?", "Am I paying for a gym I don't use?", "Is DashEats Plus still worth paying for?", "Is the student bundle worth it for me?", "Am I paying twice for cloud storage?", "Can I buy a 6,000 RON phone and still reach my home goal?", "What if I get a 10% raise?", "What if I invest what NextMove saves me?", "A 900 RON dental bill just came in. Am I still on track for the home?"],
   "laziz:BUSINESS": ["Can we take the 40,000 RON order?", "Which supplier should we buy the flour from?", "Who still owes us money?"],
   "laziz:PERSONAL": ["Will my bills clear before the owner transfer arrives?"],
 };

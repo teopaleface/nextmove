@@ -1,20 +1,24 @@
 import type { DatabaseSync } from "node:sqlite";
 import { all, json, one } from "../db/connection";
 import { HttpError, type Session } from "../auth/session";
-import { createProposal, loadProposal } from "../authority/authority";
+import { createProposal, loadProposal, SCHEDULED_GRANT_GRACE_DAYS } from "../authority/authority";
 import type { ActionSpec } from "../authority/actions";
 import { featureAllowed, featureForRoute } from "../authority/features";
 import { ALEX_SUBSCRIPTION_CAPS } from "./alex-subscriptions";
 import { ALEX_MONEY_CAPS, O1_PERSONAL } from "./alex-money";
 import { LAZIZ_CAPS, O1_BUSINESS } from "./laziz";
+import { O6_ALEX } from "./goal-route";
+import { CASH_AUTOPILOT_CAPS } from "./cash-autopilot";
+import { T4 } from "./trial-shield";
+import { HIDDEN_LOSS_CAPS } from "./hidden-losses";
 import { makeEnv, type Analysis, type CapabilityDef } from "./core";
 
 const O1_ALEX: CapabilityDef = { id: "O1", title: "Goals: phone now, home later", short: "Home readiness with or without the new phone", group: "Goals", customer: "alex", contextKind: "PERSONAL", keywords: ["goal", "home", "house", "phone", "save", "afford", "down payment"], analyze: O1_PERSONAL };
 const O1_LAZIZ: CapabilityDef = { id: "O1", title: "Goals: the 40,000 RON order", short: "Business conditions for a large order", group: "Goals", customer: "laziz", contextKind: "BUSINESS", keywords: ["goal", "order", "afford", "big order", "new shop", "expand"], analyze: O1_BUSINESS };
 
-export const CAPABILITIES: CapabilityDef[] = [O1_ALEX, ...ALEX_SUBSCRIPTION_CAPS, ...ALEX_MONEY_CAPS, O1_LAZIZ, ...LAZIZ_CAPS];
+export const CAPABILITIES: CapabilityDef[] = [O1_ALEX, ...ALEX_SUBSCRIPTION_CAPS, T4, ...ALEX_MONEY_CAPS, ...HIDDEN_LOSS_CAPS, O6_ALEX, ...CASH_AUTOPILOT_CAPS, O1_LAZIZ, ...LAZIZ_CAPS];
 
-export const CAPABILITY_ORDER = ["O1", "O2", "O3", "O4", "O5", "T1", "T2", "T3", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13", "A14"];
+export const CAPABILITY_ORDER = ["O1", "O2", "O3", "O4", "O5", "O6", "O7", "O8", "T1", "T2", "T3", "T4", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13", "A14", "A15", "A16", "A17", "A18"];
 
 export function customerOf(db: DatabaseSync, tenantId: string): "alex" | "laziz" {
   return (one<any>(db, "SELECT base_customer FROM tenants WHERE id=?", tenantId)?.base_customer ?? "alex") as "alex" | "laziz";
@@ -139,6 +143,7 @@ export function proposalView(db: DatabaseSync, session: Session, proposalId: str
     createdAt: p.created_at,
     readyExpiresAt: p.ready_expires_at,
     approvalWindowMinutes: p.manifest.approvalWindowMinutes,
+    scheduledGrantGraceDays: SCHEDULED_GRANT_GRACE_DAYS,
     context: { id: p.context_id, name: ctx.name, kind: ctx.kind },
     taskId: p.task_id,
     batchId: p.batch_id,

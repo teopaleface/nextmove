@@ -14,6 +14,10 @@ NextMove has its own yellow/ink/white identity inspired by the supplied banking 
 - [Mobile UX](design/MOBILE-UX.md) and [design system](design/DESIGN-SYSTEM.md)
 - [UI fixtures](design/ui-fixtures.json), [financial cases](demo/cases.json), [200-item acceptance fixture](demo/bulk-cancellations.json)
 
+## Discord feature extension
+
+The original 22 capability groups are extended with five feature packages: interactive agent charts/sliders; Trial Shield for a 0/1 RON card verification followed by a held charge; four hidden-cost analyses; an editable route to the home goal; and Cash Autopilot/Bill Vault/Overdraft Shield using approved internal transfers. The catalogue now covers 30 distinct capability IDs. All provider, charge-hold and transfer operations remain synthetic. See [the feature notes](docs/DISCORD-PROPOSALS.md) and [ADR 0008](docs/adr/0008-scheduled-bank-internal-transfers.md).
+
 ## Requirements
 
 - Node >= 24 (developed on Node 26). Storage uses the built-in `node:sqlite`.

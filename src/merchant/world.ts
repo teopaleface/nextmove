@@ -4,6 +4,7 @@ import path from "node:path";
 import { createHash, randomBytes } from "node:crypto";
 import { mrun, mtx } from "./db";
 import type { MerchantOperation } from "../shared/merchant-contract";
+import { seedHiddenLossWorld } from "./hidden-losses-world";
 
 // Builds the simulated merchant world for one tenant from the repository fixtures.
 // For the independent 200-item scenario, each record's scenario expectation is translated once into a
@@ -243,6 +244,7 @@ function seedAlex(db: DatabaseSync, root: string, t: string, ui: any, caps: any,
   acct("booknook", "bn-alex", { credit: { id: bn.creditId, balanceMinor: bn.balanceMinor, expiresAt: bn.expiresAt, restrictions: bn.restrictions }, catalog: [bn.intendedPurchase] });
   acct("datapass", "dp-alex", { products: caps.alex.travel.connectivity.filter((c: any) => c.id === "datapass") });
   acct("cinemax", "cm-alex", { catalog: caps.alex.contentCatalog });
+  seedHiddenLossWorld(root, t, { merchant: (m) => insertMerchant(db, t, m), account: (m, local) => acct(m, local), contract: (c) => insertContract(db, t, c) });
 
   seedBulk(db, root, t, tokens);
 }

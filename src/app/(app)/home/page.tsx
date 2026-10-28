@@ -6,6 +6,7 @@ import { useSession } from "@/ui/session";
 import { Icon, AgentSig } from "@/ui/icons";
 import { Balance, ErrorBox, Group, Loading, MerchantMark, Money, Row, Section, TaskStatus, Empty } from "@/ui/kit";
 import { date, day, dayTime, short } from "@/ui/format";
+import { ShieldAlert } from "@/ui/trial-shield";
 
 export default function HomePage() {
   const { epoch, session } = useSession();
@@ -60,6 +61,8 @@ export default function HomePage() {
         </Link>
       </nav>
 
+      <ShieldAlert findings={data.findings} />
+
       {data.opportunity ? (
         <section className="section" aria-label="Suggested by NextMove">
           <div className="opportunity">
@@ -73,10 +76,10 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      {data.findings.length ? (
+      {data.findings.some((f: any) => f.kind !== "TRIAL_SHIELD_HOLD") ? (
         <Section title="Worth a look" id="findings">
           <Group>
-            {data.findings.map((f: any) => (
+            {data.findings.filter((f: any) => f.kind !== "TRIAL_SHIELD_HOLD").map((f: any) => (
               <Row key={f.id} href={/^[OTA]\d{1,2}$/.test(f.task_kind ?? "") ? `/capabilities/${f.task_kind}` : "/agent/monitoring"} mark={<span className="mark" aria-hidden="true"><Icon.bell size={20} /></span>} title={f.title} sub={f.body} />
             ))}
           </Group>

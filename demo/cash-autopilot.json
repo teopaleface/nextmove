@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "status": "fictional",
+  "description": "Synthetic terms for the cash autopilot (O7 bill vault, O8 overdraft shield). Rates, fees, landlord, clinic and amounts are invented for the demo. They are not offers or terms of any real bank.",
+  "currency": "RON",
+  "moneyUnit": "minor (bani)",
+  "pockets": {
+    "vault": { "accountLocal": "vault", "name": "Bill vault", "kind": "POCKET", "annualRatePct": 2.0, "withdrawalFeeMinor": 0, "noticeDays": 0, "rateLabel": "2.00% a year, fictional rate" },
+    "savings": { "accountLocal": "savings", "annualRatePct": 2.5, "withdrawalFeeMinor": 0, "noticeDays": 0, "rateLabel": "2.50% a year, fictional rate" }
+  },
+  "overdraft": {
+    "annualRatePct": 21.9,
+    "feePerEventMinor": 2500,
+    "label": "Unarranged overdraft: 25 RON fee per overdrawn period plus 21.9% a year on the overdrawn amount, charged daily (fictional terms)"
+  },
+  "salary": {
+    "merchant": "Campus Bookshop Ltd (payroll)",
+    "amountMinor": 320000,
+    "dayOfMonth": 10,
+    "hourLocal": 8
+  },
+  "rent": {
+    "label": "Vatra Homes rent",
+    "payee": "Vatra Homes (fictional landlord)",
+    "amountMinor": 145000,
+    "dueAt": "2026-11-25T09:00:00+02:00"
+  },
+  "vaultRules": {
+    "minDaysAway": 5,
+    "keepInDailyMinor": 50000,
+    "returnHourLocal": 8,
+    "returnValidityDays": 14
+  },
+  "unexpectedBill": {
+    "label": "SmileCare Clinic dental treatment",
+    "payee": "SmileCare Clinic (fictional)",
+    "amountMinor": 1490000,
+    "dueInDays": 3,
+    "hourLocal": 10
+  }
+}

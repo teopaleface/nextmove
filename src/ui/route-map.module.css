@@ -1,0 +1,129 @@
+/* Route map for O6. Colors come from the global tokens in globals.css. */
+
+.figure {
+  margin: 16px 0 0;
+  transition: opacity 200ms var(--ease);
+}
+
+.figure[data-dimmed="true"] {
+  opacity: 0.35;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.target {
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+.targetLabel,
+.tick {
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.targetLabel {
+  fill: var(--ink);
+  font-weight: 600;
+}
+
+.ghost {
+  fill: none;
+  stroke: var(--control-border);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+  stroke-linecap: round;
+}
+
+.path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: draw 720ms cubic-bezier(0.77, 0, 0.175, 1) both;
+}
+
+.dot,
+.start {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-width: 2;
+  animation: appear 180ms var(--ease) both;
+}
+
+.start {
+  fill: var(--ink);
+}
+
+.arrival,
+.miss {
+  stroke-width: 2.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: land 260ms var(--ease) 640ms both;
+}
+
+.arrival {
+  fill: var(--yellow);
+  stroke: var(--ink);
+}
+
+.miss {
+  fill: var(--surface);
+  stroke: var(--danger);
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes land {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figure {
+    transition: none;
+  }
+  .path,
+  .dot,
+  .start,
+  .arrival,
+  .miss {
+    animation: none;
+  }
+}

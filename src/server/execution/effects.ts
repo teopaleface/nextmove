@@ -8,6 +8,7 @@ import { notify, taskEvent, taskIdForAction, type EvidenceLevel } from "../agent
 import { formatMoney } from "../../shared/money";
 import { formatDay } from "../../shared/time";
 import type { ActionSpec } from "../authority/actions";
+import { applyInternalTransferEffects } from "./internal-transfer-effects";
 
 // Applying a verified outcome. Everything here runs inside the caller's transaction and is keyed by a unique
 // authoritative source (receipt or bank entry), so a repeated confirmation, reconciliation or event is a no-op.
@@ -278,6 +279,10 @@ function applyEffects(db: DatabaseSync, action: any, spec: ActionSpec, receiptId
     case "PAYMENT": {
       postCardOrTransfer(db, { tenantId: t, contextId: ctx, accountId: String(spec.params.fromAccountId), sourceEventId: `payment:${action.logical_key}`, amountMinor: -Number(spec.params.amountMinor), merchantName: spec.merchantName ?? "Payee", merchantId: spec.merchantId, category: String(spec.params.category ?? "Supplier"), reference: res.reference, bookedAt: at, note: String(spec.params.description ?? "") });
       if (spec.params.forecastItemId) applyForecastEvent(db, { sourceEventId: `${src}:settle`, tenantId: t, kind: "SETTLE", itemId: String(spec.params.forecastItemId), reason: `Payment posted (${res.reference})` });
+      break;
+    }
+    case "INTERNAL_TRANSFER": {
+      applyInternalTransferEffects(db, action, spec, src);
       break;
     }
     case "CARD_FREEZE": {

@@ -96,8 +96,8 @@ function Transactions({ txns }: { txns: any[] }) {
                 href={`/activity/transactions/${encodeURIComponent(t.id)}`}
                 mark={<MerchantMark name={t.merchant_name} />}
                 title={t.merchant_name}
-                sub={t.status === "PENDING" ? `${t.category}, pending card hold` : t.amount_minor > 0 ? `${t.category}, credit` : t.category}
-                end={<span className={`num${t.amount_minor > 0 ? " positive" : ""}`} style={t.status === "PENDING" ? { color: "var(--muted)" } : undefined}>{money(t.amount_minor, { sign: true })}</span>}
+                sub={t.status === "PENDING" ? `${t.category}, ${t.note?.startsWith("Held by Trial Shield") ? "held by Trial Shield" : "pending card hold"}` : t.status === "RELEASED" ? `${t.category}, ${t.reference?.startsWith("CHK-") ? "card check, released" : "released, not charged"}` : t.amount_minor > 0 ? `${t.category}, credit` : t.category}
+                end={<span className={`num${t.amount_minor > 0 ? " positive" : ""}`} style={t.status === "PENDING" ? { color: "var(--muted)" } : t.status === "RELEASED" ? { color: "var(--muted)", textDecoration: "line-through" } : undefined}>{money(t.amount_minor, { sign: true })}</span>}
                 endSub={dayTime(t.booked_at).split(", ")[1]}
               />
             ))}

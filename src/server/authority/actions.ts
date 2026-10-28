@@ -19,8 +19,11 @@ export type Operation =
   | "SEND_MESSAGE"
   | "FOLLOW_UP"
   | "OWNER_TRANSFER"
+  | "INTERNAL_TRANSFER"
   | "PAYMENT"
   | "CARD_FREEZE"
+  | "MERCHANT_BLOCK"
+  | "HOLD_ALLOW"
   | "PREPARE_PACKET";
 
 export interface DisplayLine {
@@ -31,7 +34,7 @@ export interface DisplayLine {
 export interface ActionSpec {
   operation: Operation;
   route: Route;
-  capability: string; // O1..A14 / T1..T3 / BANK
+  capability: string; // O1..A14 / T1..T4 / BANK
   merchantId: string | null;
   merchantName: string | null;
   subscriberAccountId: string | null;

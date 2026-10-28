@@ -8,6 +8,8 @@ import type { ActionSpec } from "../authority/actions";
 import { MerchantClient, NetworkUncertainError, EgressError, delegatedToken } from "../merchant-client";
 import { browserStopRenewal } from "./browser";
 import { recordConfirmed, recordSettled } from "./effects";
+import { reconcileInternalTransfer, runInternalTransfer, transferWait } from "./internal-transfer";
+import { SHIELD_OPERATIONS, runShieldDecision } from "../bank/trial-shield";
 import { enqueueJob, finishJob, renewLease, type Job } from "./jobs";
 import { taskEvent, taskIdForAction } from "../agent/events";
 import type { MerchantContractView, OperationResponse } from "../../shared/merchant-contract";
@@ -99,6 +101,12 @@ export async function runActionJob(db: DatabaseSync, job: Job, ctx: WorkerCtx): 
       if (job.attempts === 1) taskEvent(db, { taskId, tenantId: t, kind: "waiting", label: `${spec.display.title}: waiting for ${depSpec.display.title.toLowerCase()} to be verified`, evidence: "BANK_RECORD" });
       return void finishJob(db, job, ctx.workerId, { status: "QUEUED", availableAt: new Date(Date.now() + 2000).toISOString() });
     }
+  }
+
+  // A scheduled internal transfer waits for its approved demo-time date before any attempt exists.
+  if (spec.operation === "INTERNAL_TRANSFER") {
+    const wait = transferWait(db, action, spec);
+    if (wait) return void finishJob(db, job, ctx.workerId, { status: "QUEUED", availableAt: wait.availableAt });
   }
 
   const ids = attemptIds(action, grant.id);
@@ -328,8 +336,10 @@ async function runBrowser(db: DatabaseSync, action: any, spec: ActionSpec, attem
 /* -------------------------------------------------------------------------------- bank-internal adapter */
 
 async function runBankInternal(db: DatabaseSync, action: any, spec: ActionSpec, attemptId: string, authorize: Authorize) {
+  if (spec.operation === "INTERNAL_TRANSFER") return runInternalTransfer(db, action, spec, attemptId, authorize, (reason) => gateDenied(db, action.id, attemptId, reason));
   const gate = await authorize();
   if (!gate.ok) return gateDenied(db, action.id, attemptId, gate.reason);
+  if (SHIELD_OPERATIONS.has(spec.operation)) return runShieldDecision(db, action, spec, attemptId);
   if (spec.operation === "CARD_FREEZE") {
     const acct = one<any>(db, "SELECT * FROM accounts WHERE id=? AND tenant_id=? AND context_id=?", spec.params.accountId, action.tenant_id, action.context_id);
     const card = acct?.card_json ? JSON.parse(acct.card_json) : null;
@@ -416,6 +426,15 @@ export async function runReconcileJob(db: DatabaseSync, job: Job, ctx: WorkerCtx
   run(db, "UPDATE attempts SET reconcile_checks=reconcile_checks+1, next_reconcile_at=NULL WHERE id=?", attempt.id);
   const checkNo = attempt.reconcile_checks + 1;
   const taskId = taskIdForAction(db, action.id);
+  if (spec.operation === "INTERNAL_TRANSFER") {
+    try {
+      reconcileInternalTransfer(db, attempt, action, spec, checkNo);
+    } catch (e: any) {
+      ctx.log(`[worker] reconcile ${attempt.id} error ${String(e?.message ?? e).slice(0, 160)}`);
+      scheduleNextCheck(db, attempt.id);
+    }
+    return void finishJob(db, job, ctx.workerId, { status: "DONE" });
+  }
   try {
     const reqs = await client.findRequests(spec.merchantId!, spec.subscriberAccountId!, attempt.correlation_id);
     if (reqs.status === 401) {

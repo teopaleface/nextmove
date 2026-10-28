@@ -9,3 +9,5 @@ Accepted baseline for the local hackathon implementation. These decisions descri
 5. [Local Claude inference without application API secrets](0005-local-claude-inference.md)
 6. [Phone-first interface and server-enforced Labs modes](0006-mobile-interface-and-labs.md)
 7. [Verification and recordings as delivery evidence](0007-verification-and-recordings.md)
+
+8. [Scheduled bank-internal transfers](0008-scheduled-bank-internal-transfers.md)

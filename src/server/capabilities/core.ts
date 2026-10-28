@@ -9,6 +9,7 @@ import { DEFAULT_CONSEQUENCES, DEFAULT_MONEY, type ActionSpec, type DisplayLine 
 import type { EvidenceLevel } from "../agent/events";
 import type { MerchantContractView, MerchantDirectoryEntry } from "../../shared/merchant-contract";
 import { formatMoney } from "../../shared/money";
+import type { Simulation } from "../../shared/simulations";
 
 // Shared vocabulary for capability workflows. A workflow reads current bank and provider state, runs the
 // deterministic finance engine, and returns typed blocks plus server-built action candidates. Nothing here
@@ -24,7 +25,8 @@ export type Block =
   | { kind: "facts"; title: string; items: { label: string; value: string; provenance: string }[] }
   | { kind: "note"; tone: "info" | "warn"; text: string }
   | { kind: "question"; id: string; text: string; options: { value: string; label: string }[]; answer: string | null }
-  | { kind: "status"; title: string; state: string; detail?: string; href?: string };
+  | { kind: "status"; title: string; state: string; detail?: string; href?: string }
+  | { kind: "simulation"; simulation: Simulation };
 
 export interface InputField {
   key: string;
@@ -59,7 +61,8 @@ export interface Analysis {
   numbers: Record<string, number>;
   done?: { label: string; href?: string } | null;
   links?: { label: string; href: string }[];
-  labs?: { action: string; label: string; body?: Record<string, unknown> }[];
+  // endpoint: "bank" posts {action, body} to /labs/bank; any other value is a Labs path that receives the body as is.
+  labs?: { action: string; label: string; body?: Record<string, unknown>; endpoint?: string }[];
 }
 
 export interface CapEnv {

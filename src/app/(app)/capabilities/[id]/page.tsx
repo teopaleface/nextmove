@@ -7,6 +7,7 @@ import { useSession } from "@/ui/session";
 import { AnalysisView, CandidatePicker, InputsForm } from "@/ui/analysis";
 import { ErrorBox, Group, Loading, Notice, PageHead, Row, Section, useAction } from "@/ui/kit";
 import { AgentSig, Icon } from "@/ui/icons";
+import { ShieldDecision } from "@/ui/trial-shield";
 
 export default function CapabilityPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -37,9 +38,11 @@ export default function CapabilityPage({ params }: { params: Promise<{ id: strin
       await refresh();
     });
 
-  const labs = (l: { action: string; label: string; body?: Record<string, unknown> }) =>
+  const labs = (l: { action: string; label: string; body?: Record<string, unknown>; endpoint?: string }) =>
     act.run(async () => {
-      await api("/labs/merchant", { body: { action: l.action, body: l.body ?? {} } });
+      if (l.endpoint === "bank") await api("/labs/bank", { body: { action: l.action, body: l.body ?? {} } });
+      else if (l.endpoint) await api(l.endpoint, { body: l.body ?? {} });
+      else await api("/labs/merchant", { body: { action: l.action, body: l.body ?? {} } });
       await refresh();
       toast(`Labs: ${l.label}`);
     });
@@ -74,6 +77,8 @@ export default function CapabilityPage({ params }: { params: Promise<{ id: strin
         <h2 style={{ fontSize: 20, lineHeight: "26px" }}>{data.headline}</h2>
       </div>
 
+      {cap === "T4" ? <ShieldDecision key={data.candidates?.map((c: any) => c.key).join("|")} candidates={data.candidates ?? []} /> : null}
+
       <Section>
         <AnalysisView a={data} onAnswer={answer} />
       </Section>
@@ -102,7 +107,7 @@ export default function CapabilityPage({ params }: { params: Promise<{ id: strin
         </Section>
       ) : null}
 
-      {data.candidates?.length ? (
+      {data.candidates?.length && cap !== "T4" ? (
         <Section title="What NextMove can do" id="actions">
           {session?.mode === "bank-demo" ? (
             <div style={{ marginBottom: 12 }}>

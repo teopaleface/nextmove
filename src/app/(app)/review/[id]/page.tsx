@@ -34,6 +34,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   const single = p.actions.length === 1;
   const a0 = p.actions[0];
+  const hasScheduledTransfers = p.actions.some((a: any) => a.operation === "INTERNAL_TRANSFER" && a.consequences?.effectiveAt);
   const otherContext = session?.context && p.context.id !== session.context.id;
   const chosen = selected ?? new Set<string>();
 
@@ -158,7 +159,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           items={[
             { label: "Context", value: p.context.name },
             { label: "Covers", value: `Exactly ${chosen.size} of ${p.actions.length} action${p.actions.length === 1 ? "" : "s"} as shown` },
-            { label: "Must start within", value: `${p.approvalWindowMinutes} minutes of approval` },
+            { label: hasScheduledTransfers ? "Immediate actions must start within" : "Must start within", value: `${p.approvalWindowMinutes} minutes of approval` },
+            ...(hasScheduledTransfers ? [{ label: "Scheduled transfers", value: `Run on the listed dates; permission expires ${p.scheduledGrantGraceDays} days after each date (demo clock)` }] : []),
             { label: "Review valid until", value: `${time(p.readyExpiresAt)} (demo clock)` },
             { label: "If terms change", value: "Nothing is sent; you review again" },
           ]}

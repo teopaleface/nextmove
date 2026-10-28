@@ -4,6 +4,7 @@ import { classifyPossibleDuplicates, priceAdjustmentCheck, totalCostOfOwnership,
 import { homeReadiness, comparePurchases, afterHomeBudget } from "../finance/goals";
 import { merchantAccountId } from "../../shared/ids";
 import { unavailable } from "./alex-subscriptions";
+import { goalSimulationBlocks } from "./goal-simulations";
 import {
   type Analysis,
   type Block,
@@ -559,6 +560,7 @@ export const O1_PERSONAL = async (env: CapEnv): Promise<Analysis> => {
         { cells: ["No phone", money(liquid), String(cmp.baseline.contributions ?? "Unknown"), monthLabel(cmp.baseline.contributions)] },
         ...cmp.rows.map((r) => ({ cells: [r.label, money(r.liquidAfterMinor), String(r.contributions ?? "Unknown"), monthLabel(r.contributions)], tone: r.delaysHome ? ("warn" as const) : ("good" as const) })),
       ] },
+      ...goalSimulationBlocks(env, { liquidMinor: liquid, targetMinor: cmp.baseline.targetMinor, monthlySavingMinor: home.monthlyContributionMinor, incomeMinor: ah.incomeMinor, phonePriceMinor: phone.options.at(-1)?.priceMinor }),
       { kind: "table", title: "Target", columns: ["Part", "Amount"], rows: cmp.baseline.breakdown.map((b) => ({ cells: [b.label, b.minor == null ? "Unknown" : money(b.minor)] })), note: cmp.baseline.formula },
       { kind: "table", title: "After buying the home (separate period)", columns: ["", "Per month"], rows: [{ cells: ["Expected", money(after.monthlyMinor)] }, { cells: ["If income drops", money(after.downsideMonthlyMinor)], tone: after.downsideNegative ? "bad" : undefined }], note: after.note },
       { kind: "note", tone: "info", text: (g.inputs.assumptions ?? []).join(" ") },

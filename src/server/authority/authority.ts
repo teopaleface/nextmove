@@ -181,11 +181,12 @@ export function approveProposal(
     for (const a of selected) {
       const spec = json<ActionSpec>(a.spec_json);
       const grantId = opaqueId("grt");
+      const grantExpires = scheduledGrantExpiry(spec, now) ?? startExpires;
       run(
         db,
         `INSERT INTO grants(id, mandate_id, action_id, tenant_id, context_id, actor_user_id, operation, canonical_key, spec_digest, terms_revision, max_debit_minor, currency, status, epoch_at_issue, issued_at, expires_at)
          VALUES (?,?,?,?,?,?,?,?,?,?,?, 'RON', 'ACTIVE', 0, ?, ?)`,
-        grantId, mandateId, a.id, session.tenantId, p.context_id, session.userId, a.operation, a.canonical_key, a.spec_digest, a.terms_revision, spec.money.maxDebitMinor, issuedAt, startExpires,
+        grantId, mandateId, a.id, session.tenantId, p.context_id, session.userId, a.operation, a.canonical_key, a.spec_digest, a.terms_revision, spec.money.maxDebitMinor, issuedAt, grantExpires,
       );
       run(db, "UPDATE proposal_actions SET status='APPROVED', updated_at=? WHERE id=?", issuedAt, a.id);
       const jobId = shortId("job");
@@ -196,7 +197,7 @@ export function approveProposal(
         jobId, session.tenantId, a.id, a.route, p.scope === "BATCH" ? 6 : 3, new Date().toISOString(), spec.merchantId && spec.subscriberAccountId ? `${spec.merchantId}|${spec.subscriberAccountId}` : a.subject_ref, `${session.tenantId}|${session.userId}`, new Date().toISOString(), new Date().toISOString(),
       );
       run(db, "INSERT INTO outbox(tenant_id, topic, ref_id, created_at) VALUES (?, 'action.approved', ?, ?)", session.tenantId, a.id, new Date().toISOString());
-      grants.push({ actionId: a.id, grantId, expiresAt: startExpires });
+      grants.push({ actionId: a.id, grantId, expiresAt: grantExpires });
     }
     for (const a of actions) if (!input.actionIds.includes(a.id) && a.status === "PROPOSED") run(db, "UPDATE proposal_actions SET status='NOT_STARTED', updated_at=? WHERE id=?", issuedAt, a.id);
     run(db, "UPDATE proposals SET status='APPROVED', decided_at=? WHERE id=?", issuedAt, p.id);
@@ -204,6 +205,19 @@ export function approveProposal(
   });
   if ("refused" in r) throw r.refused;
   return r;
+}
+
+/**
+ * A bank-internal leg approved for a later date (a scheduled return from a pocket) keeps its grant until a bounded
+ * window after that date. The date is part of the digested spec, so it cannot move without a new approval.
+ */
+export const SCHEDULED_GRANT_GRACE_DAYS = 14;
+function scheduledGrantExpiry(spec: ActionSpec, nowMs_: number): string | null {
+  const at = spec.route === "BANK_INTERNAL" && spec.operation === "INTERNAL_TRANSFER" ? (spec.params as any)?.executeAt : null;
+  if (typeof at !== "string") return null;
+  const ms = Date.parse(at);
+  if (!Number.isFinite(ms)) return null;
+  return toLocalIso(Math.max(nowMs_, ms) + SCHEDULED_GRANT_GRACE_DAYS * 86_400_000);
 }
 
 export function declineProposal(db: DatabaseSync, session: Session, proposalId: string) {

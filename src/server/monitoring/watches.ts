@@ -8,6 +8,7 @@ import { detectPriceChanges, reviewLicenses } from "../finance/capabilities";
 import { fixture } from "../capabilities/core";
 import { formatMoney } from "../../shared/money";
 import { toLocalIso } from "../../shared/time";
+import { checkShieldWatch } from "../bank/trial-shield";
 
 // Durable monitoring. Each watch has its own explicit permission and consent revision; checks are leased so two
 // workers never evaluate the same watch at once, and findings are deduplicated by a stable key.
@@ -113,6 +114,8 @@ async function check(db: DatabaseSync, w: any): Promise<{ result: string; next?:
       if (days <= (c.warnDays ?? 21)) finding(db, w, `credit:${w.subject_ref}:warn`, "CREDIT_EXPIRING", `${formatMoney(c.amountMinor)} credit expires in ${Math.ceil(days)} days`, "It matches a book on your wishlist. Using it is optional.", "A12", 3);
       return { result: `${Math.ceil(days)} day${Math.ceil(days) === 1 ? "" : "s"} left`, next: now + 24 * HOUR };
     }
+    case "TRIAL_SHIELD":
+      return checkShieldWatch(db, w);
     case "SEAT_USAGE": {
       const sub = one<any>(db, "SELECT * FROM subscriptions WHERE id=?", w.subject_ref);
       const r = await client.getContract(sub.merchant_id, sub.subscriber_account_id, sub.contract_id);

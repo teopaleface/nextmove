@@ -7,6 +7,7 @@ import { useSession } from "@/ui/session";
 import { ActionStatus, ErrorBox, Group, Loading, Notice, PageHead, Row, Section, TaskStatus, useAction } from "@/ui/kit";
 import { AgentSig, Icon } from "@/ui/icons";
 import { evidenceLabel, money, onDemoClock, time } from "@/ui/format";
+import { SimulationWidget } from "@/ui/simulation";
 
 const ACTIVE = new Set(["QUEUED", "RUNNING"]);
 
@@ -25,6 +26,7 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
   const answer = data.blocks.find((b: any) => b.key === "answer")?.payload;
   const analyses = data.blocks.filter((b: any) => b.kind === "analysis").map((b: any) => b.payload);
   const batch = data.blocks.find((b: any) => b.key === "batch")?.payload;
+  const simulations = data.blocks.filter((b: any) => b.kind === "simulation");
   const p = data.proposal;
 
   const reply = (questionId: string, value: string) =>
@@ -104,11 +106,18 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
         <Section>
           <div className="opportunity">
             <AgentSig label={answer.by === "LIVE_MODEL" ? `Answer by ${t.model ?? "the live model"}` : "Answer by the simulated planner"} />
-            <p style={{ margin: "10px 0 0", color: "var(--ink)" }}>{answer.text}</p>
+            <p style={{ margin: "10px 0 0", color: "var(--ink)", whiteSpace: "pre-line" }}>{answer.text}</p>
             <p className="caption" style={{ margin: "8px 0 0" }}>
               {answer.provenance}
             </p>
           </div>
+          {simulations.length ? (
+            <div className="stack" style={{ marginTop: 12 }}>
+              {simulations.map((b: any) => (
+                <SimulationWidget key={`${b.key}:${b.revision}`} sim={b.payload} />
+              ))}
+            </div>
+          ) : null}
         </Section>
       ) : ACTIVE.has(t.state) ? (
         <Section>

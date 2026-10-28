@@ -30,6 +30,8 @@ import { makeEnv } from "../capabilities/core";
 import { comparison } from "../capabilities/alex-subscriptions";
 import { verifyTravelBenefit } from "../capabilities/alex-money";
 import { buildFundingPacket } from "../capabilities/laziz";
+import { chooseReroute, resetRoute, setRoadblock } from "../capabilities/goal-route-actions";
+import { AUTOPILOT_LABS, runAutopilotLabs } from "../capabilities/cash-autopilot";
 import { approveBatch, batchFollowUps, batchSummary, recheckBatch, reviseBatch, startBulkReview, stopBatch } from "../capabilities/batch";
 import { createAgentTask, answerQuestion, stopAgentTask } from "../agent/orchestrator";
 import { cardDraft, paymentDraft, payees } from "../bank/payments";
@@ -40,6 +42,7 @@ import { requestReconcileNow } from "../execution/executor";
 import { workerStatus } from "../execution/jobs";
 import { evidenceDir } from "../execution/browser";
 import { lastModelStatus } from "../model/claude-cli";
+import { cardAttempt } from "../bank/trial-shield";
 import { seedTenant, tenantExists } from "../scenarios/seed";
 import { merchantAdmin } from "../merchant-client";
 import { formatMoney } from "../../shared/money";
@@ -307,6 +310,14 @@ post("/capabilities/O1/save", async (c) => {
     return { saved: id, revision: rev };
   });
 });
+
+// O6 route to the home goal: Labs roadblocks (demo tenant only) and reroute choice. The route itself is GET /capabilities/O6.
+post("/goals/home-route/roadblocks", async (c) => {
+  const b = await c.body();
+  return setRoadblock(c.db, s(c), String(b?.id ?? ""), b?.on !== false);
+});
+post("/goals/home-route/reset", (c) => resetRoute(c.db, s(c)));
+post("/goals/home-route/choose", async (c) => chooseReroute(c.db, s(c), String((await c.body())?.route ?? "")));
 
 get("/business/packet", (c) => {
   const ses = s(c);
@@ -608,6 +619,22 @@ post("/labs/merchant", async (c) => {
   if (body.contractId && !String(body.contractId).startsWith(`${ses.tenantId}:`)) throw new HttpError(404, "NOT_FOUND", "Not found");
   const r = await merchantAdmin.labs(ses.tenantId, body);
   run(c.db, "INSERT INTO task_events(task_id, tenant_id, kind, label, evidence, payload_json, created_at) SELECT id, tenant_id, 'labs', ?, 'SIMULATED_MERCHANT_EVENT', NULL, ? FROM tasks WHERE tenant_id=? AND context_id=? AND state NOT IN ('DONE','FAILED') ORDER BY updated_at DESC LIMIT 1", `Labs: ${String(b.action).replace(/_/g, " ")}`, new Date().toISOString(), ses.tenantId, ses.contextId);
+  return r;
+});
+post("/labs/bank", async (c) => {
+  requireLabs();
+  const ses = s(c);
+  const b = await c.body();
+  if (!AUTOPILOT_LABS.has(String(b?.action))) throw new HttpError(400, "BAD_ACTION", "Unknown Labs action");
+  return runAutopilotLabs(c.db, ses, String(b.action));
+});
+// Trial Shield: the simulated card network sends a charge the merchant started on its own. The bank decides.
+post("/labs/card-attempt", async (c) => {
+  requireLabs();
+  const ses = s(c);
+  const b = await c.body();
+  const r = cardAttempt(c.db, { tenantId: ses.tenantId, contextId: ses.contextId, merchantId: String(b?.merchantId ?? "").slice(0, 40) });
+  if (!r) throw new HttpError(404, "NOT_FOUND", "This merchant is not under Trial Shield here");
   return r;
 });
 post("/labs/clock", async (c) => {

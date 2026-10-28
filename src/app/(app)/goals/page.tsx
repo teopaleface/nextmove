@@ -5,6 +5,7 @@ import { useSession } from "@/ui/session";
 import { Empty, ErrorBox, Group, Loading, Row, Section } from "@/ui/kit";
 import { Icon } from "@/ui/icons";
 import { date } from "@/ui/format";
+import { RouteIcon } from "@/ui/route-map";
 
 const GOAL_SUB: Record<string, string> = {
   HOME: "When the home becomes affordable, with and without big purchases",
@@ -21,7 +22,7 @@ export default function GoalsPage() {
   const { data, error, reload } = useApi<any>("/goals", { epoch });
   if (!data) return error ? <ErrorBox error={error} onRetry={reload} /> : <Loading label="Loading your goals…" />;
   const business = session?.context?.kind === "BUSINESS";
-  const goalCaps = new Set(["O1", "A10", "A14", "A12", "O5"]);
+  const goalCaps = new Set(["O1", "A10", "A14", "A12", "O5", "O6"]);
   const sims = data.capabilities.filter((c: any) => c.inThisContext && SIM_GROUPS.has(c.group) && !goalCaps.has(c.id));
   return (
     <>
@@ -36,6 +37,7 @@ export default function GoalsPage() {
           ) : (
             <Empty>No goals in this context yet</Empty>
           )}
+          {data.capabilities.some((c: any) => c.id === "O6" && c.inThisContext) ? <Row href="/goals/home-route" mark={<span className="mark" aria-hidden="true"><RouteIcon size={20} /></span>} title="Route to your home" sub="Live route, checkpoints and reroutes when costs change" /> : null}
         </Group>
       </Section>
       {sims.length ? (

@@ -7,6 +7,7 @@ import { useSession } from "@/ui/session";
 import { ErrorBox, Group, KV, Loading, PageHead, Row, Section, StateLine, useAction } from "@/ui/kit";
 import { dayTime, money } from "@/ui/format";
 import { recoveryKind, recoveryState } from "@/ui/labels";
+import { ShieldTransactionState } from "@/ui/trial-shield";
 
 export default function TransactionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -26,11 +27,11 @@ export default function TransactionPage({ params }: { params: Promise<{ id: stri
     <>
       <PageHead back title={t.merchant_name} />
       <div className="group pad">
-        <div className={`num${t.amount_minor > 0 ? " positive" : ""}`} style={{ fontSize: 32, lineHeight: "38px", fontWeight: 650 }}>
+        <div className={`num${t.amount_minor > 0 ? " positive" : ""}`} style={{ color: pending || t.status === "RELEASED" ? "var(--muted)" : undefined, textDecoration: t.status === "RELEASED" ? "line-through" : undefined, fontSize: 32, lineHeight: "38px", fontWeight: 650 }}>
           {money(t.amount_minor, { sign: true })}
         </div>
         <div style={{ marginTop: 6 }}>
-          {pending ? <StateLine tone="neutral">Pending card hold, not a second charge</StateLine> : t.amount_minor > 0 ? <StateLine tone="ok">Credit posted</StateLine> : <StateLine tone="ok">Posted</StateLine>}
+          {t.status === "RELEASED" || t.data?.trialShield ? <ShieldTransactionState t={t} /> : pending ? <StateLine tone="neutral">Pending card hold, not a second charge</StateLine> : t.amount_minor > 0 ? <StateLine tone="ok">Credit posted</StateLine> : <StateLine tone="ok">Posted</StateLine>}
         </div>
       </div>
       <Section title="Details">

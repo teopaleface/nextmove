@@ -32,7 +32,7 @@ export function recoveryKind(kind: string) {
 }
 
 export function forecastKind(kind: string) {
-  return ({ RENEWAL: "Renewal", TRIAL_CONVERSION: "Trial becomes paid", BILL: "Bill", PLANNED_TRANSFER: "Planned transfer", RECEIVABLE: "Expected from a customer", SUPPLIER_PAYMENT: "Supplier payment", ORDER: "Order" } as Record<string, string>)[kind] ?? kind.toLowerCase().replace(/_/g, " ");
+  return ({ RENEWAL: "Renewal", TRIAL_CONVERSION: "Trial becomes paid", BILL: "Bill", PLANNED_TRANSFER: "Planned transfer", RECEIVABLE: "Expected from a customer", SUPPLIER_PAYMENT: "Supplier payment", ORDER: "Order", HELD_CHARGE: "Held charge, needs your decision" } as Record<string, string>)[kind] ?? kind.toLowerCase().replace(/_/g, " ");
 }
 
 /** Where to go from a subscription or bill: the capabilities that concern this provider. */

@@ -121,3 +121,21 @@ It found and fixed four defects:
 - Lease recovery stores `next_reconcile_at` in real time, but reconciliation compares it with the demo clock. Today it works only because the requeued job reschedules on the demo clock. A first fix broke the `kill -9` recovery test and was reverted, so this is still open.
 - An untracked `jev-discord/` directory appeared in the repo root at 16:51 from another process. It is not part of this work and was left untouched.
 - Nothing is committed; all of this work is in the working tree.
+
+## Checkpoint 3 — Discord proposals integrated in the main checkout
+
+The base Opus implementation was preserved in commit `1559120`. The exact 57-file Discord feature delta from snapshot tree `3a46066d8fff2a9613128bb087b04ae986c864e4` was applied with a clean three-way integration; no files under `/Users/teo/.t3/worktrees/` were modified. Its five packages add interactive agent simulations, Trial Shield, hidden-cost analyses A15–A18, the home-goal route, and Cash Autopilot/Bill Vault/Overdraft Shield. The registry now lists 30 distinct capability IDs.
+
+Validation on the combined source:
+
+- `npm run typecheck`: pass, including after the scheduled-transfer approval-copy correction.
+- `npm test`: **136 passed in 15 files**, 71.30 seconds. This is the unit/integration suite, not the deferred full browser E2E run.
+- `npx vitest run tests/integration/cash-autopilot.test.ts`: **10 passed**, 8.70 seconds after the approval display change.
+- `npm run build`: pass, including the new `/goals/home-route` page.
+- `git diff --check`: pass.
+
+The approval UI now distinguishes immediate actions from scheduled internal transfers and discloses the existing fourteen-day scheduled-grant grace period; see ADR 0008. This changes disclosure, not transfer authorization logic.
+
+Existing demo sessions/data were preserved. For the newly added provider fixtures, start Alex with **Start a separate copy** on the sign-in screen; a fresh copy contains all extension fixtures. Existing tenants created before the extension are not automatically reseeded.
+
+Recordings, the evidence manifest and long/live browser E2E remain postponed by Teo. The earlier crash-recovery clock mismatch and the other open items above remain explicit; the full combined UI and long-lived scheduled behavior have not been revalidated in a browser in this pass. The untracked `jev-discord/` directory is unrelated and remains untouched.

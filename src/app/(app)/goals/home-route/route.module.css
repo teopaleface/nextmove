@@ -1,0 +1,183 @@
+/* O6 route page. Layout and type follow the kit; tokens come from globals.css. */
+
+.card {
+  margin-top: 8px;
+  padding: 20px 20px 16px;
+  border-radius: var(--r-hero);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 20px;
+}
+
+.arrival {
+  margin: 6px 0 2px;
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  animation: settle 240ms var(--ease) both;
+}
+
+.meta {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.arrival,
+.meta {
+  transition: opacity 200ms var(--ease);
+}
+
+.arrival[data-dimmed="true"],
+.meta[data-dimmed="true"] {
+  opacity: 0.35;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.keyLine,
+.keyGhost {
+  display: inline-block;
+  width: 16px;
+  height: 0;
+  border-top: 2.5px solid var(--ink);
+}
+
+.keyGhost {
+  border-top: 1.5px dashed var(--control-border);
+}
+
+.option {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.option[aria-pressed="true"] {
+  box-shadow: inset 3px 0 0 var(--yellow);
+  background: #fbfbf8;
+}
+
+.option:disabled {
+  cursor: default;
+}
+
+.option:disabled :global(.row-title),
+.option:disabled .letter {
+  opacity: 0.6;
+}
+
+.option :global(.row-end) {
+  padding-top: 1px;
+}
+
+.letter {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  border-radius: var(--r-small);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.option[aria-pressed="true"] .letter {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.option :global(.state) {
+  margin-top: 4px;
+}
+
+.why {
+  flex-basis: 100%;
+  margin-top: -8px;
+  padding-left: 40px;
+  color: var(--danger);
+}
+
+.sources {
+  margin-top: 12px;
+}
+
+.decide {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: var(--r-group);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.step {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin: 0 6px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--surface);
+}
+
+.step[data-kind="start"] {
+  background: var(--ink);
+}
+
+.step[data-kind="end"] {
+  width: 16px;
+  height: 16px;
+  margin: 0 4px;
+  background: var(--yellow);
+}
+
+.step[data-kind="miss"] {
+  border-color: var(--danger);
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrival {
+    animation: none;
+  }
+  .arrival,
+  .meta {
+    transition: none;
+  }
+}

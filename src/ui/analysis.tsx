@@ -7,6 +7,8 @@ import { api } from "./api";
 import { Icon } from "./icons";
 import { ErrorBox, Group, Notice, StateLine, useAction, Sources } from "./kit";
 import { ROUTE_LABEL, dayTime, money } from "./format";
+import { SimulationWidget } from "./simulation";
+import type { Simulation } from "../shared/simulations";
 
 const fmtAt = (v: string) => (/^\d{4}-\d{2}-\d{2}T/.test(v) ? dayTime(v) : v);
 const fmtState = (v: string) => (/^[A-Z_]+$/.test(v) ? v.charAt(0) + v.slice(1).toLowerCase().replace(/_/g, " ") : v);
@@ -22,7 +24,8 @@ export type Block =
   | { kind: "facts"; title: string; items: { label: string; value: string; provenance: string }[] }
   | { kind: "note"; tone: "info" | "warn"; text: string }
   | { kind: "question"; id: string; text: string; options: { value: string; label: string }[]; answer: string | null }
-  | { kind: "status"; title: string; state: string; detail?: string; href?: string };
+  | { kind: "status"; title: string; state: string; detail?: string; href?: string }
+  | { kind: "simulation"; simulation: Simulation };
 
 export function BlockView({ block, onAnswer }: { block: Block; onAnswer?: (id: string, value: string) => void }) {
   switch (block.kind) {
@@ -178,6 +181,8 @@ export function BlockView({ block, onAnswer }: { block: Block; onAnswer?: (id: s
           )}
         </div>
       );
+    case "simulation":
+      return <SimulationWidget sim={block.simulation} />;
     default:
       return null;
   }

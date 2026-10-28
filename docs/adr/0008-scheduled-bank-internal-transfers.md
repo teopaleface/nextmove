@@ -1,0 +1,5 @@
+# Scheduled internal transfers share the approval and execution gate
+
+The Discord extension introduces synthetic transfers between a customer’s own accounts for Bill Vault, Salary Autopilot and Overdraft Shield. These use an exact digested action, server-owned amounts/account IDs, a per-action grant, the worker dispatch gate, one balanced ledger posting and an independently readable bank receipt. Scheduled returns bind their execution date and conditions in the approved spec; this avoids a separate privileged scheduler that could move money without authority.
+
+Immediate actions retain the ordinary approval-start window. A scheduled internal-transfer grant is valid until fourteen days after its approved date, and the review UI discloses this separate window. Changed terms or revocation still block execution. This is a bounded simulation policy, not a production-bank mandate, interest product or claim that delayed returns are acceptable for a real customer. Funds parked between owned accounts do not become income, and any yield shown is an explicitly fictional scenario.

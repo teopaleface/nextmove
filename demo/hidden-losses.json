@@ -1,0 +1,711 @@
+{
+  "status": "fictional_scenario",
+  "note": "Fictional merchants, prices, rates and insurance terms for capabilities A15–A18. Not real offers.",
+  "dasheats": {
+    "merchantId": "dasheats",
+    "merchant": "DashEats",
+    "subscriptionName": "DashEats Plus",
+    "planName": "Plus monthly",
+    "priceMinor": 2999,
+    "standardDeliveryFeeMinor": 799,
+    "freeDeliveryMinOrderMinor": 4000,
+    "nextChargeAt": "2026-11-14T08:00:00+02:00",
+    "subscriberAccountId": "de-alex",
+    "termsRevision": 1
+  },
+  "pulsegym": {
+    "merchantId": "pulsegym",
+    "merchant": "PulseGym",
+    "planName": "Full access monthly",
+    "priceMinor": 25000,
+    "location": "Floreasca",
+    "nextChargeAt": "2026-11-05T07:00:00+02:00",
+    "subscriberAccountId": "pg-alex",
+    "termsRevision": 1,
+    "pause": {
+      "startsAt": "2026-11-05T07:00:00+02:00",
+      "allowedMonths": [
+        1,
+        2,
+        3
+      ],
+      "feeMinor": 0,
+      "rule": "PulseGym lets members freeze for up to 3 months a year at no fee. The membership restarts automatically."
+    }
+  },
+  "safetrip": {
+    "merchantId": "safetrip",
+    "merchant": "SafeTrip",
+    "planName": "Annual Europe",
+    "priceMinor": 21900,
+    "billingPeriod": "ANNUAL",
+    "nextChargeAt": "2027-01-15T10:00:00+02:00",
+    "subscriberAccountId": "stp-alex",
+    "termsRevision": 1
+  },
+  "travelCover": {
+    "source": "SafeTrip policy terms v3 (fictional) and NextMove card benefits v1 (fictional)",
+    "rows": [
+      {
+        "id": "medical",
+        "label": "Medical",
+        "policy": "50,000 EUR",
+        "card": "30,000 EUR",
+        "gap": "Lower limit"
+      },
+      {
+        "id": "region",
+        "label": "Where",
+        "policy": "Europe",
+        "card": "Worldwide",
+        "gap": null
+      },
+      {
+        "id": "activation",
+        "label": "When it applies",
+        "policy": "Every trip",
+        "card": "Only trips paid with the card",
+        "gap": "Trips not paid with the card"
+      },
+      {
+        "id": "length",
+        "label": "Trip length",
+        "policy": "Up to 60 days",
+        "card": "Up to 30 days",
+        "gap": "Trips of 31–60 days"
+      },
+      {
+        "id": "baggage",
+        "label": "Baggage delay",
+        "policy": "200 EUR",
+        "card": "150 EUR",
+        "gap": "Lower limit"
+      },
+      {
+        "id": "cancellation",
+        "label": "Cancel trip",
+        "policy": "Up to 1,000 EUR",
+        "card": "Not included",
+        "gap": "Not covered"
+      },
+      {
+        "id": "wintersports",
+        "label": "Winter sports",
+        "policy": "Included",
+        "card": "Not included",
+        "gap": "Not covered"
+      }
+    ]
+  },
+  "fx": {
+    "source": "NextMove reference rate (fictional)",
+    "cardMarkupBasisPoints": 0,
+    "cardTermsSource": "NextMove card terms v1 (fictional)",
+    "rates": {
+      "EUR": {
+        "2026-08-03": "4.9710",
+        "2026-09-03": "4.9735",
+        "2026-10-03": "4.9752"
+      },
+      "USD": {
+        "2026-08-19": "4.3120",
+        "2026-09-19": "4.2950",
+        "2026-10-19": "4.2810"
+      }
+    }
+  },
+  "transactions": [
+    {
+      "id": "txn-dasheats-plus-2026-06",
+      "merchant": "DashEats Plus",
+      "merchantId": "dasheats",
+      "category": "Subscriptions",
+      "amountMinor": -2999,
+      "bookedAt": "2026-06-14T08:00:00+03:00",
+      "status": "POSTED"
+    },
+    {
+      "id": "txn-dasheats-plus-2026-07",
+      "merchant": "DashEats Plus",
+      "merchantId": "dasheats",
+      "category": "Subscriptions",
+      "amountMinor": -2999,
+      "bookedAt": "2026-07-14T08:00:00+03:00",
+      "status": "POSTED"
+    },
+    {
+      "id": "txn-dasheats-plus-2026-08",
+      "merchant": "DashEats Plus",
+      "merchantId": "dasheats",
+      "category": "Subscriptions",
+      "amountMinor": -2999,
+      "bookedAt": "2026-08-14T08:00:00+03:00",
+      "status": "POSTED"
+    },
+    {
+      "id": "txn-dasheats-plus-2026-09",
+      "merchant": "DashEats Plus",
+      "merchantId": "dasheats",
+      "category": "Subscriptions",
+      "amountMinor": -2999,
+      "bookedAt": "2026-09-14T08:00:00+03:00",
+      "status": "POSTED"
+    },
+    {
+      "id": "txn-dasheats-plus-2026-10",
+      "merchant": "DashEats Plus",
+      "merchantId": "dasheats",
+      "category": "Subscriptions",
+      "amountMinor": -2999,
+      "bookedAt": "2026-10-14T08:00:00+03:00",
+      "status": "POSTED"
+    },
+    {
+      "id": "txn-dasheats-order-01",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -5840,
+      "bookedAt": "2026-06-16T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40210"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-02",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -7120,
+      "bookedAt": "2026-06-19T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40211"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-03",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -4690,
+      "bookedAt": "2026-06-23T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40212"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-04",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -8350,
+      "bookedAt": "2026-06-27T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40213"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-05",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -6210,
+      "bookedAt": "2026-06-30T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40214"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-06",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -5530,
+      "bookedAt": "2026-07-04T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40215"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-07",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -9180,
+      "bookedAt": "2026-07-11T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40216"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-08",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -4870,
+      "bookedAt": "2026-07-18T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40217"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-09",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -6640,
+      "bookedAt": "2026-07-26T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40218"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-10",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -7350,
+      "bookedAt": "2026-08-03T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40219"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-11",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -5260,
+      "bookedAt": "2026-08-22T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40220"
+      }
+    },
+    {
+      "id": "txn-dasheats-order-12",
+      "merchant": "DashEats",
+      "merchantId": "dasheats",
+      "category": "Food delivery",
+      "amountMinor": -6240,
+      "bookedAt": "2026-10-09T20:15:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "orderRef": "DE-40221"
+      }
+    },
+    {
+      "id": "txn-lingora-2026-08",
+      "merchant": "Lingora",
+      "merchantId": "lingora",
+      "category": "Subscriptions",
+      "amountMinor": -5110,
+      "bookedAt": "2026-08-03T09:12:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "fx": {
+          "originalMinor": 999,
+          "originalCurrency": "EUR",
+          "conversion": "MERCHANT"
+        }
+      }
+    },
+    {
+      "id": "txn-lingora-2026-09",
+      "merchant": "Lingora",
+      "merchantId": "lingora",
+      "category": "Subscriptions",
+      "amountMinor": -5113,
+      "bookedAt": "2026-09-03T09:12:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "fx": {
+          "originalMinor": 999,
+          "originalCurrency": "EUR",
+          "conversion": "MERCHANT"
+        }
+      }
+    },
+    {
+      "id": "txn-lingora-2026-10",
+      "merchant": "Lingora",
+      "merchantId": "lingora",
+      "category": "Subscriptions",
+      "amountMinor": -5114,
+      "bookedAt": "2026-10-03T09:12:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "fx": {
+          "originalMinor": 999,
+          "originalCurrency": "EUR",
+          "conversion": "MERCHANT"
+        }
+      }
+    },
+    {
+      "id": "txn-pixelforge-2026-08",
+      "merchant": "PixelForge",
+      "merchantId": "pixelforge",
+      "category": "Subscriptions",
+      "amountMinor": -5294,
+      "bookedAt": "2026-08-19T06:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "fx": {
+          "originalMinor": 1199,
+          "originalCurrency": "USD",
+          "conversion": "MERCHANT"
+        }
+      }
+    },
+    {
+      "id": "txn-pixelforge-2026-09",
+      "merchant": "PixelForge",
+      "merchantId": "pixelforge",
+      "category": "Subscriptions",
+      "amountMinor": -5273,
+      "bookedAt": "2026-09-19T06:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "fx": {
+          "originalMinor": 1199,
+          "originalCurrency": "USD",
+          "conversion": "MERCHANT"
+        }
+      }
+    },
+    {
+      "id": "txn-pixelforge-2026-10",
+      "merchant": "PixelForge",
+      "merchantId": "pixelforge",
+      "category": "Subscriptions",
+      "amountMinor": -5256,
+      "bookedAt": "2026-10-19T06:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "fx": {
+          "originalMinor": 1199,
+          "originalCurrency": "USD",
+          "conversion": "MERCHANT"
+        }
+      }
+    },
+    {
+      "id": "txn-pulsegym-2026-06",
+      "merchant": "PulseGym",
+      "merchantId": "pulsegym",
+      "category": "Subscriptions",
+      "amountMinor": -25000,
+      "bookedAt": "2026-06-05T07:00:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-pulsegym-2026-07",
+      "merchant": "PulseGym",
+      "merchantId": "pulsegym",
+      "category": "Subscriptions",
+      "amountMinor": -25000,
+      "bookedAt": "2026-07-05T07:00:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-pulsegym-2026-08",
+      "merchant": "PulseGym",
+      "merchantId": "pulsegym",
+      "category": "Subscriptions",
+      "amountMinor": -25000,
+      "bookedAt": "2026-08-05T07:00:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-pulsegym-2026-09",
+      "merchant": "PulseGym",
+      "merchantId": "pulsegym",
+      "category": "Subscriptions",
+      "amountMinor": -25000,
+      "bookedAt": "2026-09-05T07:00:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-pulsegym-2026-10",
+      "merchant": "PulseGym",
+      "merchantId": "pulsegym",
+      "category": "Subscriptions",
+      "amountMinor": -25000,
+      "bookedAt": "2026-10-05T07:00:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-01",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -1450,
+      "bookedAt": "2026-06-06T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-02",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -1800,
+      "bookedAt": "2026-06-10T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-03",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -1450,
+      "bookedAt": "2026-06-13T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-04",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -2100,
+      "bookedAt": "2026-06-17T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-05",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -1650,
+      "bookedAt": "2026-06-24T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-06",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -1450,
+      "bookedAt": "2026-07-01T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-07",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -1900,
+      "bookedAt": "2026-07-08T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-08",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -1650,
+      "bookedAt": "2026-07-15T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-09",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -1500,
+      "bookedAt": "2026-07-22T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-ritm-10",
+      "merchant": "Ritm Café Floreasca",
+      "merchantId": "ritm-cafe",
+      "category": "Cafés",
+      "amountMinor": -1450,
+      "bookedAt": "2026-08-02T19:40:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-parkpoint-01",
+      "merchant": "ParkPoint Floreasca",
+      "merchantId": "parkpoint",
+      "category": "Parking",
+      "amountMinor": -800,
+      "bookedAt": "2026-06-08T18:05:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-parkpoint-02",
+      "merchant": "ParkPoint Floreasca",
+      "merchantId": "parkpoint",
+      "category": "Parking",
+      "amountMinor": -1200,
+      "bookedAt": "2026-06-12T18:05:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-parkpoint-03",
+      "merchant": "ParkPoint Floreasca",
+      "merchantId": "parkpoint",
+      "category": "Parking",
+      "amountMinor": -800,
+      "bookedAt": "2026-06-15T18:05:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-parkpoint-04",
+      "merchant": "ParkPoint Floreasca",
+      "merchantId": "parkpoint",
+      "category": "Parking",
+      "amountMinor": -1000,
+      "bookedAt": "2026-06-20T18:05:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-parkpoint-05",
+      "merchant": "ParkPoint Floreasca",
+      "merchantId": "parkpoint",
+      "category": "Parking",
+      "amountMinor": -800,
+      "bookedAt": "2026-06-27T18:05:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-parkpoint-06",
+      "merchant": "ParkPoint Floreasca",
+      "merchantId": "parkpoint",
+      "category": "Parking",
+      "amountMinor": -1200,
+      "bookedAt": "2026-07-03T18:05:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-parkpoint-07",
+      "merchant": "ParkPoint Floreasca",
+      "merchantId": "parkpoint",
+      "category": "Parking",
+      "amountMinor": -800,
+      "bookedAt": "2026-07-10T18:05:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-parkpoint-08",
+      "merchant": "ParkPoint Floreasca",
+      "merchantId": "parkpoint",
+      "category": "Parking",
+      "amountMinor": -1000,
+      "bookedAt": "2026-07-17T18:05:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-parkpoint-09",
+      "merchant": "ParkPoint Floreasca",
+      "merchantId": "parkpoint",
+      "category": "Parking",
+      "amountMinor": -800,
+      "bookedAt": "2026-07-29T18:05:00+03:00",
+      "status": "POSTED",
+      "data": {
+        "location": "Floreasca"
+      }
+    },
+    {
+      "id": "txn-safetrip-2026-01",
+      "merchant": "SafeTrip",
+      "merchantId": "safetrip",
+      "category": "Insurance",
+      "amountMinor": -21900,
+      "bookedAt": "2026-01-15T10:00:00+02:00",
+      "status": "POSTED"
+    },
+    {
+      "id": "txn-skylark-2026-10",
+      "merchant": "SkyLark Air",
+      "merchantId": "skylark",
+      "category": "Travel",
+      "amountMinor": -61200,
+      "bookedAt": "2026-10-02T21:30:00+03:00",
+      "status": "POSTED",
+      "note": "Barcelona flights, 12–16 Nov"
+    }
+  ]
+}

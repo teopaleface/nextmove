@@ -1,0 +1,344 @@
+/* What-if widget. Tokens from design/tokens.json via the CSS variables in globals.css. */
+
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.card > * {
+  min-width: 0;
+}
+
+.head {
+  padding: 16px 16px 4px;
+}
+
+.title {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.headline {
+  margin: 2px 0 2px;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.figure {
+  margin: 0;
+  padding: 8px 16px 12px;
+}
+
+.chart {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.tick {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.axis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.target {
+  stroke: var(--ink);
+  stroke-opacity: 0.45;
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.guide {
+  stroke: var(--ink);
+  stroke-opacity: 0.18;
+  stroke-width: 1;
+}
+
+.primary {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.reference {
+  fill: none;
+  stroke: var(--muted);
+  stroke-opacity: 0.7;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  stroke-linejoin: round;
+}
+
+.area {
+  fill: var(--ink);
+  fill-opacity: 0.05;
+}
+
+.dot {
+  fill: var(--yellow);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.dotSmall {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.label {
+  fill: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.keyPrimary,
+.keyRef,
+.keyTarget {
+  display: inline-block;
+  width: 16px;
+  height: 0;
+  border-top: 2px solid var(--ink);
+}
+
+.keyRef {
+  border-top: 2px dashed var(--muted);
+}
+
+.keyTarget {
+  border-top: 1px dotted var(--ink);
+}
+
+.fictional {
+  margin: 6px 0 0;
+}
+
+.controls {
+  display: grid;
+  gap: 4px;
+  padding: 4px 16px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.slider {
+  padding-top: 12px;
+}
+
+.sliderHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.sliderHead label {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.sliderHead output {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -6px;
+}
+
+/* Native range input: 44px tall hit area, 4px track filled up to the value, 24px thumb. */
+.range {
+  --p: 50%;
+  display: block;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.range:focus {
+  outline: none;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--ink) var(--p), var(--border) var(--p));
+}
+
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.range::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ink);
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -10px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  box-shadow: 0 1px 3px rgba(21, 21, 21, 0.16);
+  transition: transform 140ms var(--ease);
+}
+
+.range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  box-shadow: 0 1px 3px rgba(21, 21, 21, 0.16);
+  transition: transform 140ms var(--ease);
+}
+
+.range:active::-webkit-slider-thumb {
+  transform: scale(1.12);
+}
+
+.range:active::-moz-range-thumb {
+  transform: scale(1.12);
+}
+
+.range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
+}
+
+.range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
+}
+
+.lines {
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+
+.more {
+  border-top: 1px solid var(--border);
+}
+
+.more summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 0 16px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.more summary::-webkit-details-marker {
+  display: none;
+}
+
+.more summary::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 160ms var(--ease);
+}
+
+.more[open] summary::after {
+  transform: rotate(225deg) translateY(-2px);
+}
+
+.more ul {
+  margin: 0;
+  padding: 0 16px 14px 32px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted);
+}
+
+.more li + li {
+  margin-top: 6px;
+}
+
+.foot {
+  border-top: 1px solid var(--border);
+  padding: 0 4px;
+}
+
+.foot :global(.btn.text) {
+  gap: 6px;
+  font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .more summary::after {
+    transition: none;
+  }
+  .range::-webkit-slider-thumb {
+    transition: none;
+  }
+  .range::-moz-range-thumb {
+    transition: none;
+  }
+  .range:active::-webkit-slider-thumb {
+    transform: none;
+  }
+  .range:active::-moz-range-thumb {
+    transform: none;
+  }
+}
