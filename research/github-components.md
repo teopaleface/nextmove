@@ -4,6 +4,8 @@ Research checked **28 October 2026**, for the 29 October 11:00 Europe/Bucharest 
 
 ## Recommendation
 
+**Superseded on 28 Oct 2026:** the orchestrator is now the Claude Code CLI with allowlisted MCP tools ([ADR 0005](../docs/adr/0005-local-claude-inference.md)); the Vercel AI SDK recommendation below is kept as research history.
+
 Build **one shared financial decision engine for personal and business goals**, using a small Next.js app and Vercel AI SDK's actual tool-approval example as the starting reference. Add **PapaParse** for CSV import. Keep **assistant-ui** as the only optional UI add-on, subject to a short integration timebox; plain React cards plus `useChat` are the fallback. Do not combine multiple agent frameworks.
 
 The shared loop is: clarify goal and missing facts → load relevant profile/ledger/catalog → simulate baseline and alternatives → stress assumptions → explain the trade-off → obtain approval for an exact action bundle → create a local draft/preparation artifact → replan if facts or consent change. Context determines the tool allowlist. A phone buyer gets budget/purchase tools; a homebuyer gets housing-cost and document-preparation tools; a pretzel-shop owner gets stock, invoices, business cash flow, and owner-income tools. All five proposed functions become capabilities available when relevant, not mandatory steps for every person.

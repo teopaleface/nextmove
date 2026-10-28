@@ -145,7 +145,7 @@ Demo-ul folosește date și oferte fictive permise de brief. Artefactele generat
 
 ## 7. Arhitectura suficientă pentru concurs
 
-Un proiect Next.js/TypeScript, Vercel AI SDK, React, validare de date și un singur agent orchestrator. Calculele financiare sunt funcții deterministe, cu bani în unități întregi de bani și rotunjire explicită. Agentul decide ce să ceară, ce variante să verifice și ce instrument să folosească.
+Un proiect Next.js/TypeScript, React, validare de date și un singur agent orchestrator: Claude Code CLI, care apelează instrumentele printr-un server MCP local, numai din allowlist ([ADR 0005](docs/adr/0005-local-claude-inference.md); înlocuiește Vercel AI SDK). Fiecare instrument pornește dezactivat și se activează doar după ce testul lui trece. Calculele financiare sunt funcții deterministe, cu bani în unități întregi de bani și rotunjire explicită. Agentul decide ce să ceară, ce variante să verifice și ce instrument să folosească.
 
 Instrumentele propuse:
 
@@ -166,7 +166,7 @@ Pentru o demonstrație locală, SQLite/fișier JSON persistat sau o bază simpl�
 
 | Proiect | Decizia pentru voi | Motiv |
 |---|---|---|
-| [Vercel AI SDK](https://github.com/vercel/ai) | Baza recomandată | Instrumente tipizate, streaming și exemple de aprobare; Apache-2.0 verificat |
+| [Vercel AI SDK](https://github.com/vercel/ai) | Înlocuit de Claude Code CLI ([ADR 0005](docs/adr/0005-local-claude-inference.md)) | Instrumente tipizate, streaming și exemple de aprobare; Apache-2.0 verificat |
 | [PapaParse](https://github.com/mholt/PapaParse) | Adăugat dacă implementăm CSV | Parser mic, MIT, fără servicii externe |
 | [assistant-ui](https://github.com/assistant-ui/assistant-ui) | Opțional, maximum 45 min de evaluare | Componente pentru rezultate de instrumente; MIT; trebuie adaptate dependențele |
 | [LangGraph](https://github.com/langchain-ai/langgraph) | Alternativă dacă echipa îl cunoaște deja | Stare/pauză/reluare; MIT; adăugarea unui backend Python ar crește integrarea |

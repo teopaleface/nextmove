@@ -43,7 +43,7 @@ Required task-sheet states: reading, needs information, comparing, awaiting appr
 
 ## 3. Architecture: one orchestrator and deep modules
 
-Choose a small standalone **Next.js / React / TypeScript** application, one Vercel AI SDK orchestrator, schema validation and a local persistent SQLite store. A small long-lived worker owns browser sessions and scheduled jobs. Use the candidates in [the source-checked stack note](../research/github-components.md); resolve, install, smoke-test and lock one compatible set. Its listed versions were statically inspected, not tested builds. Do not copy a large banking/chat template or combine multiple agent frameworks.
+Choose a small standalone **Next.js / React / TypeScript** application, one Claude Code CLI orchestrator calling allowlisted tools through a local MCP server (ADR 0005, superseding the earlier Vercel AI SDK choice), schema validation and a local persistent SQLite store. A small long-lived worker owns browser sessions and scheduled jobs. Use the candidates in [the source-checked stack note](../research/github-components.md); resolve, install, smoke-test and lock one compatible set. Its listed versions were statically inspected, not tested builds. Do not copy a large banking/chat template or combine multiple agent frameworks.
 
 | Module | Small interface | Implementation responsibility |
 |---|---|---|

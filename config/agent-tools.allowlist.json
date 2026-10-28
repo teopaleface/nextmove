@@ -1,0 +1,137 @@
+{
+  "description": "Tools the Claude Code CLI agent may call, each with its own allowlist. Everything starts denied: a tool is callable only when enabled, and a call is accepted only when every scoped argument is in that tool's allow lists and within its limits. Empty allow list or zero limit means nothing is allowed. candidates lists values the specs mention; move a value into allow only after a test exercises it. verifiedBy must cover every allowed value plus one denied value. A schemaHash that no longer matches the tool's input schema means the tool is treated as disabled. See docs/adr/0005-local-claude-inference.md.",
+  "mcpServer": "nextmove",
+  "builtInTools": {
+    "enabled": [],
+    "neverAllow": ["Bash", "PowerShell", "Write", "Edit", "NotebookEdit", "WebFetch", "WebSearch", "Agent"]
+  },
+  "tools": {
+    "loadContext": {
+      "effect": "read",
+      "enabled": false,
+      "allow": { "contexts": [], "recordTypes": [] },
+      "candidates": {
+        "contexts": ["personal", "business"],
+        "recordTypes": ["balances", "transactions", "upcoming", "subscriptions", "goals", "preferences", "inventory", "receivables", "licenses"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "inspectEvidence": {
+      "effect": "read",
+      "enabled": false,
+      "allow": { "extractionKinds": [], "mimeTypes": [] },
+      "limits": { "maxBytes": 0 },
+      "candidates": {
+        "extractionKinds": ["screen-time", "subscription-terms", "invoice", "receipt", "purchase-proof", "license-roster"],
+        "mimeTypes": ["image/png", "image/jpeg", "text/csv"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "findOptions": {
+      "effect": "read",
+      "enabled": false,
+      "allow": { "sourceModes": [], "domains": [] },
+      "candidates": {
+        "sourceModes": ["fictional-catalog", "web"],
+        "domains": []
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "inspectMerchant": {
+      "effect": "read",
+      "enabled": false,
+      "allow": { "merchantOrigins": [], "adapters": [] },
+      "candidates": {
+        "merchantOrigins": ["http://127.0.0.1:3211"],
+        "adapters": ["browser", "direct"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "simulateDecision": {
+      "effect": "calculate",
+      "enabled": false,
+      "allow": { "candidateActionTypes": [] },
+      "limits": { "maxHorizonDays": 0 },
+      "candidates": {
+        "candidateActionTypes": ["buy-now", "wait", "installments", "down-payment", "supplier-order", "customer-deposit", "owner-transfer", "renewal-off", "plan-change", "pause"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "compareOptions": {
+      "effect": "calculate",
+      "enabled": false,
+      "allow": { "comparisonKinds": [] },
+      "candidates": {
+        "comparisonKinds": ["subscription-plans", "bundles", "monthly-vs-annual", "financial-products", "total-cost-of-ownership", "travel", "supplier-terms"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "preparePlan": {
+      "effect": "prepare",
+      "enabled": false,
+      "allow": { "actionTypes": [] },
+      "candidates": {
+        "actionTypes": ["renewal-off", "cancel", "plan-change", "pause", "billing-date-change", "benefit-redemption", "seat-reduction", "refund-claim", "duplicate-payment-claim", "price-adjustment-claim", "receivable-reminder", "supplier-order", "owner-transfer", "travel-option", "application-packet"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "prepareBatch": {
+      "effect": "prepare",
+      "enabled": false,
+      "allow": { "operations": [] },
+      "limits": { "maxItems": 0 },
+      "candidates": {
+        "operations": ["cancel", "renewal-off"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "inspectBatch": {
+      "effect": "read",
+      "enabled": false,
+      "allow": {},
+      "limits": { "maxPageSize": 0 },
+      "candidates": {},
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "executeApprovedAction": {
+      "effect": "mutate-with-grant",
+      "enabled": false,
+      "allow": { "operations": [], "merchantOrigins": [], "adapters": [], "currencies": [] },
+      "limits": { "maxAmountMinor": 0 },
+      "candidates": {
+        "operations": ["renewal-off", "cancel", "plan-change", "pause", "billing-date-change", "benefit-redemption", "seat-reduction", "refund-claim", "duplicate-payment-claim", "price-adjustment-claim", "receivable-reminder", "supplier-order", "owner-transfer", "travel-option"],
+        "merchantOrigins": ["http://127.0.0.1:3211"],
+        "adapters": ["browser", "direct"],
+        "currencies": ["RON"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "verifyAction": {
+      "effect": "read",
+      "enabled": false,
+      "allow": { "adapters": [] },
+      "candidates": {
+        "adapters": ["browser", "direct"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "manageWatch": {
+      "effect": "monitor",
+      "enabled": false,
+      "allow": { "watchTypes": [] },
+      "candidates": {
+        "watchTypes": ["trial-end", "renewal", "price-change", "refund-due", "invoice-due", "benefit-expiry", "terms-change"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    },
+    "recordReply": {
+      "effect": "record",
+      "enabled": false,
+      "allow": { "replyKinds": [] },
+      "candidates": {
+        "replyKinds": ["user-correction", "payment-promise", "partial-payment", "refund-accepted", "merchant-reply"]
+      },
+      "verifiedBy": [], "verifiedAt": null, "verifiedCommit": null, "schemaHash": null
+    }
+  }
+}
