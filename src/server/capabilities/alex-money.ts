@@ -19,6 +19,7 @@ import {
   fmtDate,
   fmtWhen,
   inputOr,
+  inputInt,
   money,
   openActionFor,
   spec,
@@ -461,7 +462,7 @@ const A14: CapabilityDef = {
     const dpAcct = merchantAccountId(env.tenantId, "datapass", "dp-alex");
     const days = Math.round((Date.parse(`${t.end}T00:00:00Z`) - Date.parse(`${t.start}T00:00:00Z`)) / 86_400_000) + 1;
     const r = travelComparison({
-      dataNeedGb: Number(inputOr(env, "dataNeedGb", t.dataNeedGb)),
+      dataNeedGb: inputInt(env, "dataNeedGb", t.dataNeedGb, 1, 50),
       tripDays: days,
       homePlan: { name: "MobileNet Unlimited Plus 100 GB", euRoamingGb: 4, extraEuGbMinor: mn.extraEuGbMinor },
       connectivity: t.connectivity,
@@ -514,7 +515,7 @@ const A14: CapabilityDef = {
         { kind: "conditions", title: "Card travel credit", items: [{ label: `${t.cardBenefit.name}: ${money(t.cardBenefit.amountMinor)} at ${t.cardBenefit.eligibleMerchants.join(", ")}`, state: verified === null ? "unknown" : verified ? "met" : "unmet", detail: verified === null ? "Not yet checked" : verified ? "Confirmed from your card benefits" : "Not eligible" }] },
         ...r.unknowns.map((u) => ({ kind: "note" as const, tone: "warn" as const, text: `Unknown: ${u}` })),
       ],
-      inputs: [{ key: "dataNeedGb", label: "Data you need", type: "number", value: Number(inputOr(env, "dataNeedGb", t.dataNeedGb)), min: 1, max: 50, suffix: "GB" }],
+      inputs: [{ key: "dataNeedGb", label: "Data you need", type: "number", value: inputInt(env, "dataNeedGb", t.dataNeedGb, 1, 50), min: 1, max: 50, suffix: "GB" }],
       candidates,
       numbers: { homePlanMinor: r.connectivity.find((c) => c.id === "home-plan")?.netMinor ?? 0, datapassNetMinor: dp.netMinor ?? -1, kioskFxMinor: r.payments.find((p) => p.id === "airport-kiosk")?.fxCostMinor ?? 0 },
       done: ordered ? { label: "DataPass eSIM ordered" } : null,
@@ -538,18 +539,25 @@ function homeHeadline(contributions: number, phoneDelay: number, when: string) {
   const phone = phoneDelay > 0 ? `paying 6,000 RON upfront for the phone pushes it back ${plural(phoneDelay, "month")}` : "paying 6,000 RON upfront for the phone does not delay it";
   return `Home ready in ${when} after ${plural(contributions, "monthly contribution")}; ${phone}`;
 }
+const HOME_PART_MAX_MINOR = 100_000_000_00;
 export const O1_PERSONAL = async (env: CapEnv): Promise<Analysis> => {
   const g = goalInputs(env, "home")!;
   const phone = goalInputs(env, "phone")!.inputs;
   const accts = accountsFor(env.db, env.tenantId, env.contextId);
   const liquid = accts.reduce((s, a) => s + a.balanceMinor, 0);
-  const tc = inputOr<any>(env, "transactionCostsMinor", g.inputs.transactionCostsMinor);
+  // Each cost part stays between 0 and 100 million RON so the target stays inside the money bound; an unusable
+  // value falls back to the saved goal. Transaction costs may stay unknown; saving must be positive to plan at all.
+  const part = (key: string, fallback: number | null) => {
+    const n = inputOr<number>(env, key, fallback ?? Number.NaN);
+    return Number.isFinite(n) ? Math.min(HOME_PART_MAX_MINOR, Math.max(0, n)) : null;
+  };
+  const saving = inputOr<number>(env, "monthlyContributionMinor", g.inputs.monthlyContributionMinor);
   const home = {
     liquidMinor: liquid,
-    downPaymentMinor: Number(inputOr(env, "downPaymentMinor", g.inputs.downPaymentMinor)),
-    transactionCostsMinor: tc === "unknown" || tc === null ? null : Number(tc),
-    protectedReserveMinor: Number(inputOr(env, "protectedReserveMinor", g.inputs.protectedReserveMinor)),
-    monthlyContributionMinor: Number(inputOr(env, "monthlyContributionMinor", g.inputs.monthlyContributionMinor)),
+    downPaymentMinor: part("downPaymentMinor", g.inputs.downPaymentMinor) ?? 0,
+    transactionCostsMinor: env.inputs.transactionCostsMinor === "unknown" ? null : part("transactionCostsMinor", g.inputs.transactionCostsMinor ?? null),
+    protectedReserveMinor: part("protectedReserveMinor", g.inputs.protectedReserveMinor) ?? 0,
+    monthlyContributionMinor: saving >= 1 ? Math.min(HOME_PART_MAX_MINOR, saving) : g.inputs.monthlyContributionMinor,
   };
   const cmp = comparePurchases(home, phone.options);
   const ah = g.inputs.afterHome;

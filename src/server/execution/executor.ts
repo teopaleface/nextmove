@@ -22,6 +22,8 @@ import { formatMoney } from "../../shared/money";
 
 /** Demo-time offsets for reconciliation checks after an unknown outcome: five checks inside 24 hours. */
 export const RECONCILE_SCHEDULE_MIN = [5, 30, 120, 390, 1440];
+/** Provider error codes that mean the request was rejected before anything changed (only trusted on a 4xx). */
+const DEFINITIVE_REFUSALS = new Set(["VALIDATION", "NOT_FOUND", "NOT_SUPPORTED", "IDEMPOTENCY_CONFLICT", "BAD_SIGNATURE", "UNAUTHENTICATED"]);
 const PENDING_RECHECK_MIN = 12 * 60;
 
 export interface WorkerCtx {
@@ -232,7 +234,14 @@ async function handleApiResponse(db: DatabaseSync, client: MerchantClient, actio
   const r = resp.response as any;
   if (r?.error === "TERMS_CHANGED") return termsChanged(db, action, spec, attemptId, r.currentRevision ?? null, true);
   if (r?.error === "AUTH_EXPIRED" || resp.status === 401) return void tx(db, () => recordSettled(db, action.id, attemptId, "BLOCKED", { reason: "The provider session expired; sign in on the provider's own page", code: "AUTH_EXPIRED" }));
-  if (r?.error) return void tx(db, () => recordSettled(db, action.id, attemptId, "REFUSED", { reason: r.message ?? r.error, code: r.error }));
+  // Only the provider's own definitive 4xx answers are refusals. A 5xx, a body that is not JSON (a gateway page, a
+  // truncated reply) or an empty answer may follow a commit: the outcome is unknown and is read back, never resent.
+  if (r?.error && resp.status >= 400 && resp.status < 500 && DEFINITIVE_REFUSALS.has(r.error)) return void tx(db, () => recordSettled(db, action.id, attemptId, "REFUSED", { reason: r.message ?? r.error, code: r.error }));
+  if (!r || typeof r !== "object" || r.error) {
+    tx(db, () => recordSettled(db, action.id, attemptId, "UNKNOWN", { reason: "No clear answer after the request was sent; checking with the provider before anything else", code: r?.error ?? `HTTP_${resp.status}` }));
+    scheduleNextCheck(db, attemptId);
+    return;
+  }
   if (r.status === "PENDING_REVIEW") {
     tx(db, () => recordSettled(db, action.id, attemptId, "PENDING", { reason: "The provider is reviewing the request", requestId: r.request?.requestId }));
     scheduleReconcile(db, attemptId, PENDING_RECHECK_MIN);

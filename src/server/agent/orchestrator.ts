@@ -81,13 +81,16 @@ interface Step {
   result: any;
 }
 
+/** At most n UTF-16 units, never ending on half of an emoji (SQLite would store the lone half as U+FFFD). */
+const cut = (s: string, n: number) => (s.length > n && /[\uD800-\uDBFF]/.test(s[n - 1]) ? s.slice(0, n - 1) : s.slice(0, n));
+
 export function createAgentTask(db: DatabaseSync, session: Session, text: string, opts: { kind?: string; title?: string } = {}) {
-  const clean = String(text ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 600);
+  const clean = cut(String(text ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim(), 600);
   if (!clean) throw new HttpError(400, "EMPTY", "Tell NextMove what you want to do");
   const id = shortId("task");
   const now = new Date().toISOString();
   return tx(db, () => {
-    run(db, "INSERT INTO tasks(id, tenant_id, context_id, user_id, kind, title, state, planner_mode, model, step_budget, request_text, created_at, updated_at) VALUES (?,?,?,?,?,?, 'QUEUED', ?, ?, 8, ?, ?, ?)", id, session.tenantId, session.contextId, session.userId, opts.kind ?? "AGENT", (opts.title ?? clean).slice(0, 80), config.planner, config.model, clean, now, now);
+    run(db, "INSERT INTO tasks(id, tenant_id, context_id, user_id, kind, title, state, planner_mode, model, step_budget, request_text, created_at, updated_at) VALUES (?,?,?,?,?,?, 'QUEUED', ?, ?, 8, ?, ?, ?)", id, session.tenantId, session.contextId, session.userId, opts.kind ?? "AGENT", cut(opts.title ?? clean, 80), config.planner, config.model, clean, now, now);
     enqueueJob(db, { tenantId: session.tenantId, kind: "AGENT", refId: id, priority: 3, userKey: `${session.tenantId}|${session.userId}` });
     taskEvent(db, { taskId: id, tenantId: session.tenantId, kind: "request", label: "Request received", evidence: "MANUAL_INPUT" });
     return { taskId: id };
@@ -103,8 +106,9 @@ export function answerQuestion(db: DatabaseSync, session: Session, taskId: strin
     if (!q) throw new HttpError(404, "NOT_FOUND", "Not found");
     if (q.status !== "OPEN") return { already: true };
     const opts = json<string[]>(q.options_json, []);
-    const a = String(answer ?? "").slice(0, 200);
+    const a = cut(String(answer ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim(), 200);
     if (opts.length && !opts.includes(a)) throw new HttpError(400, "BAD_ANSWER", "Choose one of the options");
+    if (!a) throw new HttpError(400, "BAD_ANSWER", "Type an answer");
     run(db, "UPDATE task_questions SET status='ANSWERED', answer_json=?, answered_at=? WHERE id=?", JSON.stringify(a), new Date().toISOString(), q.id);
     run(db, "UPDATE tasks SET state='QUEUED', rounds=rounds+1, updated_at=? WHERE id=?", new Date().toISOString(), taskId);
     enqueueJob(db, { tenantId: session.tenantId, kind: "AGENT", refId: taskId, priority: 3, userKey: `${session.tenantId}|${session.userId}`, requeue: true });
@@ -411,6 +415,13 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
       }
       if (d.tool === "analyze" && (!d.capabilityId || !ids.includes(d.capabilityId))) d = { tool: "find_capability", query: task.request_text, reason: "Capability not available here" };
       if (d.tool === "prepare_proposal" && (!d.capabilityId || !ids.includes(d.capabilityId))) d = { tool: "final_answer", reason: "Invalid capability", text: "I could not prepare that here." };
+      // A proposal rests on an analysis of the same capability in this task: one the model skipped runs first.
+      const capId = d.capabilityId;
+      if (d.tool === "prepare_proposal" && !steps.some((s) => s.tool === "analyze" && s.args?.capabilityId === capId && !s.result?.error)) {
+        d = { tool: "analyze", capabilityId: capId, reason: "Analyse before preparing" };
+        by = "SIMULATED_PLANNER";
+        taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: "planner", label: "The model tried to prepare before analysing; NextMove analyses first", evidence: "SIMULATED_PLANNER" });
+      }
       d = ensureSimulation(d, task.request_text, steps, customerOf(db, task.tenant_id) === "alex" && session.contextKind === "PERSONAL");
       // Stop may have been pressed while the model was thinking: nothing new is prepared after that.
       if (one<any>(db, "SELECT state FROM tasks WHERE id=?", task.id)?.state === "STOPPED") break;
@@ -451,18 +462,21 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
         }
         setBlock(db, task.id, "answer", 40, "answer", { text, by: mode, provenance });
         const hasProposal = steps.some((s) => s.tool === "prepare_proposal" && s.result.proposalId);
-        setTaskState(db, task.id, hasProposal ? "NEEDS_APPROVAL" : "DONE", text.slice(0, 300));
+        setTaskState(db, task.id, hasProposal ? "NEEDS_APPROVAL" : "DONE", cut(text, 300));
         break;
       }
-      if (i === task.step_budget - 1) setTaskState(db, task.id, steps.some((s) => s.tool === "prepare_proposal" && s.result.proposalId) ? "NEEDS_APPROVAL" : "DONE", "Step budget reached");
     }
+    // Out of steps, including a run that resumed after an answer with the budget already spent: end, never stay RUNNING.
+    if (one<any>(db, "SELECT state FROM tasks WHERE id=?", task.id)?.state === "RUNNING") setTaskState(db, task.id, steps.some((s) => s.tool === "prepare_proposal" && s.result.proposalId) ? "NEEDS_APPROVAL" : "DONE", "Step budget reached");
   } catch (e: any) {
     setTaskState(db, task.id, "FAILED", String(e?.message ?? e).slice(0, 200));
     taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: "error", label: "The task stopped: the live model is required but unavailable", evidence: null });
   } finally {
     clearInterval(keepAlive);
   }
-  finishJob(db, job, ctx.workerId, { status: "DONE" });
+  // An answer that arrived while this job still held its lease re-queued the task but could not re-queue the job.
+  const requeued = one<any>(db, "SELECT state FROM tasks WHERE id=?", task.id)?.state === "QUEUED";
+  finishJob(db, job, ctx.workerId, { status: requeued ? "QUEUED" : "DONE", availableAt: requeued ? new Date().toISOString() : undefined });
 }
 
 /**

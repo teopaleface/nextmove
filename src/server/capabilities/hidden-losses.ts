@@ -37,6 +37,12 @@ function answer(env: CapEnv, key: string): string | null {
   return f ? String(json<any>(f.value_json)?.value ?? "") : null;
 }
 
+/** An answer counts only when it is one of the question's options; anything else is treated as not answered. */
+function oneOf(v: unknown, options: string[]): string | null {
+  const s = String(v ?? "");
+  return options.includes(s) ? s : null;
+}
+
 function debits(env: CapEnv, where: string, ...args: unknown[]) {
   return all<any>(env.db, `SELECT * FROM transactions WHERE tenant_id=? AND context_id=? AND status='POSTED' AND amount_minor<0 AND ${where} ORDER BY booked_at`, env.tenantId, env.contextId, ...args);
 }
@@ -207,7 +213,7 @@ const A17: CapabilityDef = {
     const charges = debits(env, "merchant_id='pulsegym'").map((t) => ({ id: t.id, bookedAt: t.booked_at, amountMinor: -t.amount_minor }));
     const nearby = debits(env, "merchant_id != 'pulsegym' AND json_extract(data_json, '$.location') = ?", location).map((t) => ({ id: t.id, bookedAt: t.booked_at, amountMinor: -t.amount_minor, merchantName: t.merchant_name }));
     const fp = behavioralFootprint({ membershipCharges: charges, related: nearby, now: env.now });
-    const said = String(inputOr(env, "stillGoing", answer(env, A17_Q) ?? "")) || null;
+    const said = oneOf(inputOr(env, "stillGoing", answer(env, A17_Q) ?? ""), ["yes", "break", "no"]);
     const pause = (contract.details as any).pause;
     const paused = (contract.pending as any)?.pause;
     const busy = openActionFor(env, sub.id, "STOP_RENEWAL") || openActionFor(env, sub.id, "PAUSE");
@@ -315,7 +321,7 @@ const A18: CapabilityDef = {
     const tripPayment = trip && card ? debits(env, "category='Travel' AND card_last4=?", card.last4).slice(-1)[0] : null;
     const rows: CoverRow[] = hl.travelCover.rows;
     const c = coverageOverlap({ rows, tripPaidWithCard: trip ? Boolean(tripPayment) : null });
-    const said = String(inputOr(env, "needsExtras", answer(env, A18_Q) ?? "")) || null;
+    const said = oneOf(inputOr(env, "needsExtras", answer(env, A18_Q) ?? ""), ["no", "yes"]);
     const open = openActionFor(env, sub.id, "STOP_RENEWAL");
     const gapsText = c.gaps.map((g) => `${g.label}: ${g.gap?.toLowerCase()}`);
     const candidates: Candidate[] = [];

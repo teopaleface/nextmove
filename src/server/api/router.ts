@@ -45,7 +45,7 @@ import { lastModelStatus } from "../model/claude-cli";
 import { cardAttempt } from "../bank/trial-shield";
 import { seedTenant, tenantExists } from "../scenarios/seed";
 import { merchantAdmin } from "../merchant-client";
-import { formatMoney } from "../../shared/money";
+import { MAX_MINOR, formatMoney } from "../../shared/money";
 import { inWindow } from "../../shared/time";
 import { EXTENSIONS, runExtLabs } from "../extensions/registry";
 
@@ -294,15 +294,23 @@ post("/capabilities/:id/propose", async (c) => {
   return proposeFromCapability(c.db, s(c), c.params.id.toUpperCase(), Array.isArray(b?.keys) ? b.keys.map(String).slice(0, 50) : [], b?.inputs ?? {});
 });
 post("/capabilities/A14/verify", (c) => ({ verified: verifyTravelBenefit(makeEnv(c.db, s(c))) }));
+// Only transaction costs may be unknown (null); every other saved amount is a whole number of bani, the contribution above zero.
+function savedAmount(k: string, v: unknown): number | null {
+  if ((v === null || v === "" || v === "unknown") && k === "transactionCostsMinor") return null;
+  const n = typeof v === "number" ? v : typeof v === "string" && /^\d+$/.test(v) ? Number(v) : NaN;
+  if (!Number.isSafeInteger(n) || n < (k === "monthlyContributionMinor" ? 1 : 0) || n > MAX_MINOR) throw new HttpError(400, "BAD_INPUT", "Amounts must be whole numbers in the supported range");
+  return n;
+}
 post("/capabilities/O1/save", async (c) => {
   const ses = s(c);
   const b = await c.body();
+  for (const k of ["monthlyContributionMinor", "transactionCostsMinor", "protectedReserveMinor", "downPaymentMinor"]) if (b?.inputs?.[k] !== undefined) savedAmount(k, b.inputs[k]);
   const a = await analyzeCapability(c.db, ses, "O1", b?.inputs ?? {});
   const goal = one<any>(c.db, "SELECT * FROM goals WHERE tenant_id=? AND context_id=? AND kind IN ('HOME','BUSINESS_ORDER') ORDER BY kind LIMIT 1", ses.tenantId, ses.contextId);
   return tx(c.db, () => {
     if (goal && ses.contextKind === "PERSONAL") {
       const inputs = { ...json<any>(goal.inputs_json, {}) };
-      for (const k of ["monthlyContributionMinor", "transactionCostsMinor", "protectedReserveMinor", "downPaymentMinor"]) if (b?.inputs?.[k] !== undefined) inputs[k] = b.inputs[k] === null || b.inputs[k] === "" ? null : Number(b.inputs[k]);
+      for (const k of ["monthlyContributionMinor", "transactionCostsMinor", "protectedReserveMinor", "downPaymentMinor"]) if (b?.inputs?.[k] !== undefined) inputs[k] = savedAmount(k, b.inputs[k]);
       run(c.db, "UPDATE goals SET inputs_json=?, revision=revision+1, updated_at=? WHERE id=?", JSON.stringify(inputs), new Date().toISOString(), goal.id);
     }
     const rev = goal ? one<any>(c.db, "SELECT revision FROM goals WHERE id=?", goal.id).revision : 1;
@@ -396,7 +404,11 @@ get("/tasks", (c) => {
   const ses = s(c);
   return { tasks: all<any>(c.db, "SELECT id, kind, title, state, summary, planner_mode, model, step_count, updated_at, created_at FROM tasks WHERE tenant_id=? AND context_id=? ORDER BY updated_at DESC LIMIT 30", ses.tenantId, ses.contextId) };
 });
-post("/tasks", async (c) => createAgentTask(c.db, s(c), String((await c.body())?.text ?? "")));
+post("/tasks", async (c) => {
+  // Only text is a request: a number or object would otherwise become "42" or "[object Object]".
+  const text = (await c.body())?.text;
+  return createAgentTask(c.db, s(c), typeof text === "string" ? text : "");
+});
 
 function taskView(db: DatabaseSync, ses: Session, id: string, after = 0) {
   const t = one<any>(db, "SELECT * FROM tasks WHERE id=?", id);
@@ -458,7 +470,7 @@ get("/tasks/:id/stream", (c) => {
 post("/tasks/:id/stop", (c) => stopAgentTask(c.db, s(c), c.params.id));
 post("/tasks/:id/answer", async (c) => {
   const b = await c.body();
-  return answerQuestion(c.db, s(c), c.params.id, String(b?.questionId ?? ""), String(b?.answer ?? ""));
+  return answerQuestion(c.db, s(c), c.params.id, String(b?.questionId ?? ""), typeof b?.answer === "string" ? b.answer : "");
 });
 
 /* ------------------------------------------------------------------------------ facts / preferences */

@@ -105,7 +105,7 @@ async function analyzeE2(env: CapEnv): Promise<Analysis> {
         const row = one<any>(env.db, "SELECT status FROM ext_exit_plan WHERE action_id=? AND tenant_id=?", a.id, env.tenantId);
         const counts = countUses(evidenceFor(env.db, env.tenantId, env.contextId, p.terms.subscriptionId), p.createdOn, localDate(env.now));
         const uses = Math.max(counts.allDevices ?? 0, counts.thisDevice ?? 0);
-        const status = a.status === "CONFIRMED" ? "Renewal stopped" : a.status === "APPROVED" || a.status === "EXECUTING" ? STATUS_TEXT[row?.status ?? "ACTIVE"] : STATUS_TEXT[row?.status ?? ""] ?? a.status.toLowerCase().replace(/_/g, " ");
+        const status = a.status === "CONFIRMED" ? "Renewal stopped" : a.status === "APPROVED" || a.status === "EXECUTING" ? STATUS_TEXT[row?.status ?? "ACTIVE"] : (["KEPT", "VOID"].includes(row?.status) ? STATUS_TEXT[row.status] : null) ?? a.status.charAt(0) + a.status.slice(1).toLowerCase().replace(/_/g, " ");
         return { cells: [spec.merchantName ?? "—", `Stop unless used ${p.terms.minUses}×`, fmtDate(p.terms.evaluateOn), `${uses}${counts.allDevices === undefined && counts.thisDevice !== undefined ? " (this phone only)" : ""}`, status], tone: a.status === "CONFIRMED" ? "good" : row?.status === "ASKED" ? "warn" : "neutral" };
       }),
       note: "Usage counts only come from sources you chose to share. A phone cannot see TV or family-profile use, so phone-only data never stops a subscription on its own.",

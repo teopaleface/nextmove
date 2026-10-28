@@ -17,6 +17,7 @@ import {
   fmtWhen,
   forecastFor,
   inputOr,
+  inputInt,
   lastReceipt,
   liveContract,
   money,
@@ -429,7 +430,7 @@ const A3: CapabilityDef = {
     const live = (await liveContract(env, sub)).contract;
     if (!live) return unavailable(env, "A3", "StudyPlus could not be read");
     const annual = (live.details as any).annualPlan;
-    const horizon = Number(inputOr(env, "horizonMonths", 12));
+    const horizon = inputInt(env, "horizonMonths", 12, 1, 60);
     const r = monthlyVsAnnual({ monthlyMinor: annual.monthlyMinor, annualMinor: annual.annualMinor, horizonMonths: horizon });
     const replacing = openActionFor(env, sub.id, "STOP_RENEWAL") || subscription(env, "studyplus-bundle");
     const candidates: Candidate[] =
@@ -640,7 +641,9 @@ const A6: CapabilityDef = {
     const live = (await liveContract(env, sub)).contract;
     if (!live) return unavailable(env, "A6", "Streamly could not be read");
     const pause = (live.details as any).pause;
-    const months = Number(inputOr(env, "months", 1));
+    // A pause length the provider does not offer falls back to one month instead of failing the analysis.
+    const asked = inputInt(env, "months", 1, 1, 12);
+    const months = pause.allowedMonths.includes(asked) ? asked : pause.allowedMonths.includes(1) ? 1 : pause.allowedMonths[0];
     const r = pauseEffect({ monthlyMinor: live.priceMinor, pauseStartsAt: pause.startsAt, months, allowedMonths: pause.allowedMonths, feeMinor: pause.feeMinor, window: SUBSCRIPTION_WINDOW });
     const already = (live.pending as any)?.pause;
     const busy = openActionFor(env, sub.id, "STOP_RENEWAL") || openActionFor(env, sub.id, "CHANGE_PLAN") || openActionFor(env, sub.id, "PAUSE");

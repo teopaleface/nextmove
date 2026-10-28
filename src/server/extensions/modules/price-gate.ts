@@ -230,6 +230,8 @@ function setCeilingOp({ db, action, spec: s, attemptId }: ExtActionContext) {
        ON CONFLICT(tenant_id, ceiling_id) DO UPDATE SET status='ACTIVE', approved_minor=excluded.approved_minor, manifest_digest=excluded.manifest_digest, grant_id=excluded.grant_id, rejected_minor=NULL, rejected_currency=NULL, updated_at=excluded.updated_at`,
       t, c.ceilingId, ctx, sub.id, JSON.stringify(c.terms.merchantIds), c.terms.currency, c.terms.approvedMinor, c.manifestDigest, c.grantId ?? grant.grantId, now,
     );
+    // A new ceiling that already covers a declined price answers that request; one that still falls short leaves it open.
+    run(db, "UPDATE ext_price_rise_notice SET status='ACCEPTED', answered_at=? WHERE tenant_id=? AND context_id=? AND subscription_id=? AND status='OPEN' AND currency=? AND requested_minor <= ?", now, t, ctx, sub.id, c.terms.currency, c.terms.approvedMinor);
     recordConfirmed(db, action.id, attemptId, {
       issuer: "nextmove-bank",
       reference: `NMP-${sha256Hex(action.logical_key).slice(0, 10).toUpperCase()}`,

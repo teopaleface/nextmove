@@ -101,7 +101,7 @@ async function analyze(env: CapEnv): Promise<Analysis> {
   const labs = [...sent.values()].filter((x) => x.status === "REQUESTED").map((x) => ({ action: "member_pays", label: `${name.get(x.member_id) ?? x.member_id} pays ${money(x.amount_minor - x.paid_minor)}`, endpoint: "/labs/ext", body: { module: "shared-split", action: "member_pays", body: { memberId: x.member_id } } }));
   return {
     ...base,
-    headline: unsent.length ? `Ask for ${money(unsent.reduce((s, q) => s + q.amountMinor, 0))} of the ${money(bill.amount_minor)} ${bill.merchant_name} bill` : receivedMinor === askedMinor ? `Everyone paid their share of ${bill.merchant_name}` : `${money(askedMinor - receivedMinor)} still to come from the household`,
+    headline: unsent.length ? `Ask for ${money(unsent.reduce((s, q) => s + q.amountMinor, 0))} of the ${money(bill.amount_minor)} ${bill.merchant_name} bill` : !sent.size ? `Nobody else owes a share of ${bill.merchant_name}` : receivedMinor === askedMinor ? `Everyone paid their share of ${bill.merchant_name}` : `${money(askedMinor - receivedMinor)} still to come from the household`,
     summary: `${g.label} is shared by ${members.length} people. You pay ${bill.merchant_name}; the others are asked for their share.`,
     candidates,
     blocks,

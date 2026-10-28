@@ -8,7 +8,7 @@ import { MerchantClient } from "../merchant-client";
 import { DEFAULT_CONSEQUENCES, DEFAULT_MONEY, type ActionSpec, type DisplayLine } from "../authority/actions";
 import type { EvidenceLevel } from "../agent/events";
 import type { MerchantContractView, MerchantDirectoryEntry } from "../../shared/merchant-contract";
-import { formatMoney } from "../../shared/money";
+import { formatMoney, MAX_MINOR } from "../../shared/money";
 import type { Simulation } from "../../shared/simulations";
 
 // Shared vocabulary for capability workflows. A workflow reads current bank and provider state, runs the
@@ -242,11 +242,21 @@ export function inputOr<T>(env: CapEnv, key: string, fallback: T): T {
   const v = env.inputs[key];
   if (v === undefined || v === null || v === "") return fallback;
   // A numeric field never yields NaN or a fractional amount: unparseable input falls back, money rounds to whole bani.
+  // Only plain decimal numbers count (not booleans, hex or exponents), and only inside the money bound, so a huge
+  // value cannot reach the integer maths and fail it.
   if (typeof fallback === "number") {
-    const n = Number(v);
-    return (Number.isFinite(n) ? (key.endsWith("Minor") ? Math.round(n) : n) : fallback) as T;
+    const n = typeof v === "number" ? v : typeof v === "string" && /^\s*-?\d+(\.\d+)?\s*$/.test(v) ? Number(v) : Number.NaN;
+    return (Number.isFinite(n) && Math.abs(n) <= MAX_MINOR ? (key.endsWith("Minor") ? Math.round(n) : n) : fallback) as T;
   }
+  // A text field stays text even when the query string carried digits ("-5" arrives as a number).
+  if (typeof fallback === "string") return String(v) as T;
   return v as T;
+}
+
+/** A whole-number input kept inside [min, max]; anything unusable falls back to the default. */
+export function inputInt(env: CapEnv, key: string, fallback: number, min: number, max: number): number {
+  const n = Math.round(inputOr(env, key, fallback));
+  return Math.min(max, Math.max(min, Number.isFinite(n) ? n : fallback));
 }
 
 export const PROVENANCE: Record<string, string> = {

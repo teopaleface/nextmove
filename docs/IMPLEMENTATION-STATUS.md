@@ -276,3 +276,36 @@ These are credentials and logins, left out on purpose: NextMove is a demo, not a
 **Live model.** In a later sweep run the live model was answering again: 36 of the 45 requests ran on the LIVE planner, the rest fell back. Two live answers came before any tool had run ("the analysis tools did not respond"). A final answer before NextMove has read anything is now replaced, for that step, by the deterministic read, labelled as such in the task log; the model then continues with real data (test in `tests/integration/planner-inputs.test.ts`). Prerequisites are followed through the whole chain, so T3 no longer offers a renewal stop that needs the unverified student bundle.
 
 **Checks:** `npx tsc --noEmit`: pass. `npm test`: **286 tests passed in 41 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.
+
+### Edge-case pass (2026-10-28)
+
+92 edge-case tests in five new files: `tests/integration/edge-agent.test.ts` (23), `edge-execution.test.ts` (20), `edge-extensions.test.ts` (30), `edge-inputs.test.ts` (5, over 500 hostile analyses), `tests/unit/edge-money.test.ts` (14). Bugs found and fixed:
+
+- **Execution:** a 5xx, a non-JSON or empty body, or an unknown error code from the provider was recorded as REFUSED, although the change may have been applied. Only the provider's definitive 4xx codes (`VALIDATION`, `NOT_FOUND`, `NOT_SUPPORTED`, `IDEMPOTENCY_CONFLICT`, `BAD_SIGNATURE`, `UNAUTHENTICATED`) are refusals now. Anything else is UNKNOWN and is read back with the same idempotency key, never resent.
+- **Chat agent:**
+  - A task whose last allowed step was a question stayed RUNNING forever after the answer.
+  - Cutting text at 600 or 80 characters could split an emoji, which was then stored as U+FFFD.
+  - An empty answer to a free-form question was accepted.
+  - The model could prepare a proposal for a capability it had not analysed; that analysis now runs first.
+  - A number or an object sent as task text or as an answer became "42" or "[object Object]".
+  - An answer arriving while the worker still held the job's lease left the task QUEUED with no job. The job is now re-queued when it finishes (reasoned fix, no deterministic test).
+- **Inputs:**
+  - Numeric inputs accepted `1e309`, `0x10`, booleans and huge values (O7/O8 showed 1e120-scale amounts).
+  - T3, A3, A6 and O1 returned 500 for a numeric student id, a horizon outside 1–60, an unoffered pause length, or a contribution of 0 or less.
+  - A14 data needs are clamped to 1–50 GB.
+  - A17/A18 echoed any text as the answer.
+  - O1 save stored NaN, negatives and 1e300 in the goal, after which every O1 analysis returned 500. It now answers 400 `BAD_INPUT`.
+- **Extensions:**
+  - E5: raising the ceiling above a declined price rise now settles the request.
+  - E2: a revoked or expired plan showed "Waiting for the check day".
+  - E9: a single-member group said "Everyone paid".
+- **UI:** the E4 page overflowed at 360 px (542 px). `.stack` and `.split` grid columns are now `minmax(0, 1fr)`, so wide tables scroll inside their wrapper. A 360 px crawl of every page, in light and dark, after pressing each feature's Labs triggers, shows no overflow and no 5xx.
+
+Still open (judged acceptable):
+- The execution-claim filter misses "is cancelled" and Romanian phrasing.
+- A choice is dropped when the step budget is already spent.
+- The household cannot withdraw an E7 consent once given.
+- A merchant refund after a dispute is filed is not simulated.
+- `formatPct` uses a hyphen for negatives (no caller passes one).
+
+**Checks:** `npx tsc --noEmit`: pass. `npm test`: **378 tests passed in 46 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.
