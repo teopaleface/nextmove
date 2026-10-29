@@ -1,0 +1,172 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; font-feature-settings: "ss01" 0; }
+    .shot { position: absolute; inset: 0; overflow: hidden; visibility: hidden; opacity: 0; background: #f7f7f2; }
+    .shot.ink { background: #151515; color: #f7f7f2; }
+    .k { visibility: hidden; opacity: 0; }
+    .w { display: inline-block; }
+    .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .left { position: absolute; left: 150px; top: 0; bottom: 0; width: 820px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+    .h0 { font-size: 300px; font-weight: 740; letter-spacing: -0.055em; line-height: 0.92; font-variant-numeric: tabular-nums; }
+    .h1 { font-size: 184px; font-weight: 720; letter-spacing: -0.05em; line-height: 0.98; }
+    .h2 { font-size: 124px; font-weight: 700; letter-spacing: -0.045em; line-height: 1.0; }
+    .h3 { font-size: 76px; font-weight: 660; letter-spacing: -0.035em; line-height: 1.06; }
+    .sub { font-size: 46px; font-weight: 520; letter-spacing: -0.02em; line-height: 1.2; color: #60605a; }
+    .ink .sub, .mute-ink { color: #a3a39b; }
+    .mute { color: #60605a; }
+    .tiny { font-size: 28px; font-weight: 500; letter-spacing: -0.005em; color: #60605a; }
+    .ink .tiny { color: #a3a39b; }
+    .yel { color: #fee600; }
+    .mark { background: linear-gradient(transparent 62%, #fee600 62%, #fee600 92%, transparent 92%); padding: 0 6px; margin: 0 -6px; }
+    .gap { margin-top: 26px; }
+    .ph { position: absolute; left: 0; top: 0; transform-origin: 0 0; padding: 12px; border-radius: 62px; background: #151515; box-shadow: 0 60px 120px -50px rgba(21, 21, 21, 0.55), 0 20px 50px -25px rgba(21, 21, 21, 0.3); }
+    .ink .ph { box-shadow: 0 0 0 2px #2a2a28; }
+    .scr { position: relative; width: 390px; height: 844px; border-radius: 50px; overflow: hidden; background: #f7f7f2; }
+    .scr img, .scr video { position: absolute; left: 0; top: 0; width: 390px; height: 844px; object-fit: cover; }
+    .scr .later { visibility: hidden; }
+    .count { position: relative; display: inline-block; font-variant-numeric: tabular-nums; }
+    .count .ghost { visibility: hidden; }
+    .count .cv { position: absolute; right: 0; top: 0; visibility: hidden; opacity: 0; }
+    .tap { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; border: 6px solid #fee600; background: rgba(254, 230, 0, 0.25); visibility: hidden; opacity: 0; }
+    .pill { display: inline-flex; align-items: center; gap: 14px; padding: 12px 24px; border-radius: 999px; background: #ffffff; border: 1.5px solid #e4e5df; font-size: 30px; font-weight: 600; letter-spacing: -0.01em; color: #151515; }
+    .pill i { width: 14px; height: 14px; border-radius: 50%; background: #fee600; box-shadow: 0 0 0 1.5px #151515 inset; }
+
+    .q { font-size: 150px; font-weight: 700; letter-spacing: -0.05em; line-height: 1; }
+    .q .qm { color: #a3a39b; }
+    #root .left { width: 760px; }
+  </style>
+  <div id="root" data-composition-id="c4" data-width="1920" data-height="1080">
+    <div class="shot ink" id="c4-a"><div class="center"><div class="h1" id="c4-a1">Off script?</div></div></div>
+
+    <div class="shot" id="c4-q1"><div class="center"><div class="q" id="c4-q1t"><span class="qm">“</span>Cancel everything.<span class="qm">”</span></div><div class="sub gap k" id="c4-q1s">Recorded in the app · synthetic data</div></div></div>
+
+    <div class="shot" id="c4-chips">
+      <div class="left"><div class="h2 k" id="c4-c1">It asks.</div><div class="h2 mute k" id="c4-c2">One at a time.</div></div>
+      <div class="ph" id="c4-ph1"><div class="scr"><img src="assets/media/v2/edge-chips.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot" id="c4-plan">
+      <div class="left"><div class="h2 k" id="c4-p1">Model too fast?</div><div class="h2 mute k" id="c4-p2">It reads first.</div></div>
+      <div class="ph" id="c4-ph2"><div class="scr"><img src="assets/media/v2/edge-planner.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot" id="c4-q2"><div class="center"><div class="q" id="c4-q2t"><span class="qm">“</span>Don’t cancel anything.<span class="qm">”</span></div></div></div>
+
+    <div class="shot" id="c4-neg">
+      <div class="left"><div class="h2 k" id="c4-n1">No false “done”.</div><div class="sub gap k" id="c4-n2">A claim the records don’t back is withheld.</div></div>
+      <div class="ph" id="c4-ph3"><div class="scr"><img src="assets/media/v2/negate.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot" id="c4-mer">
+      <div class="left"><div class="h2 k" id="c4-m1">Merchant text is data.</div><div class="h2 mute k" id="c4-m2">Never instructions.</div></div>
+      <div class="ph" id="c4-ph4"><div class="scr"><img src="assets/media/v2/offer-signed.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot" id="c4-tam">
+      <div class="left"><div class="h2 k" id="c4-t1">Tampered offer?</div><div class="h2 k" id="c4-t2"><span class="mark">Refused.</span></div></div>
+      <div class="ph" id="c4-ph5"><div class="scr"><img src="assets/media/v2/offer-tampered.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot ink" id="c4-z"><div class="center"><div class="h2" id="c4-z1">Nothing moves</div><div class="h2" id="c4-z2">without your yes.</div></div></div>
+  </div>
+  <script>
+    // Shared helpers (film/shared.js, inlined by film/build.mjs). Times are seconds from the scene start.
+    // The score runs at 128 BPM, and every scene starts on a downbeat, so b(n) is the n-th beat of the scene.
+    const B = 60 / 128;
+    const b = (n) => Math.round(n * B * 1000) / 1000;
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    /** Hard cut: the element is on screen from a to z. */
+    function shot(sel, a, z) {
+      tl.set(sel, { autoAlpha: 1 }, a);
+      if (z !== undefined) tl.set(sel, { autoAlpha: 0 }, z);
+    }
+    /** Kinetic entrance: rises and settles. */
+    function pop(sel, t, o = {}) {
+      tl.fromTo(sel, { autoAlpha: 0, y: o.y ?? 48, scale: o.s ?? 0.95 }, { autoAlpha: 1, y: 0, scale: 1, duration: o.d ?? 0.42, ease: o.e ?? IN, stagger: o.st ?? 0, immediateRender: false }, t);
+    }
+    /** Snap entrance: lands from slightly larger, on the beat. */
+    function snap(sel, t, o = {}) {
+      tl.fromTo(sel, { autoAlpha: 0, scale: o.s ?? 1.16 }, { autoAlpha: 1, scale: 1, duration: o.d ?? 0.34, ease: IN, stagger: o.st ?? 0, immediateRender: false }, t);
+    }
+    function off(sel, t, d = 0.18) {
+      tl.fromTo(sel, { autoAlpha: 1 }, { autoAlpha: 0, duration: d, ease: "power2.in", immediateRender: false }, t);
+    }
+    function dim(sel, t, to = 0.25) {
+      tl.fromTo(sel, { opacity: 1 }, { opacity: to, duration: 0.25, ease: "power2.out", immediateRender: false }, t);
+    }
+    /** Phone camera: put screen point (px, py), in CSS px of the 390x844 screen, at frame point (fx, fy), at scale k. */
+    function cam(k, px, py, fx = 1400, fy = 540) {
+      return { x: fx - k * (px + 12), y: fy - k * (py + 12), scale: k };
+    }
+    function place(sel, t, st) {
+      tl.set(sel, st, t);
+    }
+    function move(sel, t, d, from, to, ease = "power2.inOut") {
+      tl.fromTo(sel, from, { ...to, duration: d, ease, immediateRender: false }, t);
+    }
+    /** A number that counts from `from` to `to` (ease-out), drawn as pre-rendered frames so any seek is exact. */
+    function counter(id, from, to, t0, dur, fmt = (v) => Math.round(v).toLocaleString("en-US")) {
+      const el = document.getElementById(id);
+      const n = Math.max(2, Math.round((dur * 30) / 2));
+      const ghost = document.createElement("span");
+      ghost.className = "ghost";
+      ghost.textContent = fmt(to);
+      el.appendChild(ghost);
+      for (let i = 0; i <= n; i++) {
+        const p = 1 - Math.pow(1 - i / n, 3);
+        const s = document.createElement("span");
+        s.className = "cv";
+        s.textContent = fmt(from + (to - from) * p);
+        el.appendChild(s);
+        tl.set(s, { autoAlpha: 1 }, t0 + (dur * i) / n);
+        if (i < n) tl.set(s, { autoAlpha: 0 }, t0 + (dur * (i + 1)) / n);
+      }
+    }
+    /** Tap ripple at a frame point. */
+    function tap(sel, t) {
+      tl.fromTo(sel, { autoAlpha: 0, scale: 0.4 }, { autoAlpha: 1, scale: 1, duration: 0.16, ease: "power2.out", immediateRender: false }, t);
+      tl.fromTo(sel, { autoAlpha: 1, scale: 1 }, { autoAlpha: 0, scale: 1.7, duration: 0.45, ease: "power2.out", immediateRender: false }, t + 0.16);
+    }
+
+    // 67.5 Off script? (ink, one bar)
+    shot("#c4-a", 0, b(4));
+    snap("#c4-a1", 0);
+    shot("#c4-q1", b(4), b(8));
+    pop("#c4-q1t", b(4));
+    pop("#c4-q1s", b(5), { y: 12 });
+    // chips: zoom in on the question NextMove asks back
+    shot("#c4-chips", b(8), b(14));
+    pop("#c4-c1", b(8));
+    pop("#c4-c2", b(10));
+    move("#c4-ph1", b(8), b(6), cam(1.45, 195, 520, 1400, 560), cam(1.75, 195, 545, 1400, 540), "power1.out");
+    // planner row: the model answered before reading; NextMove read first
+    shot("#c4-plan", b(14), b(20));
+    pop("#c4-p1", b(14));
+    pop("#c4-p2", b(16));
+    move("#c4-ph2", b(14), b(6), cam(2.0, 195, 520, 1400, 540), cam(2.25, 195, 520, 1400, 540), "power1.out");
+    // Don't cancel anything.
+    shot("#c4-q2", b(20), b(24));
+    pop("#c4-q2t", b(20));
+    shot("#c4-neg", b(24), b(30));
+    pop("#c4-n1", b(24));
+    pop("#c4-n2", b(26), { y: 16 });
+    move("#c4-ph3", b(24), b(6), cam(1.7, 195, 440, 1400, 540), cam(1.95, 195, 445, 1400, 540), "power1.out");
+    // merchant message quoted as data
+    shot("#c4-mer", b(30), b(36));
+    pop("#c4-m1", b(30));
+    pop("#c4-m2", b(32));
+    move("#c4-ph4", b(30), b(6), cam(1.5, 195, 230, 1400, 540), cam(1.5, 195, 380, 1400, 540), "power2.inOut");
+    // tampered offer refused
+    shot("#c4-tam", b(36), b(42));
+    pop("#c4-t1", b(36));
+    snap("#c4-t2", b(38));
+    move("#c4-ph5", b(36), b(6), cam(1.55, 195, 520, 1400, 540), cam(1.8, 195, 530, 1400, 540), "power1.out");
+    // Nothing moves without your yes.
+    shot("#c4-z", b(42), b(48));
+    pop("#c4-z1", b(42));
+    pop("#c4-z2", b(44));
+    window.__timelines["c4"] = tl;
+  </script>
+</template>

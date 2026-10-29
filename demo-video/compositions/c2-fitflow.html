@@ -1,0 +1,207 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; font-feature-settings: "ss01" 0; }
+    .shot { position: absolute; inset: 0; overflow: hidden; visibility: hidden; opacity: 0; background: #f7f7f2; }
+    .shot.ink { background: #151515; color: #f7f7f2; }
+    .k { visibility: hidden; opacity: 0; }
+    .w { display: inline-block; }
+    .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .left { position: absolute; left: 150px; top: 0; bottom: 0; width: 820px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+    .h0 { font-size: 300px; font-weight: 740; letter-spacing: -0.055em; line-height: 0.92; font-variant-numeric: tabular-nums; }
+    .h1 { font-size: 184px; font-weight: 720; letter-spacing: -0.05em; line-height: 0.98; }
+    .h2 { font-size: 124px; font-weight: 700; letter-spacing: -0.045em; line-height: 1.0; }
+    .h3 { font-size: 76px; font-weight: 660; letter-spacing: -0.035em; line-height: 1.06; }
+    .sub { font-size: 46px; font-weight: 520; letter-spacing: -0.02em; line-height: 1.2; color: #60605a; }
+    .ink .sub, .mute-ink { color: #a3a39b; }
+    .mute { color: #60605a; }
+    .tiny { font-size: 28px; font-weight: 500; letter-spacing: -0.005em; color: #60605a; }
+    .ink .tiny { color: #a3a39b; }
+    .yel { color: #fee600; }
+    .mark { background: linear-gradient(transparent 62%, #fee600 62%, #fee600 92%, transparent 92%); padding: 0 6px; margin: 0 -6px; }
+    .gap { margin-top: 26px; }
+    .ph { position: absolute; left: 0; top: 0; transform-origin: 0 0; padding: 12px; border-radius: 62px; background: #151515; box-shadow: 0 60px 120px -50px rgba(21, 21, 21, 0.55), 0 20px 50px -25px rgba(21, 21, 21, 0.3); }
+    .ink .ph { box-shadow: 0 0 0 2px #2a2a28; }
+    .scr { position: relative; width: 390px; height: 844px; border-radius: 50px; overflow: hidden; background: #f7f7f2; }
+    .scr img, .scr video { position: absolute; left: 0; top: 0; width: 390px; height: 844px; object-fit: cover; }
+    .scr .later { visibility: hidden; }
+    .count { position: relative; display: inline-block; font-variant-numeric: tabular-nums; }
+    .count .ghost { visibility: hidden; }
+    .count .cv { position: absolute; right: 0; top: 0; visibility: hidden; opacity: 0; }
+    .tap { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; border: 6px solid #fee600; background: rgba(254, 230, 0, 0.25); visibility: hidden; opacity: 0; }
+    .pill { display: inline-flex; align-items: center; gap: 14px; padding: 12px 24px; border-radius: 999px; background: #ffffff; border: 1.5px solid #e4e5df; font-size: 30px; font-weight: 600; letter-spacing: -0.01em; color: #151515; }
+    .pill i { width: 14px; height: 14px; border-radius: 50%; background: #fee600; box-shadow: 0 0 0 1.5px #151515 inset; }
+
+    #root .left { width: 800px; }
+    #c2-q .sub { max-width: 760px; }
+    #c2-m .h0 { font-size: 260px; }
+    #c2-m .was { font-size: 76px; font-weight: 660; letter-spacing: -0.035em; color: #a3a39b; text-decoration: line-through; text-decoration-thickness: 6px; }
+    #c2-k .h0 { font-size: 340px; }
+  </style>
+  <div id="root" data-composition-id="c2" data-width="1920" data-height="1080">
+    <!-- The main workflow, live model, fresh isolated Alex copy (assets/media/v2/ff.mp4 = captures/rec/ff3.mp4; capture/shot-fitflow.mjs). -->
+    <div class="shot" id="c2-q">
+      <div class="left"><div class="h1 k" id="c2-q1">Alex asks.</div><div class="sub gap k" id="c2-q2">“Can you stop the FitFlow trial before it charges me?”</div></div>
+      <div class="ph" id="c2-ph1"><div class="scr">
+        <video id="c2-v1" class="clip" data-start="0" data-duration="3.75" data-media-start="1.6" data-track-index="1" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c2-r">
+      <div class="left"><div class="h1 k" id="c2-r1">It reads first.</div><div class="sub gap k" id="c2-r2">Live model. Read-only tools.</div></div>
+      <div class="ph" id="c2-ph2"><div class="scr">
+        <video id="c2-v2" class="clip" data-start="3.75" data-duration="3.75" data-media-start="6.0" data-track-index="2" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c2-m">
+      <div class="left">
+        <div class="h3 k" id="c2-m1">Code does the maths.</div>
+        <div class="gap k" id="c2-m0"><span class="was">242 RON</span></div>
+        <div><span class="h0"><span class="count" id="c2-n"></span></span></div>
+        <div class="sub k" id="c2-m2">RON upcoming charges</div>
+      </div>
+      <div class="ph" id="c2-ph3"><div class="scr">
+        <video id="c2-v3" class="clip" data-start="7.5" data-duration="3.75" data-media-start="16.4" data-track-index="3" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c2-p">
+      <div class="left"><div class="h1 k" id="c2-p1">One exact action.</div><div class="sub gap k" id="c2-p2">Nothing has been sent.</div></div>
+      <div class="ph" id="c2-ph4"><div class="scr">
+        <video id="c2-v4" class="clip" data-start="11.25" data-duration="3.75" data-media-start="22.4" data-track-index="4" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <!-- One continuous take: the review tap, the exact sheet, the approve press on the drop (52.5 s). -->
+    <div class="shot" id="c2-a">
+      <div class="left"><div class="h2 k" id="c2-a1">See exactly</div><div class="h2 k" id="c2-a2">what happens.</div></div>
+      <div class="left"><div class="h2 k" id="c2-a3">One tap.</div><div class="h2 k" id="c2-a4"><span class="mark">Exact approval.</span></div></div>
+      <div class="ph" id="c2-ph5"><div class="scr">
+        <video id="c2-v5" class="clip" data-start="15" data-duration="7.5" data-media-start="27.0" data-track-index="5" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c2-s">
+      <div class="left"><div class="h2 k" id="c2-s1">Sent once.</div><div class="h2 k" id="c2-s2">Then checked.</div><div class="sub gap k" id="c2-s3">Simulated merchant, isolated browser</div></div>
+      <div class="ph" id="c2-ph6"><div class="scr">
+        <video id="c2-v6" class="clip" data-start="22.5" data-duration="3.75" data-media-start="34.9" data-track-index="6" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c2-v">
+      <div class="left"><div class="h2 k" id="c2-v1t">Read back.</div><div class="h2 k" id="c2-v2t">Verified.</div><div class="sub gap k" id="c2-v3t">Receipt NF-1047</div></div>
+      <div class="ph" id="c2-ph7"><div class="scr">
+        <video id="c2-v7" class="clip" data-start="26.25" data-duration="1.875" data-media-start="38.85" data-track-index="7" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c2-k"><div class="center">
+      <div><span class="h0"><span class="count" id="c2-k79"></span></span><span class="h2"> RON kept.</span></div>
+      <div class="sub gap k" id="c2-k2">A charge avoided, not a refund.</div>
+    </div></div>
+  </div>
+  <script>
+    // Shared helpers (film/shared.js, inlined by film/build.mjs). Times are seconds from the scene start.
+    // The score runs at 128 BPM, and every scene starts on a downbeat, so b(n) is the n-th beat of the scene.
+    const B = 60 / 128;
+    const b = (n) => Math.round(n * B * 1000) / 1000;
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    /** Hard cut: the element is on screen from a to z. */
+    function shot(sel, a, z) {
+      tl.set(sel, { autoAlpha: 1 }, a);
+      if (z !== undefined) tl.set(sel, { autoAlpha: 0 }, z);
+    }
+    /** Kinetic entrance: rises and settles. */
+    function pop(sel, t, o = {}) {
+      tl.fromTo(sel, { autoAlpha: 0, y: o.y ?? 48, scale: o.s ?? 0.95 }, { autoAlpha: 1, y: 0, scale: 1, duration: o.d ?? 0.42, ease: o.e ?? IN, stagger: o.st ?? 0, immediateRender: false }, t);
+    }
+    /** Snap entrance: lands from slightly larger, on the beat. */
+    function snap(sel, t, o = {}) {
+      tl.fromTo(sel, { autoAlpha: 0, scale: o.s ?? 1.16 }, { autoAlpha: 1, scale: 1, duration: o.d ?? 0.34, ease: IN, stagger: o.st ?? 0, immediateRender: false }, t);
+    }
+    function off(sel, t, d = 0.18) {
+      tl.fromTo(sel, { autoAlpha: 1 }, { autoAlpha: 0, duration: d, ease: "power2.in", immediateRender: false }, t);
+    }
+    function dim(sel, t, to = 0.25) {
+      tl.fromTo(sel, { opacity: 1 }, { opacity: to, duration: 0.25, ease: "power2.out", immediateRender: false }, t);
+    }
+    /** Phone camera: put screen point (px, py), in CSS px of the 390x844 screen, at frame point (fx, fy), at scale k. */
+    function cam(k, px, py, fx = 1400, fy = 540) {
+      return { x: fx - k * (px + 12), y: fy - k * (py + 12), scale: k };
+    }
+    function place(sel, t, st) {
+      tl.set(sel, st, t);
+    }
+    function move(sel, t, d, from, to, ease = "power2.inOut") {
+      tl.fromTo(sel, from, { ...to, duration: d, ease, immediateRender: false }, t);
+    }
+    /** A number that counts from `from` to `to` (ease-out), drawn as pre-rendered frames so any seek is exact. */
+    function counter(id, from, to, t0, dur, fmt = (v) => Math.round(v).toLocaleString("en-US")) {
+      const el = document.getElementById(id);
+      const n = Math.max(2, Math.round((dur * 30) / 2));
+      const ghost = document.createElement("span");
+      ghost.className = "ghost";
+      ghost.textContent = fmt(to);
+      el.appendChild(ghost);
+      for (let i = 0; i <= n; i++) {
+        const p = 1 - Math.pow(1 - i / n, 3);
+        const s = document.createElement("span");
+        s.className = "cv";
+        s.textContent = fmt(from + (to - from) * p);
+        el.appendChild(s);
+        tl.set(s, { autoAlpha: 1 }, t0 + (dur * i) / n);
+        if (i < n) tl.set(s, { autoAlpha: 0 }, t0 + (dur * (i + 1)) / n);
+      }
+    }
+    /** Tap ripple at a frame point. */
+    function tap(sel, t) {
+      tl.fromTo(sel, { autoAlpha: 0, scale: 0.4 }, { autoAlpha: 1, scale: 1, duration: 0.16, ease: "power2.out", immediateRender: false }, t);
+      tl.fromTo(sel, { autoAlpha: 1, scale: 1 }, { autoAlpha: 0, scale: 1.7, duration: 0.45, ease: "power2.out", immediateRender: false }, t + 0.16);
+    }
+
+    // 30.0 Alex asks (typed live in the app)
+    shot("#c2-q", 0, b(8));
+    snap("#c2-q1", 0);
+    pop("#c2-q2", b(1), { y: 16 });
+    move("#c2-ph1", 0, b(8), cam(1.5, 195, 300, 1420, 540), cam(1.62, 195, 300, 1420, 540), "none");
+    // 33.75 it reads
+    shot("#c2-r", b(8), b(16));
+    pop("#c2-r1", b(8));
+    pop("#c2-r2", b(10), { y: 16 });
+    move("#c2-ph2", b(8), b(8), cam(1.3, 195, 330, 1420, 540), cam(1.45, 195, 330, 1420, 540), "power1.out");
+    // 37.5 the maths: the answer lands, 242 down to 163
+    shot("#c2-m", b(16), b(24));
+    pop("#c2-m1", b(16));
+    pop("#c2-m0", b(17), { y: 16 });
+    counter("c2-n", 242, 163, b(18), b(3));
+    pop("#c2-m2", b(18), { y: 12 });
+    move("#c2-ph3", b(16), b(8), cam(1.25, 195, 420, 1440, 540), cam(1.4, 195, 420, 1440, 540), "power1.out");
+    // 41.25 the proposal card
+    shot("#c2-p", b(24), b(32));
+    snap("#c2-p1", b(24));
+    pop("#c2-p2", b(26), { y: 16 });
+    move("#c2-ph4", b(24), b(8), cam(1.45, 195, 420, 1420, 540), cam(1.6, 195, 440, 1420, 540), "power1.out");
+    // 45.0 review tap (~16.8), the exact sheet (~17.8), the approve press (~22.2), cut on 52.5
+    shot("#c2-a", b(32), b(48));
+    pop("#c2-a1", b(32));
+    pop("#c2-a2", b(33));
+    off(["#c2-a1", "#c2-a2"], b(40) - 0.2);
+    snap("#c2-a3", b(40));
+    pop("#c2-a4", b(42));
+    move("#c2-ph5", b(32), 2.2, cam(1.45, 195, 450, 1420, 540), cam(1.5, 195, 470, 1420, 540), "power1.out");
+    move("#c2-ph5", b(32) + 2.4, 2.0, cam(1.5, 195, 470, 1420, 540), cam(1.35, 195, 420, 1420, 540), "power2.inOut");
+    move("#c2-ph5", b(40), b(8), cam(1.35, 195, 420, 1420, 540), cam(1.7, 195, 700, 1420, 600), "power2.inOut");
+    // 52.5 the drop: the worker's gate sends once; the simulated merchant answers
+    shot("#c2-s", b(48), b(56));
+    snap("#c2-s1", b(48));
+    pop("#c2-s2", b(50));
+    pop("#c2-s3", b(52), { y: 12 });
+    move("#c2-ph6", b(48), b(8), cam(1.4, 195, 400, 1420, 540), cam(1.55, 195, 420, 1420, 540), "power1.out");
+    // 56.25 read back
+    shot("#c2-v", b(56), b(60));
+    pop("#c2-v1t", b(56));
+    pop("#c2-v2t", b(56.5));
+    pop("#c2-v3t", b(57), { y: 12 });
+    place("#c2-ph7", b(56), cam(1.4, 195, 300, 1420, 540));
+    // 58.125 the payoff
+    shot("#c2-k", b(60), b(64));
+    counter("c2-k79", 0, 79, b(60), b(2));
+    pop("#c2-k2", b(60.5), { y: 16 });
+    window.__timelines["c2"] = tl;
+  </script>
+</template>

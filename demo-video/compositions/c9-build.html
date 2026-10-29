@@ -1,0 +1,164 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; font-feature-settings: "ss01" 0; }
+    .shot { position: absolute; inset: 0; overflow: hidden; visibility: hidden; opacity: 0; background: #f7f7f2; }
+    .shot.ink { background: #151515; color: #f7f7f2; }
+    .k { visibility: hidden; opacity: 0; }
+    .w { display: inline-block; }
+    .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .left { position: absolute; left: 150px; top: 0; bottom: 0; width: 820px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+    .h0 { font-size: 300px; font-weight: 740; letter-spacing: -0.055em; line-height: 0.92; font-variant-numeric: tabular-nums; }
+    .h1 { font-size: 184px; font-weight: 720; letter-spacing: -0.05em; line-height: 0.98; }
+    .h2 { font-size: 124px; font-weight: 700; letter-spacing: -0.045em; line-height: 1.0; }
+    .h3 { font-size: 76px; font-weight: 660; letter-spacing: -0.035em; line-height: 1.06; }
+    .sub { font-size: 46px; font-weight: 520; letter-spacing: -0.02em; line-height: 1.2; color: #60605a; }
+    .ink .sub, .mute-ink { color: #a3a39b; }
+    .mute { color: #60605a; }
+    .tiny { font-size: 28px; font-weight: 500; letter-spacing: -0.005em; color: #60605a; }
+    .ink .tiny { color: #a3a39b; }
+    .yel { color: #fee600; }
+    .mark { background: linear-gradient(transparent 62%, #fee600 62%, #fee600 92%, transparent 92%); padding: 0 6px; margin: 0 -6px; }
+    .gap { margin-top: 26px; }
+    .ph { position: absolute; left: 0; top: 0; transform-origin: 0 0; padding: 12px; border-radius: 62px; background: #151515; box-shadow: 0 60px 120px -50px rgba(21, 21, 21, 0.55), 0 20px 50px -25px rgba(21, 21, 21, 0.3); }
+    .ink .ph { box-shadow: 0 0 0 2px #2a2a28; }
+    .scr { position: relative; width: 390px; height: 844px; border-radius: 50px; overflow: hidden; background: #f7f7f2; }
+    .scr img, .scr video { position: absolute; left: 0; top: 0; width: 390px; height: 844px; object-fit: cover; }
+    .scr .later { visibility: hidden; }
+    .count { position: relative; display: inline-block; font-variant-numeric: tabular-nums; }
+    .count .ghost { visibility: hidden; }
+    .count .cv { position: absolute; right: 0; top: 0; visibility: hidden; opacity: 0; }
+    .tap { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; border: 6px solid #fee600; background: rgba(254, 230, 0, 0.25); visibility: hidden; opacity: 0; }
+    .pill { display: inline-flex; align-items: center; gap: 14px; padding: 12px 24px; border-radius: 999px; background: #ffffff; border: 1.5px solid #e4e5df; font-size: 30px; font-weight: 600; letter-spacing: -0.01em; color: #151515; }
+    .pill i { width: 14px; height: 14px; border-radius: 50%; background: #fee600; box-shadow: 0 0 0 1.5px #151515 inset; }
+
+    #c9-flow { position: absolute; left: 120px; right: 120px; top: 380px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 34px 40px; }
+    #c9-flow .n { position: relative; height: 150px; border-radius: 28px; background: #ffffff; border: 2px solid #e4e5df; display: flex; align-items: center; padding: 0 34px; font-size: 44px; font-weight: 660; letter-spacing: -0.025em; line-height: 1.05; }
+    #c9-flow .n b { position: absolute; left: 34px; top: 18px; font-size: 22px; font-weight: 600; color: #a3a39b; letter-spacing: 0; }
+    #c9-flow .n.y { border-color: #151515; }
+    #c9-flow .n.y::after { content: ""; position: absolute; right: 24px; top: 22px; width: 16px; height: 16px; border-radius: 50%; background: #fee600; box-shadow: 0 0 0 1.5px #151515 inset; }
+    #c9-t { position: absolute; left: 120px; top: 190px; }
+    #c9-f { position: absolute; left: 120px; top: 820px; }
+    #c9-nums { position: absolute; inset: 0; display: grid; grid-template-columns: 1.15fr 1fr 1fr; align-items: center; padding: 0 120px; gap: 40px; }
+    #c9-nums .h0 { font-size: 220px; }
+    #c9-nums .lab { font-size: 40px; font-weight: 600; letter-spacing: -0.015em; color: #60605a; margin-top: 8px; line-height: 1.15; }
+  </style>
+  <div id="root" data-composition-id="c9" data-width="1920" data-height="1080">
+    <div class="shot" id="c9-a">
+      <div class="h2 k" id="c9-t">How it’s built.</div>
+      <div id="c9-flow">
+        <div class="n k"><b>1</b>App</div>
+        <div class="n k"><b>2</b>Agent</div>
+        <div class="n k"><b>3</b>Read-only tools</div>
+        <div class="n y k"><b>4</b>Exact approval</div>
+        <div class="n k"><b>5</b>Durable worker</div>
+        <div class="n y k"><b>6</b>One-shot gate</div>
+        <div class="n k"><b>7</b>Merchant</div>
+        <div class="n y k"><b>8</b>Receipt, read back</div>
+      </div>
+      <div class="h3 k" id="c9-f">Live model. <span class="mute">Labelled fallback.</span></div>
+    </div>
+
+    <div class="shot" id="c9-b"><div id="c9-nums">
+      <div><div class="h0"><span class="count" id="c9-n1"></span></div><div class="lab k" id="c9-l1">automated tests</div></div>
+      <div><div class="h0"><span class="count" id="c9-n2"></span></div><div class="lab k" id="c9-l2">extension checks</div></div>
+      <div><div class="h0"><span class="count" id="c9-n3"></span></div><div class="lab k" id="c9-l3">phone end-to-end scenarios</div></div>
+    </div></div>
+
+    <div class="shot ink" id="c9-c"><div class="center">
+      <div class="h2 k" id="c9-c1">Synthetic data.</div>
+      <div class="h2 k" id="c9-c2">Simulated merchants.</div>
+      <div class="h2 k" id="c9-c3">No production.</div>
+    </div></div>
+
+    <div class="shot" id="c9-d"><div class="center">
+      <div class="h3 mute k" id="c9-d1">Next</div>
+      <div class="h1 k" id="c9-d2">A pilot inside</div>
+      <div class="h1 k" id="c9-d3"><span class="mark">a partner bank.</span></div>
+    </div></div>
+  </div>
+  <script>
+    // Shared helpers (film/shared.js, inlined by film/build.mjs). Times are seconds from the scene start.
+    // The score runs at 128 BPM, and every scene starts on a downbeat, so b(n) is the n-th beat of the scene.
+    const B = 60 / 128;
+    const b = (n) => Math.round(n * B * 1000) / 1000;
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    /** Hard cut: the element is on screen from a to z. */
+    function shot(sel, a, z) {
+      tl.set(sel, { autoAlpha: 1 }, a);
+      if (z !== undefined) tl.set(sel, { autoAlpha: 0 }, z);
+    }
+    /** Kinetic entrance: rises and settles. */
+    function pop(sel, t, o = {}) {
+      tl.fromTo(sel, { autoAlpha: 0, y: o.y ?? 48, scale: o.s ?? 0.95 }, { autoAlpha: 1, y: 0, scale: 1, duration: o.d ?? 0.42, ease: o.e ?? IN, stagger: o.st ?? 0, immediateRender: false }, t);
+    }
+    /** Snap entrance: lands from slightly larger, on the beat. */
+    function snap(sel, t, o = {}) {
+      tl.fromTo(sel, { autoAlpha: 0, scale: o.s ?? 1.16 }, { autoAlpha: 1, scale: 1, duration: o.d ?? 0.34, ease: IN, stagger: o.st ?? 0, immediateRender: false }, t);
+    }
+    function off(sel, t, d = 0.18) {
+      tl.fromTo(sel, { autoAlpha: 1 }, { autoAlpha: 0, duration: d, ease: "power2.in", immediateRender: false }, t);
+    }
+    function dim(sel, t, to = 0.25) {
+      tl.fromTo(sel, { opacity: 1 }, { opacity: to, duration: 0.25, ease: "power2.out", immediateRender: false }, t);
+    }
+    /** Phone camera: put screen point (px, py), in CSS px of the 390x844 screen, at frame point (fx, fy), at scale k. */
+    function cam(k, px, py, fx = 1400, fy = 540) {
+      return { x: fx - k * (px + 12), y: fy - k * (py + 12), scale: k };
+    }
+    function place(sel, t, st) {
+      tl.set(sel, st, t);
+    }
+    function move(sel, t, d, from, to, ease = "power2.inOut") {
+      tl.fromTo(sel, from, { ...to, duration: d, ease, immediateRender: false }, t);
+    }
+    /** A number that counts from `from` to `to` (ease-out), drawn as pre-rendered frames so any seek is exact. */
+    function counter(id, from, to, t0, dur, fmt = (v) => Math.round(v).toLocaleString("en-US")) {
+      const el = document.getElementById(id);
+      const n = Math.max(2, Math.round((dur * 30) / 2));
+      const ghost = document.createElement("span");
+      ghost.className = "ghost";
+      ghost.textContent = fmt(to);
+      el.appendChild(ghost);
+      for (let i = 0; i <= n; i++) {
+        const p = 1 - Math.pow(1 - i / n, 3);
+        const s = document.createElement("span");
+        s.className = "cv";
+        s.textContent = fmt(from + (to - from) * p);
+        el.appendChild(s);
+        tl.set(s, { autoAlpha: 1 }, t0 + (dur * i) / n);
+        if (i < n) tl.set(s, { autoAlpha: 0 }, t0 + (dur * (i + 1)) / n);
+      }
+    }
+    /** Tap ripple at a frame point. */
+    function tap(sel, t) {
+      tl.fromTo(sel, { autoAlpha: 0, scale: 0.4 }, { autoAlpha: 1, scale: 1, duration: 0.16, ease: "power2.out", immediateRender: false }, t);
+      tl.fromTo(sel, { autoAlpha: 1, scale: 1 }, { autoAlpha: 0, scale: 1.7, duration: 0.45, ease: "power2.out", immediateRender: false }, t + 0.16);
+    }
+
+    // 150.0: the music's breakdown. One node per beat.
+    shot("#c9-a", 0, b(16));
+    pop("#c9-t", 0);
+    snap("#c9-flow .n", b(2), { st: B });
+    pop("#c9-f", b(11));
+    // 157.5: the lift. Count-ups.
+    shot("#c9-b", b(16), b(28));
+    counter("c9-n1", 0, 681, b(16), b(3));
+    pop("#c9-l1", b(16), { y: 12 });
+    counter("c9-n2", 0, 310, b(18), b(3));
+    pop("#c9-l2", b(18), { y: 12 });
+    counter("c9-n3", 0, 28, b(20), b(3));
+    pop("#c9-l3", b(20), { y: 12 });
+    // Limits, plainly.
+    shot("#c9-c", b(28), b(36));
+    pop("#c9-c1", b(28));
+    pop("#c9-c2", b(30));
+    pop("#c9-c3", b(32));
+    shot("#c9-d", b(36), b(44));
+    pop("#c9-d1", b(36), { y: 12 });
+    pop("#c9-d2", b(37));
+    pop("#c9-d3", b(39));
+    window.__timelines["c9"] = tl;
+  </script>
+</template>

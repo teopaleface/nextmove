@@ -1,0 +1,31 @@
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; font-feature-settings: "ss01" 0; }
+    .shot { position: absolute; inset: 0; overflow: hidden; visibility: hidden; opacity: 0; background: #f7f7f2; }
+    .shot.ink { background: #151515; color: #f7f7f2; }
+    .k { visibility: hidden; opacity: 0; }
+    .w { display: inline-block; }
+    .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .left { position: absolute; left: 150px; top: 0; bottom: 0; width: 820px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+    .h0 { font-size: 300px; font-weight: 740; letter-spacing: -0.055em; line-height: 0.92; font-variant-numeric: tabular-nums; }
+    .h1 { font-size: 184px; font-weight: 720; letter-spacing: -0.05em; line-height: 0.98; }
+    .h2 { font-size: 124px; font-weight: 700; letter-spacing: -0.045em; line-height: 1.0; }
+    .h3 { font-size: 76px; font-weight: 660; letter-spacing: -0.035em; line-height: 1.06; }
+    .sub { font-size: 46px; font-weight: 520; letter-spacing: -0.02em; line-height: 1.2; color: #60605a; }
+    .ink .sub, .mute-ink { color: #a3a39b; }
+    .mute { color: #60605a; }
+    .tiny { font-size: 28px; font-weight: 500; letter-spacing: -0.005em; color: #60605a; }
+    .ink .tiny { color: #a3a39b; }
+    .yel { color: #fee600; }
+    .mark { background: linear-gradient(transparent 62%, #fee600 62%, #fee600 92%, transparent 92%); padding: 0 6px; margin: 0 -6px; }
+    .gap { margin-top: 26px; }
+    .ph { position: absolute; left: 0; top: 0; transform-origin: 0 0; padding: 12px; border-radius: 62px; background: #151515; box-shadow: 0 60px 120px -50px rgba(21, 21, 21, 0.55), 0 20px 50px -25px rgba(21, 21, 21, 0.3); }
+    .ink .ph { box-shadow: 0 0 0 2px #2a2a28; }
+    .scr { position: relative; width: 390px; height: 844px; border-radius: 50px; overflow: hidden; background: #f7f7f2; }
+    .scr img, .scr video { position: absolute; left: 0; top: 0; width: 390px; height: 844px; object-fit: cover; }
+    .scr .later { visibility: hidden; }
+    .count { position: relative; display: inline-block; font-variant-numeric: tabular-nums; }
+    .count .ghost { visibility: hidden; }
+    .count .cv { position: absolute; right: 0; top: 0; visibility: hidden; opacity: 0; }
+    .tap { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; border: 6px solid #fee600; background: rgba(254, 230, 0, 0.25); visibility: hidden; opacity: 0; }
+    .pill { display: inline-flex; align-items: center; gap: 14px; padding: 12px 24px; border-radius: 999px; background: #ffffff; border: 1.5px solid #e4e5df; font-size: 30px; font-weight: 600; letter-spacing: -0.01em; color: #151515; }
+    .pill i { width: 14px; height: 14px; border-radius: 50%; background: #fee600; box-shadow: 0 0 0 1.5px #151515 inset; }

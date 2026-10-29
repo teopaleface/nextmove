@@ -1,0 +1,71 @@
+<template>
+  <style>
+/*@CSS*/
+    #c8-sum .row { display: flex; align-items: baseline; gap: 28px; }
+    #c8-sum .h1 { font-variant-numeric: tabular-nums; }
+    #c8-sum .h3 { color: #60605a; }
+    #c8-batch .h0 { font-size: 260px; }
+    .mt .cap { position: absolute; left: 1000px; top: 0; bottom: 0; width: 820px; display: flex; flex-direction: column; justify-content: center; }
+    .mt .name { font-size: 40px; font-weight: 640; letter-spacing: -0.015em; color: #60605a; margin-bottom: 18px; }
+  </style>
+  <div id="root" data-composition-id="c8" data-width="1920" data-height="1080">
+    <div class="shot" id="c8-sum"><div class="left" style="width: 1600px">
+      <div class="row k" id="c8-s1"><span class="h1">79 RON</span><span class="h3">kept · FitFlow</span></div>
+      <div class="row k" id="c8-s2"><span class="h1">358.99 RON</span><span class="h3">less due · Airbag</span></div>
+      <div class="row k" id="c8-s3"><span class="h1"><span class="mark">1 yes</span></span><span class="h3">each</span></div>
+    </div></div>
+
+    <div class="shot" id="c8-batch"><div class="center">
+      <div class="h0"><span class="count" id="c8-n"></span></div>
+      <div class="h3 k" id="c8-b1">RON in future charges avoided</div>
+      <div class="tiny gap k" id="c8-b2">Separate batch run · 200 subscriptions · synthetic data</div>
+    </div></div>
+
+    <div class="shot" id="c8-act"><div class="center">
+      <div class="h2 mute k" id="c8-a1">Not just advice.</div>
+      <div class="h1 k" id="c8-a2">Action.</div>
+      <div class="h2 k" id="c8-a3"><span class="mark">With your yes.</span></div>
+    </div></div>
+
+    <div class="shot mt" id="c8-m1"><div class="ph"><div class="scr"><img src="assets/media/v2/mont-T4.png" alt="" /></div></div><div class="cap"><div class="name">Trial Shield</div><div class="h2">Holds the first charge.</div></div></div>
+    <div class="shot mt" id="c8-m2"><div class="ph"><div class="scr"><img src="assets/media/v2/mont-O6.png" alt="" /></div></div><div class="cap"><div class="name">Route to your home</div><div class="h2">An arrival date. The roadblocks.</div></div></div>
+    <div class="shot mt" id="c8-m3"><div class="ph"><div class="scr"><img src="assets/media/v2/mont-O7.png" alt="" /></div></div><div class="cap"><div class="name">Bill vault</div><div class="h2">Bill money, set aside.</div></div></div>
+    <div class="shot mt" id="c8-m4"><div class="ph"><div class="scr"><img src="assets/media/v2/mont-O8.png" alt="" /></div></div><div class="cap"><div class="name">Overdraft shield</div><div class="h2">Sees the dip coming.</div></div></div>
+    <div class="shot mt" id="c8-m5"><div class="ph"><div class="scr"><img src="assets/media/v2/mont-A17.png" alt="" /></div></div><div class="cap"><div class="name">Hidden-loss detectors</div><div class="h2">Finds what leaks.</div></div></div>
+    <div class="shot mt" id="c8-m6"><div class="ph"><div class="scr"><img src="assets/media/v2/mont-simple.png" alt="" /></div></div><div class="cap"><div class="name">Simple mode</div><div class="h2">Bigger text. Clear steps.</div></div></div>
+
+    <div class="shot" id="c8-why"><div class="center">
+      <div class="h2 k" id="c8-w1">Numbers from code.</div>
+      <div class="h2 k" id="c8-w2">Proof after every step.</div>
+      <div class="h2 k" id="c8-w3"><span class="mark">Your yes, exactly.</span></div>
+    </div></div>
+  </div>
+  <script>
+/*@JS*/
+    shot("#c8-sum", 0, b(8));
+    pop("#c8-s1", 0);
+    pop("#c8-s2", b(2));
+    pop("#c8-s3", b(4));
+    // The separate batch scenario, not Alex's account.
+    shot("#c8-batch", b(8), b(16));
+    counter("c8-n", 0, 2824, b(8), b(4));
+    pop("#c8-b1", b(9), { y: 16 });
+    pop("#c8-b2", b(11), { y: 10 });
+    shot("#c8-act", b(16), b(24));
+    pop("#c8-a1", b(16));
+    snap("#c8-a2", b(18));
+    pop("#c8-a3", b(20));
+    // What else it does: one feature every bar-half... every four beats.
+    for (let i = 1; i <= 6; i++) {
+      const t = b(24 + 4 * (i - 1));
+      shot("#c8-m" + i, t, t + b(4));
+      move("#c8-m" + i + " .ph", t, b(4), cam(1.42, 195, 300, 600, 560), cam(1.58, 195, 300, 600, 560), "power1.out");
+      pop("#c8-m" + i + " .cap", t, { y: 30 });
+    }
+    shot("#c8-why", b(48), b(64));
+    pop("#c8-w1", b(48));
+    pop("#c8-w2", b(52));
+    pop("#c8-w3", b(56));
+    window.__timelines["c8"] = tl;
+  </script>
+</template>

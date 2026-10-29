@@ -1,0 +1,70 @@
+<template>
+  <style>
+/*@CSS*/
+    #root .left { width: 760px; }
+    #c6-big .h0 { font-size: 200px; }
+    #c6-big > div:first-child { white-space: nowrap; }
+    #c6-big .unit { font-size: 90px; font-weight: 700; letter-spacing: -0.03em; margin-left: 18px; }
+  </style>
+  <div id="root" data-composition-id="c6" data-width="1920" data-height="1080">
+    <!-- Financial Airbag on a fresh isolated Alex copy (assets/media/v2/airbag.mp4; capture/shot-airbag.mjs). -->
+    <div class="shot" id="c6-a">
+      <div class="left"><div class="h1 k" id="c6-a1">Money tight?</div><div class="h2 mute k" id="c6-a2">Financial Airbag.</div></div>
+      <div class="ph" id="c6-ph1"><div class="scr">
+        <video id="c6-v1" class="clip" data-start="0" data-duration="1.875" data-media-start="4.6" data-track-index="1" src="assets/media/v2/airbag.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c6-b">
+      <div class="left"><div class="h1 k" id="c6-b1">One tap.</div><div class="sub gap k" id="c6-b2">Every optional service. Essential bills stay protected.</div></div>
+      <div class="ph" id="c6-ph2"><div class="scr">
+        <video id="c6-v2" class="clip" data-start="1.875" data-duration="1.875" data-media-start="9.6" data-track-index="2" src="assets/media/v2/airbag.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c6-c">
+      <div class="left" id="c6-big">
+        <div><span class="h0"><span class="count" id="c6-n"></span></span><span class="unit">RON</span></div>
+        <div class="h3 k" id="c6-c2">less due in 30 days</div>
+        <div class="tiny gap k" id="c6-c3">2,036.99 → 1,678.00 RON scheduled · future charges, not a refund</div>
+      </div>
+      <div class="ph" id="c6-ph3"><div class="scr"><img src="assets/media/v2/airbag-numbers.png" alt="" /></div></div>
+    </div>
+    <div class="shot" id="c6-d">
+      <div class="left"><div class="h2 k" id="c6-d1">Approve</div><div class="h2 k" id="c6-d2">the exact list.</div></div>
+      <div class="ph" id="c6-ph4"><div class="scr">
+        <video id="c6-v4" class="clip" data-start="6.563" data-duration="1.875" data-media-start="35.4" data-track-index="3" src="assets/media/v2/airbag.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c6-e">
+      <div class="left"><div class="h2 k" id="c6-e1">3 confirmed.</div><div class="sub gap k" id="c6-e2">DashEats Plus · FitFlow · PulseGym</div></div>
+      <div class="ph" id="c6-ph5"><div class="scr">
+        <video id="c6-v5" class="clip" data-start="8.438" data-duration="2.812" data-media-start="39.8" data-track-index="4" src="assets/media/v2/airbag.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+  </div>
+  <script>
+/*@JS*/
+    shot("#c6-a", 0, b(4));
+    snap("#c6-a1", 0);
+    pop("#c6-a2", b(2));
+    move("#c6-ph1", 0, b(4), cam(1.45, 195, 330, 1380, 540), cam(1.6, 195, 330, 1380, 540), "power1.out");
+    shot("#c6-b", b(4), b(8));
+    snap("#c6-b1", b(4));
+    pop("#c6-b2", b(5), { y: 16 });
+    place("#c6-ph2", b(4), cam(1.55, 195, 300, 1380, 560));
+    // The cash it frees in the next 30 days, read off the screen: 2,036.99 - 1,678.00 = 358.99 RON.
+    shot("#c6-c", b(8), b(14));
+    counter("c6-n", 0, 358.99, b(8), b(3), (v) => v.toFixed(2));
+    pop("#c6-c2", b(9), { y: 16 });
+    pop("#c6-c3", b(9.5), { y: 10 });
+    move("#c6-ph3", b(8), b(6), cam(1.5, 195, 520, 1440, 520), cam(1.75, 195, 520, 1440, 520), "power1.out");
+    shot("#c6-d", b(14), b(18));
+    pop("#c6-d1", b(14));
+    pop("#c6-d2", b(15));
+    place("#c6-ph4", b(14), cam(1.5, 195, 640, 1380, 560));
+    shot("#c6-e", b(18), b(24));
+    snap("#c6-e1", b(18));
+    pop("#c6-e2", b(19), { y: 16 });
+    move("#c6-ph5", b(18), b(6), cam(1.55, 195, 300, 1380, 520), cam(1.7, 195, 300, 1380, 520), "power1.out");
+    window.__timelines["c6"] = tl;
+  </script>
+</template>

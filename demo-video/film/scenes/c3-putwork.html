@@ -1,0 +1,55 @@
+<template>
+  <style>
+/*@CSS*/
+    #root .left { width: 800px; }
+  </style>
+  <div id="root" data-composition-id="c3" data-width="1920" data-height="1080">
+    <!-- Put what you kept to work: same live take as c2, after the stop (assets/media/v2/ff.mp4). -->
+    <div class="shot" id="c3-a">
+      <div class="left"><div class="h1 k" id="c3-a1">Put it to work?</div><div class="sub gap k" id="c3-a2">79 RON kept. Balance unchanged.</div></div>
+      <div class="ph" id="c3-ph1"><div class="scr">
+        <video id="c3-v1" class="clip" data-start="0" data-duration="1.875" data-media-start="41.7" data-track-index="1" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c3-b">
+      <div class="left"><div class="h2 k" id="c3-b1">Savings, 5% a year.</div><div class="sub gap k" id="c3-b2">Demo rate. Or government bonds, simulated.</div></div>
+      <div class="ph" id="c3-ph2"><div class="scr">
+        <video id="c3-v2" class="clip" data-start="1.875" data-duration="1.875" data-media-start="46.4" data-track-index="2" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c3-c">
+      <div class="left"><div class="h1 k" id="c3-c1">Your yes again.</div><div class="sub gap k" id="c3-c2">Move 79.00 RON to Savings.</div><div class="tiny gap k" id="c3-c3">In 12 months: 82.95 RON at the demo rate. A projection, not a promise.</div></div>
+      <div class="ph" id="c3-ph3"><div class="scr">
+        <video id="c3-v3" class="clip" data-start="3.75" data-duration="1.875" data-media-start="57.3" data-track-index="3" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c3-d">
+      <div class="left"><div class="h2 k" id="c3-d1">Stop the leaks.</div><div class="h2 k" id="c3-d2"><span class="mark">Grow the rest.</span></div><div class="tiny gap k" id="c3-d3">In 12 months: 82.95 RON at the demo rate. A projection, not a promise.</div></div>
+      <div class="ph" id="c3-ph4"><div class="scr">
+        <video id="c3-v4" class="clip" data-start="5.625" data-duration="1.875" data-media-start="66.0" data-track-index="4" src="assets/media/v2/ff.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+  </div>
+  <script>
+/*@JS*/
+    shot("#c3-a", 0, b(4));
+    snap("#c3-a1", 0);
+    pop("#c3-a2", b(0.5), { y: 16 });
+    move("#c3-ph1", 0, b(4), cam(1.35, 195, 330, 1420, 540), cam(1.45, 195, 330, 1420, 540), "none");
+    shot("#c3-b", b(4), b(8));
+    pop("#c3-b1", b(4));
+    pop("#c3-b2", b(5), { y: 16 });
+    move("#c3-ph2", b(4), b(4), cam(1.45, 195, 330, 1420, 540), cam(1.55, 195, 330, 1420, 540), "none");
+    shot("#c3-c", b(8), b(12));
+    snap("#c3-c1", b(8));
+    pop("#c3-c2", b(9), { y: 16 });
+    pop("#c3-c3", b(10), { y: 10 });
+    move("#c3-ph3", b(8), b(4), cam(1.35, 195, 520, 1420, 560), cam(1.5, 195, 600, 1420, 600), "none");
+    shot("#c3-d", b(12), b(16));
+    pop("#c3-d1", b(12));
+    pop("#c3-d2", b(12.5));
+    pop("#c3-d3", b(12.5), { y: 10 });
+    move("#c3-ph4", b(12), b(4), cam(1.4, 195, 180, 1440, 460), cam(1.55, 195, 180, 1440, 460), "none");
+    window.__timelines["c3"] = tl;
+  </script>
+</template>

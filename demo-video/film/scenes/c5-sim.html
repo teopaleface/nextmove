@@ -1,0 +1,63 @@
+<template>
+  <style>
+/*@CSS*/
+    #root .left { width: 740px; }
+  </style>
+  <div id="root" data-composition-id="c5" data-width="1920" data-height="1080">
+    <!-- Live chat answer with an interactive what-if (assets/media/v2/sim.mp4, captures/logs2/sim.txt). -->
+    <div class="shot" id="c5-a">
+      <div class="left"><div class="h2 k" id="c5-a1">“A 6,000 RON phone?”</div><div class="sub gap k" id="c5-a2">Will Alex still reach the home goal?</div></div>
+      <div class="ph" id="c5-ph1"><div class="scr">
+        <video id="c5-v1" class="clip" data-start="0" data-duration="1.875" data-media-start="2.6" data-track-index="1" src="assets/media/v2/sim.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c5-b">
+      <div class="left"><div class="h2 k" id="c5-b1">It answers</div><div class="h2 k" id="c5-b2">with a what-if.</div></div>
+      <div class="ph" id="c5-ph2"><div class="scr">
+        <video id="c5-v2" class="clip" data-start="1.875" data-duration="1.875" data-media-start="20.9" data-track-index="2" src="assets/media/v2/sim.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c5-c">
+      <div class="left"><div class="h1 k" id="c5-c1">Drag.</div><div class="h2 k" id="c5-c2"><span class="mark">March 2027.</span></div><div class="sub gap k" id="c5-c3">Shorter term: one month later.</div></div>
+      <div class="ph" id="c5-ph3"><div class="scr">
+        <video id="c5-v3" class="clip" data-start="3.75" data-duration="4.688" data-media-start="31.28" data-track-index="3" src="assets/media/v2/sim.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+    <div class="shot" id="c5-d">
+      <!-- Opens on the same March caption (the target still reads March until media 42.25), then "Drag back." on the flip. -->
+      <div class="left" id="c5-dm"><div class="h1">Drag.</div><div class="h2"><span class="mark">March 2027.</span></div><div class="sub gap">Shorter term: one month later.</div></div>
+      <div class="left"><div class="h2 k" id="c5-d1">Drag back.</div><div class="h2 k" id="c5-d2"><span class="mark">February.</span></div><div class="sub gap k" id="c5-d3">A what-if. Nothing moves.</div></div>
+      <div class="ph" id="c5-ph4"><div class="scr">
+        <video id="c5-v4" class="clip" data-start="8.438" data-duration="2.812" data-media-start="41.55" data-track-index="4" src="assets/media/v2/sim.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+  </div>
+  <script>
+/*@JS*/
+    shot("#c5-a", 0, b(4));
+    pop("#c5-a1", 0);
+    pop("#c5-a2", b(1), { y: 16 });
+    move("#c5-ph1", 0, b(4), cam(1.8, 195, 190, 1380, 420), cam(1.9, 195, 190, 1380, 420), "none");
+    shot("#c5-b", b(4), b(8));
+    pop("#c5-b1", b(4));
+    pop("#c5-b2", b(5));
+    move("#c5-ph2", b(4), b(4), cam(1.1, 195, 422, 1380, 540), cam(1.25, 195, 450, 1380, 540), "power1.out");
+    // The drag: zoomed on the card so the date and the slider read clearly.
+    shot("#c5-c", b(8), b(18));
+    snap("#c5-c1", b(8));
+    // March first shows at media 35.0 (local 7.47): cause, then effect.
+    pop("#c5-c2", b(16));
+    pop("#c5-c3", b(16.5), { y: 16 });
+    move("#c5-ph3", b(8), b(10), cam(1.62, 195, 520, 1380, 560), cam(1.72, 195, 520, 1380, 560), "power1.inOut");
+    shot("#c5-d", b(18), b(24));
+    // Raw sim.mp4: March from 34.967 s to 42.2 s, February again from 42.233 s (frame-measured).
+    // With media 41.55 here, the last March frame is local 9.0875 and February is back at 9.121:
+    // the March caption fades out across the flip, and "Drag back." only appears on February frames.
+    off(["#c5-dm"], 9.09, 0.06);
+    snap("#c5-d1", b(19.5));
+    pop("#c5-d2", b(19.5) + 0.1);
+    pop("#c5-d3", b(20.5), { y: 16 });
+    place("#c5-ph4", b(18), cam(1.72, 195, 520, 1380, 560));
+    window.__timelines["c5"] = tl;
+  </script>
+</template>

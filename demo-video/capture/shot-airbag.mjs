@@ -1,0 +1,74 @@
+// Financial Airbag, start to receipts, on a fresh isolated Alex copy (no model calls).
+// Home -> "Review optional spending" -> "Deploy the airbag" -> exact list -> approve -> receipts.
+// Usage: node capture/shot-airbag.mjs
+import { launch, signIn, settle, still, recorder, assertClean, sleep, BASE, installTouch, hideTouch, tapOn, scrollTopTo, smoothScrollBy } from "./lib.mjs";
+const { browser, page, problems } = await launch();
+await signIn(page, "alex", "PERSONAL");
+await page.goto(BASE + "/home", { waitUntil: "networkidle" });
+await settle(page, 1500);
+await assertClean(page);
+await installTouch(page);
+const rec = await recorder(page, "airbag");
+await sleep(1200);
+rec.mark("tap-row");
+await tapOn(page, page.getByText("Review optional spending").first(), 700);
+await page.waitForURL(/\/capabilities\/O9/);
+await settle(page, 1500);
+await installTouch(page);
+rec.mark("o9");
+await still(page, "airbag-00-top");
+await sleep(1200);
+await scrollTopTo(page, page.getByText("Choose what can wait").first(), 70, 1600);
+await sleep(900);
+await still(page, "airbag-01-choose");
+rec.mark("deploy");
+await tapOn(page, page.getByRole("button", { name: /deploy the airbag/i }), 600);
+await page.getByRole("button", { name: /review \d+ actions?/i }).waitFor({ timeout: 20000 });
+await settle(page, 900);
+await sleep(800);
+await still(page, "airbag-02-chosen");
+// Up to the numbers: what is still due once the choices confirm.
+rec.mark("numbers");
+await hideTouch(page);
+await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+await sleep(1500);
+await still(page, "airbag-03-numbers");
+await sleep(1800);
+rec.mark("list");
+await scrollTopTo(page, page.getByText("What NextMove can do").first(), 70, 1800);
+await sleep(1500);
+await still(page, "airbag-04-list");
+const review = page.getByRole("button", { name: /review \d+ actions?/i }).or(page.getByRole("link", { name: /review \d+ actions?/i })).first();
+await review.scrollIntoViewIfNeeded();
+await sleep(600);
+rec.mark("review");
+await tapOn(page, review, 600);
+await page.waitForURL(/\/review\//, { timeout: 20000 });
+await settle(page, 2000);
+await installTouch(page);
+await still(page, "airbag-10-review");
+await sleep(1200);
+await smoothScrollBy(page, 700, 2400);
+await sleep(1000);
+await still(page, "airbag-11-review-more");
+const approve = page.locator("button.btn.primary.main").first();
+await approve.scrollIntoViewIfNeeded();
+await sleep(800);
+await still(page, "airbag-12-approve");
+rec.mark("approve");
+await tapOn(page, approve, 600);
+await page.waitForURL(/\/actions\/|\/receipts\/|\/batches\//, { timeout: 30000 }).catch(() => console.log("no nav after approve", page.url()));
+rec.mark("after-approve " + page.url().replace(BASE, ""));
+await hideTouch(page);
+for (let i = 0; i < 120; i++) {
+  if ((await page.getByText(/^Confirmed by /).count()) >= 3) break;
+  await sleep(400);
+}
+rec.mark("confirmed " + page.url().replace(BASE, ""));
+await sleep(2500);
+await still(page, "airbag-20-done");
+const meta = await rec.stop();
+console.log(JSON.stringify(meta));
+console.log("receipts on page:", await page.locator('a[href^="/receipts/"]').count(), "url", page.url());
+console.log("problems", problems);
+await browser.close();

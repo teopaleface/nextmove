@@ -1,0 +1,29 @@
+<template>
+  <style>
+/*@CSS*/
+    #root .left { width: 760px; }
+  </style>
+  <div id="root" data-composition-id="c7" data-width="1920" data-height="1080">
+    <div class="shot" id="c7-a">
+      <div class="left"><div class="sub k" id="c7-a0">Laziz Products · small business</div><div class="h2 gap k" id="c7-a1">“Take the 40,000 RON order?”</div><div class="h2 k" id="c7-a2"><span class="mark">Only with conditions.</span></div></div>
+      <div class="ph" id="c7-ph1"><div class="scr"><img src="assets/media/v2/order.png" alt="" /></div></div>
+    </div>
+    <div class="shot" id="c7-b">
+      <div class="left"><div class="h2 k" id="c7-b1">Not sure what you mean?</div><div class="h2 k" id="c7-b2"><span class="mark">It asks first.</span></div></div>
+      <div class="ph" id="c7-ph2"><div class="scr"><img src="assets/media/v2/gym.png" alt="" /></div></div>
+    </div>
+  </div>
+  <script>
+/*@JS*/
+    shot("#c7-a", 0, b(8));
+    pop("#c7-a0", 0, { y: 12 });
+    pop("#c7-a1", b(1));
+    pop("#c7-a2", b(4));
+    move("#c7-ph1", 0, b(8), cam(1.45, 195, 455, 1400, 540), cam(1.7, 195, 455, 1400, 540), "power1.out");
+    shot("#c7-b", b(8), b(16));
+    pop("#c7-b1", b(8));
+    pop("#c7-b2", b(11));
+    move("#c7-ph2", b(8), b(8), cam(1.5, 195, 515, 1400, 540), cam(1.75, 195, 515, 1400, 540), "power1.out");
+    window.__timelines["c7"] = tl;
+  </script>
+</template>

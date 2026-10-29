@@ -1,0 +1,40 @@
+<template>
+  <style>
+/*@CSS*/
+    #c10 { background: #151515; }
+    .logo { width: 820px; height: auto; overflow: visible; }
+    #c10-logo { position: absolute; left: 550px; top: 250px; }
+    #c10-tag { position: absolute; left: 0; right: 0; top: 330px; text-align: center; }
+    #c10-cred { position: absolute; left: 0; right: 0; bottom: 70px; text-align: center; display: flex; flex-direction: column; gap: 10px; }
+    #c10-cred .team { font-size: 34px; font-weight: 600; color: #f7f7f2; letter-spacing: -0.01em; }
+  </style>
+  <div id="root" data-composition-id="c10" data-width="1920" data-height="1080">
+    <div class="shot ink" id="c10">
+      <div id="c10-logo"><!--@LOGO:c10lg--></div>
+      <div id="c10-tag"><div class="h1 k" id="c10-t1">Stop the leaks.</div><div class="h1 k" id="c10-t2">Grow the rest.</div></div>
+      <div id="c10-cred">
+        <div class="team k" id="c10-c1">Mr Laziz · Teo, Eduard and Cosmin</div>
+        <div class="tiny k" id="c10-c2">Built for the Raiffeisen Bank challenge at NEXXT 2026 · Fictional demo bank. Synthetic data.</div>
+        <div class="tiny k" id="c10-c3">Music: “Nonstop” Kevin MacLeod (incompetech.com) · Licensed under CC BY 4.0</div>
+      </div>
+    </div>
+  </div>
+  <script>
+/*@JS*/
+    // 170.625: the tagline, then it steps down and the lockup draws above it; the dot lands on the final hit (174.375).
+    shot("#c10", 0);
+    pop("#c10-t1", 0);
+    pop("#c10-t2", b(2));
+    move("#c10-tag", b(5), 0.6, { y: 0, scale: 1 }, { y: 200, scale: 0.62 }, "power3.inOut");
+    tl.set("#c10lg-draw", { autoAlpha: 1 }, b(6));
+    tl.fromTo("#c10lg-draw", { attr: { "stroke-dashoffset": 360 } }, { attr: { "stroke-dashoffset": 0 }, duration: b(2) - 0.05, ease: "power2.inOut", immediateRender: false }, b(6));
+    tl.set("#c10lg-n", { autoAlpha: 1 }, b(8));
+    tl.set("#c10lg-draw", { autoAlpha: 0 }, b(8));
+    tl.fromTo("#c10lg-move", { autoAlpha: 1, y: -150 }, { autoAlpha: 1, y: 0, duration: 0.38, ease: "bounce.out", immediateRender: false }, b(8) - 0.2);
+    tl.fromTo("#c10lg-wordmark", { autoAlpha: 0, x: -24 }, { autoAlpha: 1, x: 0, duration: 0.5, ease: IN, immediateRender: false }, b(9));
+    pop("#c10-c1", b(10), { y: 12 });
+    pop("#c10-c2", b(11), { y: 10 });
+    pop("#c10-c3", b(12), { y: 10 });
+    window.__timelines["c10"] = tl;
+  </script>
+</template>

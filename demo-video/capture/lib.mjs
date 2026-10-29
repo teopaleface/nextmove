@@ -166,3 +166,80 @@ export async function assertClean(page) {
   const hit = bad.find((re) => re.test(t));
   if (hit) throw new Error("dirty screen: " + hit);
 }
+
+/** A visible touch point for the recording: a soft dark dot that follows the mouse and presses on mousedown. */
+export async function installTouch(page) {
+  await page.evaluate(() => {
+    if (document.getElementById("__demo_touch")) return;
+    const d = document.createElement("div");
+    d.id = "__demo_touch";
+    d.style.cssText = "position:fixed;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(21,21,21,0.28);border:2.5px solid rgba(255,255,255,0.95);box-shadow:0 2px 10px rgba(0,0,0,0.25);pointer-events:none;z-index:2147483646;opacity:0;transition:transform 120ms ease-out,opacity 160ms ease-out;";
+    document.documentElement.appendChild(d);
+    addEventListener("mousemove", (e) => { d.style.left = e.clientX + "px"; d.style.top = e.clientY + "px"; d.style.opacity = "1"; }, true);
+    addEventListener("mousedown", () => { d.style.transform = "scale(0.78)"; d.style.background = "rgba(21,21,21,0.45)"; }, true);
+    addEventListener("mouseup", () => { d.style.transform = "scale(1)"; d.style.background = "rgba(21,21,21,0.28)"; }, true);
+  });
+}
+export function hideTouch(page) {
+  return page.evaluate(() => { const d = document.getElementById("__demo_touch"); if (d) d.style.opacity = "0"; });
+}
+
+let lastPos = { x: 195, y: 600 };
+/** Glide the touch point to (x, y) with an ease-in-out path. */
+export async function glide(page, x, y, ms = 450) {
+  const steps = Math.max(2, Math.round(ms / 16));
+  const a = { ...lastPos };
+  for (let i = 1; i <= steps; i++) {
+    const p = 0.5 - 0.5 * Math.cos((Math.PI * i) / steps);
+    await page.mouse.move(a.x + (x - a.x) * p, a.y + (y - a.y) * p);
+    await sleep(16);
+  }
+  lastPos = { x, y };
+}
+/** Glide to the centre of a locator and tap it. */
+export async function tapOn(page, locator, ms = 450) {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error("tap target not visible");
+  await glide(page, box.x + box.width / 2, box.y + box.height / 2, ms);
+  await sleep(160);
+  await page.mouse.down();
+  await sleep(110);
+  await page.mouse.up();
+}
+/** Drag a range input from its current value to `to`, smoothly, holding the thumb like a finger. */
+export async function dragRange(page, input, to, ms = 1800, thumb = 12) {
+  const box = await input.boundingBox();
+  const { min, max, value } = await input.evaluate((el) => ({ min: Number(el.min), max: Number(el.max), value: Number(el.value) }));
+  const X = (v) => box.x + thumb + ((v - min) / (max - min)) * (box.width - 2 * thumb);
+  const y = box.y + box.height / 2;
+  await glide(page, X(value), y, 500);
+  await sleep(200);
+  await page.mouse.down();
+  await sleep(150);
+  const steps = Math.round(ms / 16);
+  for (let i = 1; i <= steps; i++) {
+    const p = 0.5 - 0.5 * Math.cos((Math.PI * i) / steps);
+    await page.mouse.move(X(value) + (X(to) - X(value)) * p, y);
+    await sleep(16);
+  }
+  lastPos = { x: X(to), y };
+  await sleep(150);
+  await page.mouse.up();
+  return input.evaluate((el) => Number(el.value));
+}
+export async function smoothScrollBy(page, px, ms = 1600) {
+  const steps = Math.max(2, Math.round(ms / 16));
+  for (let i = 0; i < steps; i++) {
+    const a = 0.5 - 0.5 * Math.cos((Math.PI * i) / steps), b = 0.5 - 0.5 * Math.cos((Math.PI * (i + 1)) / steps);
+    await page.mouse.wheel(0, px * (b - a));
+    await sleep(16);
+  }
+  await sleep(200);
+}
+/** Scroll so the locator's top sits at y (CSS px). */
+export async function scrollTopTo(page, locator, y = 90, ms = 1400) {
+  const box = await locator.boundingBox();
+  if (!box) return;
+  const d = box.y - y;
+  if (Math.abs(d) > 8) await smoothScrollBy(page, d, ms);
+}

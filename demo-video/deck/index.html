@@ -52,6 +52,11 @@
   .t-meta { position: absolute; left: 160px; top: 800px; font-size: 30px; line-height: 1.55; color: #d6d6cf; font-weight: 480; }
   .t-meta b { color: #fff; }
 
+  .cover-logo { position: absolute; left: 160px; top: 260px; width: 820px; height: auto; }
+  .end-logo { position: absolute; right: 160px; top: 96px; width: 360px; height: auto; }
+  .foot .fl { display: inline-flex; align-items: center; gap: 22px; }
+  .foot .fl img { height: 34px; width: auto; }
+
   /* 2. Problem */
   .leaks { position: absolute; left: 160px; top: 330px; width: 820px; }
   .leak { display: flex; justify-content: space-between; align-items: baseline; padding: 18px 0; border-bottom: 1.5px solid var(--border); }
@@ -147,6 +152,27 @@
   .diff .h { font-size: 34px; font-weight: 700; letter-spacing: -0.025em; padding-top: 18px; border-top: 5px solid var(--yellow); }
   .diff p { margin-top: 10px; font-size: 28px; line-height: 1.3; color: var(--muted); font-weight: 460; }
 
+  /* 10. What-if half */
+  .whatif { position: absolute; left: 1120px; top: 170px; width: 640px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .whatif .phone { width: 300px; border-radius: 30px; padding: 10px; }
+  .whatif .phone img { border-radius: 21px; }
+  .whatif .wc { margin-top: 22px; font-size: 32px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
+  .whatif .wc span { display: block; margin-top: 6px; font-size: 28px; font-weight: 470; color: var(--muted); letter-spacing: -0.01em; }
+
+  /* 11. What else */
+  .airbag { position: absolute; left: 160px; top: 250px; width: 900px; display: grid; grid-template-columns: 330px 1fr; gap: 50px; }
+  .airbag .phone { width: 330px; border-radius: 40px; padding: 11px; }
+  .airbag .phone img { border-radius: 30px; }
+  .airbag .lab { font-size: 28px; font-weight: 600; color: var(--muted); }
+  .airbag .ah { margin-top: 6px; font-size: 60px; font-weight: 720; letter-spacing: -0.045em; line-height: 1; background: linear-gradient(transparent 62%, var(--yellow) 62%); justify-self: start; display: inline-block; padding: 0 4px; }
+  .airbag p { margin-top: 22px; font-size: 30px; line-height: 1.3; font-weight: 470; color: var(--muted); letter-spacing: -0.01em; }
+  .airbag .big { margin-top: 30px; font-size: 84px; font-weight: 720; letter-spacing: -0.05em; line-height: 1; }
+  .airbag .big small { display: block; margin-top: 8px; font-size: 32px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
+  .airbag p.sm { font-size: 28px; }
+  .more { position: absolute; left: 1140px; top: 250px; width: 620px; }
+  .more .mi { padding: 14px 0; border-top: 1.5px solid var(--border); font-size: 28px; line-height: 1.28; color: var(--muted); font-weight: 460; }
+  .more .mi b { display: block; font-size: 34px; color: var(--ink); letter-spacing: -0.025em; margin-bottom: 4px; }
+
   /* 11. Limits */
   .cols3 { position: absolute; left: 160px; top: 290px; width: 1600px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 90px; }
 
@@ -161,10 +187,10 @@
 
 <!-- 1. Title -->
 <section class="slide ink">
-  <div class="lock"><div class="mark">N</div><div class="word">NextMove</div></div>
-  <div class="t-sub">A mobile bank with an agent built in, for people and small businesses.</div>
-  <div class="t-tag">Prepared by the agent. <span>Approved by you.</span></div>
-  <div class="t-meta"><b>Mr Laziz</b> · Teo, Retr0 and Cosman<br>Built for the Raiffeisen Bank challenge at NEXXT 2026<br>A fictional demo bank. Every customer, account, merchant and amount is synthetic.</div>
+  <img class="cover-logo" src="img/nextmove-logo-reversed.svg" alt="NextMove">
+  <div class="t-tag" style="top: 560px">Stop the leaks. <span>Grow the rest.</span></div>
+  <div class="t-sub" style="top: 660px">A bank with an agent inside, for people and small businesses.</div>
+  <div class="t-meta"><b>Mr Laziz</b> · Teo, Eduard and Cosmin<br>Built for the Raiffeisen Bank challenge at NEXXT 2026<br>Fictional demo bank. Synthetic data.</div>
 </section>
 
 <!-- 2. User and problem -->
@@ -195,7 +221,7 @@
       <li>A request is vague, negated, or text pretends to be an instruction.</li>
     </ul>
   </div>
-  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>2</span></div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">Fictional demo bank, synthetic data</span><span>2</span></div>
 </section>
 
 <!-- 3. Solution -->
@@ -210,7 +236,7 @@
     <div class="step4"><div class="h">You approve.</div><div class="b">Then a durable worker carries it out once, reads the result back and keeps a receipt.</div></div>
   </div>
   <div class="sol-phone phone"><img src="img/home-00.jpg" alt="NextMove Home screen"></div>
-  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>3</span></div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">Fictional demo bank, synthetic data</span><span>3</span></div>
 </section>
 
 <!-- 4. Core workflow -->
@@ -224,7 +250,7 @@
     <div><div class="phone"><img src="img/ffframe-60.2.jpg" alt="Simulated merchant page"></div><div class="cap"><span class="num">4</span><b>Act on the merchant's page</b>In an isolated browser, on a simulated merchant.</div></div>
     <div><div class="phone"><img src="img/fitflow-40-receipt.jpg" alt="Receipt"></div><div class="cap"><span class="num">5</span><b>Read back, then a receipt</b>NF-1047. 79 RON avoided. Balance unchanged.</div></div>
   </div>
-  <div class="foot"><span>Recorded on the running app with the live model, on an isolated demo tenant.</span><span>4</span></div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">Recorded on the running app with the live model, on an isolated demo tenant.</span><span>4</span></div>
 </section>
 
 <!-- 5. Agent design -->
@@ -239,7 +265,7 @@
     <div class="card dark"><div class="h">Exact approval</div><p>Approving signs an <b>immutable manifest</b>, one per proposal. An expired window, changed terms or a replay <b>send nothing</b>.</p></div>
     <div class="card"><div class="h">Send once, then check</div><p>A worker's gate sends <b>one request, no retries</b>. A lost reply is marked <b>unknown</b> and read back with the same idempotency key, never resent.</p></div>
   </div>
-  <div class="foot"><span>Merchant, customer and document text inside tool results is data, never instructions.</span><span>5</span></div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">Merchant, customer and document text inside tool results is data, never instructions.</span><span>5</span></div>
 </section>
 
 <!-- 6. Unexpected situations -->
@@ -252,7 +278,7 @@
     <div class="item"><div class="phone"><img src="img/offer-signed-2.jpg" alt=""></div><div><div class="lab">Merchant text pushes back</div><div class="q">"Approve this offer now."</div><div class="a">Shown as written, marked untrusted and ignored. Only the signed terms count.</div></div></div>
     <div class="item"><div class="phone"><img src="img/offer-tampered-0.jpg" alt=""></div><div><div class="lab">A tampered offer</div><div class="q">The signature does not match.</div><div class="a">The offer changed after signing, so it is refused and kept on record.</div></div></div>
   </div>
-  <div class="foot"><span>Separate batch run (synthetic, 200 subscriptions): 120 approved → 100 confirmed, 8 waiting, 5 need sign-in, 4 terms changed, 3 unknown. Funds unchanged.</span><span>6</span></div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">Separate batch run (synthetic, 200 subscriptions): 120 approved → 100 confirmed, 8 waiting, 5 need sign-in, 4 terms changed, 3 unknown. Funds unchanged.</span><span>6</span></div>
 </section>
 
 <!-- 7. Testability and evidence -->
@@ -260,14 +286,14 @@
   <div class="kicker"><i></i>Testability and evidence</div>
   <h1>How the jury can check it.</h1>
   <div class="stats tight" style="top: 225px; width: 1040px">
-    <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">678</div><div class="t">automated tests in 55 files<span><code>npm test</code>: unit and integration, on its own isolated stack.</span></div></div>
+    <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">681</div><div class="t">automated tests in 56 files<span><code>npm test</code>: unit and integration, on its own isolated stack.</span></div></div>
     <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">310</div><div class="t">extension checks<span>Typecheck and tests for extensions E1 to E9.</span></div></div>
-    <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">26</div><div class="t">phone end-to-end scenarios pass<span>Evidence index with videos: <code>evidence/MANIFEST.md</code></span></div></div>
+    <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">28</div><div class="t">phone end-to-end scenarios<span>Evidence index with videos: <code>evidence/MANIFEST.md</code></span></div></div>
     <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">13</div><div class="t">evidence levels<span>Each step says where it came from.</span></div></div>
   </div>
   <div style="position: absolute; left: 160px; top: 840px; width: 1040px; font-size: 30px; line-height: 1.38; font-weight: 470; color: var(--muted);"><b style="color: var(--ink)">Try it:</b> run the FitFlow request, open the receipt and "How NextMove checked it". On the Agent tab every task shows its planner, tools, calculations and evidence. Status: <code>docs/IMPLEMENTATION-STATUS.md</code></div>
   <div class="phone" style="position: absolute; left: 1360px; top: 130px; width: 400px;"><img src="img/fitflow-41-receipt-more.jpg" alt="How NextMove checked it"></div>
-  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>7</span></div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">Fictional demo bank, synthetic data</span><span>7</span></div>
 </section>
 
 <!-- 8. Architecture -->
@@ -295,74 +321,84 @@
 
     <div class="log"><i></i>Evidence log <span>· every step stored with its evidence level · SQLite per tenant · loopback only (127.0.0.1)</span></div>
   </div>
-  <div class="foot"><span>App on :3210, simulated merchant on :3211. No API key needed.</span><span>8</span></div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">App on :3210, simulated merchant on :3211. No API key needed.</span><span>8</span></div>
 </section>
 
 <!-- 9. Setup -->
 <section class="slide">
-  <div class="kicker"><i></i>Setup and reproducibility</div>
-  <h1>Running in a few minutes.</h1>
+  <div class="kicker"><i></i>Setup, limits and next step</div>
+  <h1>Run it. Then the limits.</h1>
   <div class="term">
     <div><span class="c"># Node 24 or later</span></div>
     <div><span class="p">$</span> npm install</div>
     <div><span class="p">$</span> npx playwright install chromium</div>
     <div><span class="p">$</span> npm run demo <span class="c"># merchant, worker, app</span></div>
-    <div><span class="c"># open http://127.0.0.1:3210</span></div>
+    <div><span class="c"># open http://127.0.0.1:3210, sign in as Alex,</span></div>
+    <div><span class="c"># tick "Start a separate copy"</span></div>
     <div><span class="p">$</span> npm run typecheck</div>
     <div><span class="p">$</span> npm test</div>
     <div><span class="p">$</span> npm run test:e2e <span class="c"># stack running</span></div>
-    <div><span class="p">$</span> npm run evidence:manifest</div>
     <div><span class="p">$</span> npm run stop</div>
   </div>
   <div class="setside">
-    <div class="col-h yl">Then</div>
+    <div class="col-h">Limits</div>
+    <ul class="dots">
+      <li>Synthetic data. Simulated merchants.</li>
+      <li>No real payments, cards or sign-ins.</li>
+      <li>Loopback only. No production.</li>
+    </ul>
+    <div style="height: 40px"></div>
+    <div class="col-h yl">Next</div>
     <ul class="dots yb">
-      <li>Sign in as Alex and tick "Start a separate copy" for an isolated tenant.</li>
-      <li><code>NEXTMOVE_PLANNER</code> = auto, live or simulated.</li>
-      <li>Health: <code>/api/health</code></li>
-      <li><code>npm run reset</code> restores the demo data.</li>
+      <li>A pilot inside a partner bank, after its own legal, privacy and security review.</li>
     </ul>
   </div>
-  <div class="foot"><span>All commands from the repository README.</span><span>9</span></div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">All commands from the repository README. <code>npm run reset</code> restores the demo data.</span><span>9</span></div>
 </section>
 
 <!-- 10. Value -->
 <section class="slide">
   <div class="kicker"><i></i>Value and differentiation</div>
   <h1>What Alex gets.</h1>
-  <div class="stats" style="top: 240px">
-    <div class="stat"><div class="n">79<small>RON</small></div><div class="t">kept from one trial, before it charged<span>Next 30 days: 242 to 163 RON. Balance unchanged.</span></div></div>
-    <div class="stat"><div class="n">1<small>tap</small></div><div class="t">to approve an action that was read, calculated and explained<span>And one receipt that shows what happened.</span></div></div>
-    <div class="stat"><div class="n">2,824<small>RON</small></div><div class="t">of future charges avoided in a 200-subscription batch run (synthetic)<span>A separate scenario from the FitFlow case: 100 confirmed stops, bank funds unchanged.</span></div></div>
+  <div class="stats" style="top: 250px; width: 940px">
+    <div class="stat" style="grid-template-columns: 380px 1fr"><div class="n">79<small>RON</small></div><div class="t">kept from one trial<span>Next 30 days: 242 to 163 RON.</span></div></div>
+    <div class="stat" style="grid-template-columns: 380px 1fr"><div class="n">358.99<small>RON</small></div><div class="t">less due, one airbag tap<span>Future charges, not a refund.</span></div></div>
+    <div class="stat" style="grid-template-columns: 380px 1fr"><div class="n">2,824<small>RON</small></div><div class="t">avoided in a batch run<span>200 subscriptions, synthetic.</span></div></div>
   </div>
-  <div class="diff">
-    <div><div class="h">It acts, not just advises.</div><p>One exact action, carried out after your approval, then proved.</p></div>
-    <div><div class="h">Numbers come from code.</div><p>The model plans and explains; its sentences are checked.</p></div>
-    <div><div class="h">For people and businesses.</div><p>Built as a feature inside a bank app, with one approval model.</p></div>
+  <div class="diff" style="top: 800px; width: 940px; grid-template-columns: 1fr 1fr; gap: 44px">
+    <div><div class="h">Action, not advice.</div><p>One exact action, after your yes.</p></div>
+    <div><div class="h">Numbers from code.</div><p>The model plans and explains.</p></div>
   </div>
-  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>10</span></div>
+  <div class="whatif">
+    <div class="wi"><div class="phone"><img src="img/sim-21-term3.jpg" alt="What-if at a 3-month term: home target March 2027"></div><div class="wc">Drag the term.<span>March 2027. One month later.</span></div></div>
+    <div class="wi"><div class="phone"><img src="img/sim-22-term24.jpg" alt="What-if at a 24-month term: home target February 2027"></div><div class="wc">Drag again.<span>February holds.</span></div></div>
+  </div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">Fictional demo bank, synthetic data</span><span>10</span></div>
 </section>
 
-<!-- 11. Limits and next steps -->
+<!-- 11. What else it does -->
 <section class="slide">
-  <div class="kicker"><i></i>Limitations and next steps</div>
-  <h1>What it is, and what it is not yet.</h1>
-  <div class="cols3">
-    <div><div class="col-h">Honest limits</div><ul class="dots">
-      <li>A fictional demo bank with synthetic data.</li>
-      <li>Merchants are simulated; no real merchant is contacted.</li>
-      <li>No real payments, cards or sign-ins.</li>
-      <li>Runs on loopback only; no production deployment.</li>
-      <li>The merchant does not yet apply accepted offer prices on its side.</li>
-      <li>No dark mode.</li>
-    </ul></div>
-    <div><div class="col-h yl">Next step</div><ul class="dots yb">
-      <li>A pilot as a feature inside a partner bank's app.</li>
-      <li>Only after that bank's own legal, privacy, security and integration review.</li>
-      <li>Real merchants only through supported, verified workflows.</li>
-    </ul></div>
+  <div class="kicker"><i></i>What else it does</div>
+  <h1>One approval model. Many jobs.</h1>
+  <div class="airbag">
+    <div class="phone"><img src="img/airbag-03-numbers.jpg" alt="Financial Airbag: 2,036.99 to 1,678.00 RON scheduled"></div>
+    <div>
+      <div class="lab">Lead feature</div>
+      <div class="ah">Financial Airbag</div>
+      <p>Money tight? One tap prepares a pause or stop for every optional service. You approve the exact list.</p>
+      <div class="big">358.99 <small>RON less due in 30 days</small></div>
+      <p class="sm">Essential bills stay protected. Future charges, not a refund.</p>
+    </div>
   </div>
-  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>11</span></div>
+  <div class="more">
+    <div class="mi"><b>Trial Shield</b>Holds the first charge.</div>
+    <div class="mi"><b>Route to your home</b>An arrival date. The roadblocks.</div>
+    <div class="mi"><b>Bill vault · Overdraft shield</b>Bill money set aside. Every bill checked before payday.</div>
+    <div class="mi"><b>Hidden-loss detectors</b>Unused perks, FX markup, overlapping cover.</div>
+    <div class="mi"><b>Simple mode</b>Bigger text. Clear steps.</div>
+    <div class="mi"><b>Save what you kept</b>5% demo-rate savings, or simulated bonds.</div>
+  </div>
+  <div class="foot"><span class="fl"><img src="img/nextmove-logo.svg" alt="NextMove">Fictional demo bank, synthetic data. Rates are demo values, not offers.</span><span>11</span></div>
 </section>
 
 <!-- 12. Team -->
@@ -370,10 +406,11 @@
   <div class="kicker" style="color:#a3a39b"><i></i>Team</div>
   <div class="team">
     <div class="n">Mr Laziz</div>
-    <div class="m">Teo · Retr0 · Cosman</div>
+    <div class="m">Teo · Eduard · Cosmin</div>
   </div>
-  <div class="t-tag" style="top: 640px">Prepared by the agent. <span>Approved by you.</span></div>
-  <div class="t-meta" style="top: 820px">Built for the Raiffeisen Bank challenge at NEXXT 2026<br>NextMove is a fictional demo bank. All customers, accounts, merchants and money shown are synthetic.</div>
+  <div class="t-tag" style="top: 640px">Stop the leaks. <span>Grow the rest.</span></div>
+  <div class="t-meta" style="top: 820px">Built for the Raiffeisen Bank challenge at NEXXT 2026<br>Fictional demo bank. Synthetic data.</div>
+  <img class="end-logo" src="img/nextmove-logo-reversed.svg" alt="NextMove">
 </section>
 
 </body>

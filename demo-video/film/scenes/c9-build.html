@@ -1,0 +1,75 @@
+<template>
+  <style>
+/*@CSS*/
+    #c9-flow { position: absolute; left: 120px; right: 120px; top: 380px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 34px 40px; }
+    #c9-flow .n { position: relative; height: 150px; border-radius: 28px; background: #ffffff; border: 2px solid #e4e5df; display: flex; align-items: center; padding: 0 34px; font-size: 44px; font-weight: 660; letter-spacing: -0.025em; line-height: 1.05; }
+    #c9-flow .n b { position: absolute; left: 34px; top: 18px; font-size: 22px; font-weight: 600; color: #a3a39b; letter-spacing: 0; }
+    #c9-flow .n.y { border-color: #151515; }
+    #c9-flow .n.y::after { content: ""; position: absolute; right: 24px; top: 22px; width: 16px; height: 16px; border-radius: 50%; background: #fee600; box-shadow: 0 0 0 1.5px #151515 inset; }
+    #c9-t { position: absolute; left: 120px; top: 190px; }
+    #c9-f { position: absolute; left: 120px; top: 820px; }
+    #c9-nums { position: absolute; inset: 0; display: grid; grid-template-columns: 1.15fr 1fr 1fr; align-items: center; padding: 0 120px; gap: 40px; }
+    #c9-nums .h0 { font-size: 220px; }
+    #c9-nums .lab { font-size: 40px; font-weight: 600; letter-spacing: -0.015em; color: #60605a; margin-top: 8px; line-height: 1.15; }
+  </style>
+  <div id="root" data-composition-id="c9" data-width="1920" data-height="1080">
+    <div class="shot" id="c9-a">
+      <div class="h2 k" id="c9-t">How it’s built.</div>
+      <div id="c9-flow">
+        <div class="n k"><b>1</b>App</div>
+        <div class="n k"><b>2</b>Agent</div>
+        <div class="n k"><b>3</b>Read-only tools</div>
+        <div class="n y k"><b>4</b>Exact approval</div>
+        <div class="n k"><b>5</b>Durable worker</div>
+        <div class="n y k"><b>6</b>One-shot gate</div>
+        <div class="n k"><b>7</b>Merchant</div>
+        <div class="n y k"><b>8</b>Receipt, read back</div>
+      </div>
+      <div class="h3 k" id="c9-f">Live model. <span class="mute">Labelled fallback.</span></div>
+    </div>
+
+    <div class="shot" id="c9-b"><div id="c9-nums">
+      <div><div class="h0"><span class="count" id="c9-n1"></span></div><div class="lab k" id="c9-l1">automated tests</div></div>
+      <div><div class="h0"><span class="count" id="c9-n2"></span></div><div class="lab k" id="c9-l2">extension checks</div></div>
+      <div><div class="h0"><span class="count" id="c9-n3"></span></div><div class="lab k" id="c9-l3">phone end-to-end scenarios</div></div>
+    </div></div>
+
+    <div class="shot ink" id="c9-c"><div class="center">
+      <div class="h2 k" id="c9-c1">Synthetic data.</div>
+      <div class="h2 k" id="c9-c2">Simulated merchants.</div>
+      <div class="h2 k" id="c9-c3">No production.</div>
+    </div></div>
+
+    <div class="shot" id="c9-d"><div class="center">
+      <div class="h3 mute k" id="c9-d1">Next</div>
+      <div class="h1 k" id="c9-d2">A pilot inside</div>
+      <div class="h1 k" id="c9-d3"><span class="mark">a partner bank.</span></div>
+    </div></div>
+  </div>
+  <script>
+/*@JS*/
+    // 150.0: the music's breakdown. One node per beat.
+    shot("#c9-a", 0, b(16));
+    pop("#c9-t", 0);
+    snap("#c9-flow .n", b(2), { st: B });
+    pop("#c9-f", b(11));
+    // 157.5: the lift. Count-ups.
+    shot("#c9-b", b(16), b(28));
+    counter("c9-n1", 0, 681, b(16), b(3));
+    pop("#c9-l1", b(16), { y: 12 });
+    counter("c9-n2", 0, 310, b(18), b(3));
+    pop("#c9-l2", b(18), { y: 12 });
+    counter("c9-n3", 0, 28, b(20), b(3));
+    pop("#c9-l3", b(20), { y: 12 });
+    // Limits, plainly.
+    shot("#c9-c", b(28), b(36));
+    pop("#c9-c1", b(28));
+    pop("#c9-c2", b(30));
+    pop("#c9-c3", b(32));
+    shot("#c9-d", b(36), b(44));
+    pop("#c9-d1", b(36), { y: 12 });
+    pop("#c9-d2", b(37));
+    pop("#c9-d3", b(39));
+    window.__timelines["c9"] = tl;
+  </script>
+</template>

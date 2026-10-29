@@ -1,0 +1,83 @@
+<template>
+  <style>
+/*@CSS*/
+    .q { font-size: 150px; font-weight: 700; letter-spacing: -0.05em; line-height: 1; }
+    .q .qm { color: #a3a39b; }
+    #root .left { width: 760px; }
+  </style>
+  <div id="root" data-composition-id="c4" data-width="1920" data-height="1080">
+    <div class="shot ink" id="c4-a"><div class="center"><div class="h1" id="c4-a1">Off script?</div></div></div>
+
+    <div class="shot" id="c4-q1"><div class="center"><div class="q" id="c4-q1t"><span class="qm">“</span>Cancel everything.<span class="qm">”</span></div><div class="sub gap k" id="c4-q1s">Recorded in the app · synthetic data</div></div></div>
+
+    <div class="shot" id="c4-chips">
+      <div class="left"><div class="h2 k" id="c4-c1">It asks.</div><div class="h2 mute k" id="c4-c2">One at a time.</div></div>
+      <div class="ph" id="c4-ph1"><div class="scr"><img src="assets/media/v2/edge-chips.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot" id="c4-plan">
+      <div class="left"><div class="h2 k" id="c4-p1">Model too fast?</div><div class="h2 mute k" id="c4-p2">It reads first.</div></div>
+      <div class="ph" id="c4-ph2"><div class="scr"><img src="assets/media/v2/edge-planner.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot" id="c4-q2"><div class="center"><div class="q" id="c4-q2t"><span class="qm">“</span>Don’t cancel anything.<span class="qm">”</span></div></div></div>
+
+    <div class="shot" id="c4-neg">
+      <div class="left"><div class="h2 k" id="c4-n1">No false “done”.</div><div class="sub gap k" id="c4-n2">A claim the records don’t back is withheld.</div></div>
+      <div class="ph" id="c4-ph3"><div class="scr"><img src="assets/media/v2/negate.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot" id="c4-mer">
+      <div class="left"><div class="h2 k" id="c4-m1">Merchant text is data.</div><div class="h2 mute k" id="c4-m2">Never instructions.</div></div>
+      <div class="ph" id="c4-ph4"><div class="scr"><img src="assets/media/v2/offer-signed.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot" id="c4-tam">
+      <div class="left"><div class="h2 k" id="c4-t1">Tampered offer?</div><div class="h2 k" id="c4-t2"><span class="mark">Refused.</span></div></div>
+      <div class="ph" id="c4-ph5"><div class="scr"><img src="assets/media/v2/offer-tampered.png" alt="" /></div></div>
+    </div>
+
+    <div class="shot ink" id="c4-z"><div class="center"><div class="h2" id="c4-z1">Nothing moves</div><div class="h2" id="c4-z2">without your yes.</div></div></div>
+  </div>
+  <script>
+/*@JS*/
+    // 67.5 Off script? (ink, one bar)
+    shot("#c4-a", 0, b(4));
+    snap("#c4-a1", 0);
+    shot("#c4-q1", b(4), b(8));
+    pop("#c4-q1t", b(4));
+    pop("#c4-q1s", b(5), { y: 12 });
+    // chips: zoom in on the question NextMove asks back
+    shot("#c4-chips", b(8), b(14));
+    pop("#c4-c1", b(8));
+    pop("#c4-c2", b(10));
+    move("#c4-ph1", b(8), b(6), cam(1.45, 195, 520, 1400, 560), cam(1.75, 195, 545, 1400, 540), "power1.out");
+    // planner row: the model answered before reading; NextMove read first
+    shot("#c4-plan", b(14), b(20));
+    pop("#c4-p1", b(14));
+    pop("#c4-p2", b(16));
+    move("#c4-ph2", b(14), b(6), cam(2.0, 195, 520, 1400, 540), cam(2.25, 195, 520, 1400, 540), "power1.out");
+    // Don't cancel anything.
+    shot("#c4-q2", b(20), b(24));
+    pop("#c4-q2t", b(20));
+    shot("#c4-neg", b(24), b(30));
+    pop("#c4-n1", b(24));
+    pop("#c4-n2", b(26), { y: 16 });
+    move("#c4-ph3", b(24), b(6), cam(1.7, 195, 440, 1400, 540), cam(1.95, 195, 445, 1400, 540), "power1.out");
+    // merchant message quoted as data
+    shot("#c4-mer", b(30), b(36));
+    pop("#c4-m1", b(30));
+    pop("#c4-m2", b(32));
+    move("#c4-ph4", b(30), b(6), cam(1.5, 195, 230, 1400, 540), cam(1.5, 195, 380, 1400, 540), "power2.inOut");
+    // tampered offer refused
+    shot("#c4-tam", b(36), b(42));
+    pop("#c4-t1", b(36));
+    snap("#c4-t2", b(38));
+    move("#c4-ph5", b(36), b(6), cam(1.55, 195, 520, 1400, 540), cam(1.8, 195, 530, 1400, 540), "power1.out");
+    // Nothing moves without your yes.
+    shot("#c4-z", b(42), b(48));
+    pop("#c4-z1", b(42));
+    pop("#c4-z2", b(44));
+    window.__timelines["c4"] = tl;
+  </script>
+</template>
