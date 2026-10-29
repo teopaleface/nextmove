@@ -1,0 +1,558 @@
+{
+  "generatedAt": "2026-10-29T00:51:40.312Z",
+  "run": {
+    "startedAt": "2026-10-29T00:44:29.494Z",
+    "durationMs": 142211,
+    "passed": 26,
+    "failed": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "build": {
+    "commit": "45747f5",
+    "branch": "feat/extensions",
+    "dirty": false
+  },
+  "scenarios": [
+    {
+      "file": "tests/e2e/01-navigation.spec.ts",
+      "line": 3,
+      "title": "navigation: tabs, detail screens, alerts, profile and contexts @layout",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 4739,
+      "features": [
+        "0.0s Sign in as a separate copy of Alex",
+        "0.3s Home: funds, accounts, everyday actions, coming up",
+        "0.7s Upcoming payments and a subscription",
+        "1.3s Account and card",
+        "1.5s Activity: transactions, agent outcomes, refunds, subscriptions",
+        "2.2s Goals and a goal plan",
+        "2.4s Agent: ask, tools, everything NextMove can help with, planned items",
+        "2.8s Alerts, monitoring and permissions",
+        "3.0s Profile: contexts, features, Labs controls",
+        "3.1s Switch demo customer to Laziz (business and household)",
+        "4.2s Household context"
+      ],
+      "captures": [
+        "home",
+        "subscription",
+        "refund-tracker",
+        "agent",
+        "business-home"
+      ],
+      "recording": "recordings/01-navigation--navigation-tabs-detail-screens-alerts-profile-and-contexts-l--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/01-navigation.spec.ts:3 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/01-navigation.spec.ts",
+      "line": 3,
+      "title": "navigation: tabs, detail screens, alerts, profile and contexts @layout",
+      "project": "phone-360",
+      "status": "passed",
+      "durationMs": 4202,
+      "features": [
+        "0.0s Sign in as a separate copy of Alex",
+        "0.3s Home: funds, accounts, everyday actions, coming up",
+        "0.7s Upcoming payments and a subscription",
+        "1.2s Account and card",
+        "1.4s Activity: transactions, agent outcomes, refunds, subscriptions",
+        "2.0s Goals and a goal plan",
+        "2.2s Agent: ask, tools, everything NextMove can help with, planned items",
+        "2.6s Alerts, monitoring and permissions",
+        "2.7s Profile: contexts, features, Labs controls",
+        "2.8s Switch demo customer to Laziz (business and household)",
+        "3.7s Household context"
+      ],
+      "captures": [
+        "home",
+        "subscription",
+        "refund-tracker",
+        "agent",
+        "business-home"
+      ],
+      "recording": "recordings/01-navigation--navigation-tabs-detail-screens-alerts-profile-and-contexts-l--phone-360.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/01-navigation.spec.ts:3 --project=phone-360"
+    },
+    {
+      "file": "tests/e2e/01-navigation.spec.ts",
+      "line": 3,
+      "title": "navigation: tabs, detail screens, alerts, profile and contexts @layout",
+      "project": "phone-430",
+      "status": "passed",
+      "durationMs": 4251,
+      "features": [
+        "0.0s Sign in as a separate copy of Alex",
+        "0.3s Home: funds, accounts, everyday actions, coming up",
+        "0.7s Upcoming payments and a subscription",
+        "1.2s Account and card",
+        "1.4s Activity: transactions, agent outcomes, refunds, subscriptions",
+        "2.0s Goals and a goal plan",
+        "2.3s Agent: ask, tools, everything NextMove can help with, planned items",
+        "2.6s Alerts, monitoring and permissions",
+        "2.7s Profile: contexts, features, Labs controls",
+        "2.8s Switch demo customer to Laziz (business and household)",
+        "3.8s Household context"
+      ],
+      "captures": [
+        "home",
+        "subscription",
+        "refund-tracker",
+        "agent",
+        "business-home"
+      ],
+      "recording": "recordings/01-navigation--navigation-tabs-detail-screens-alerts-profile-and-contexts-l--phone-430.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/01-navigation.spec.ts:3 --project=phone-430"
+    },
+    {
+      "file": "tests/e2e/02-trial-cancel.spec.ts",
+      "line": 3,
+      "title": "T2: stop a trial on the provider's website in an isolated browser, then verify the receipt",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 3835,
+      "features": [
+        "0.4s Home suggests the trial before it charges",
+        "0.6s Deterministic comparison of the options",
+        "1.1s Exact approval: operation, route, money, consequences, window",
+        "1.4s Live task: the isolated browser works on the provider page",
+        "3.1s Receipt: independent read-back, balance unchanged",
+        "3.6s Upcoming charges updated from the confirmed receipt"
+      ],
+      "captures": [
+        "t2-options",
+        "t2-approval",
+        "t2-done",
+        "t2-receipt"
+      ],
+      "recording": "recordings/02-trial-cancel--t2-stop-a-trial-on-the-provider-s-website-in-an-isolated-bro--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/02-trial-cancel.spec.ts:3 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/03-subscriptions.spec.ts",
+      "line": 10,
+      "title": "T3: student bundle with verification, activation and two renewals stopped in order",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 4515,
+      "features": [
+        "0.6s Bundle comparison against current plans",
+        "0.9s Four dependent actions approved together",
+        "4.1s Verification first, then activation, then the old plans"
+      ],
+      "captures": [
+        "t3-approval",
+        "t3-done"
+      ],
+      "recording": "recordings/03-subscriptions--t3-student-bundle-with-verification-activation-and-two-renew--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/03-subscriptions.spec.ts:10 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/03-subscriptions.spec.ts",
+      "line": 27,
+      "title": "A1: copy CloudBox files first, then stop the duplicate storage",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 4540,
+      "features": [
+        "0.7s Duplicate storage found",
+        "2.6s The stop waits until the file copy is verified",
+        "4.3s Copy verified, then renewal stopped"
+      ],
+      "captures": [],
+      "recording": "recordings/03-subscriptions--a1-copy-cloudbox-files-first-then-stop-the-duplicate-storage--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/03-subscriptions.spec.ts:27 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/03-subscriptions.spec.ts",
+      "line": 45,
+      "title": "A3, A5, A6: annual billing, timed CinemaMax starts and a Streamly pause",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 6646,
+      "features": [
+        "0.6s A3 monthly or annual",
+        "2.6s A5 time a service around the shows you want",
+        "4.6s A6 pause instead of paying"
+      ],
+      "captures": [],
+      "recording": "recordings/03-subscriptions--a3-a5-a6-annual-billing-timed-cinemamax-starts-and-a-streaml--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/03-subscriptions.spec.ts:45 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/03-subscriptions.spec.ts",
+      "line": 66,
+      "title": "A4: a price rise, and a protected benefit that keeps a cheaper plan off the table",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 1527,
+      "features": [
+        "0.6s A4 price rise explained",
+        "0.9s Preference changed in Monitoring",
+        "1.3s The cheaper plan becomes available, still only with your approval"
+      ],
+      "captures": [
+        "a4-protected"
+      ],
+      "recording": "recordings/03-subscriptions--a4-a-price-rise-and-a-protected-benefit-that-keeps-a-cheaper--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/03-subscriptions.spec.ts:66 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/04-bills-banking.spec.ts",
+      "line": 3,
+      "title": "A2: right-size the phone plan after a hotspot question",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 2980,
+      "features": [
+        "0.7s A2 usage against the plan",
+        "0.9s Answer saved as a preference"
+      ],
+      "captures": [],
+      "recording": "recordings/04-bills-banking--a2-right-size-the-phone-plan-after-a-hotspot-question--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/04-bills-banking.spec.ts:3 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/04-bills-banking.spec.ts",
+      "line": 15,
+      "title": "Pay a known bill and freeze the card, each with exact approval",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 4234,
+      "features": [
+        "0.5s Pay a bill NextMove knows about",
+        "1.3s Ledger posting: balance down by exactly 65.00 RON",
+        "1.3s Freeze the card",
+        "4.1s Card frozen; unfreeze is offered"
+      ],
+      "captures": [
+        "pay-approval",
+        "card-frozen"
+      ],
+      "recording": "recordings/04-bills-banking--pay-a-known-bill-and-freeze-the-card-each-with-exact-approva--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/04-bills-banking.spec.ts:15 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/04-bills-banking.spec.ts",
+      "line": 46,
+      "title": "A11: move a household bill's date so it does not fail before the owner transfer",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 2989,
+      "features": [
+        "0.9s A11 dated cash forecast",
+        "2.8s Bill moved to the 5th"
+      ],
+      "captures": [],
+      "recording": "recordings/04-bills-banking--a11-move-a-household-bill-s-date-so-it-does-not-fail-before---phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/04-bills-banking.spec.ts:46 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/05-live-model.spec.ts",
+      "line": 8,
+      "title": "T1: the live model reads a Screen Time image; you confirm; NextMove matches it to subscriptions",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 8734,
+      "features": [
+        "0.4s Evidence: synthetic samples or your own upload",
+        "0.5s Live model reading the image bytes",
+        "4.1s Each value labelled: read from the image, or check this",
+        "8.2s T1 result: phone minutes against what each subscription costs"
+      ],
+      "captures": [
+        "t1-read",
+        "t1-matched"
+      ],
+      "recording": "recordings/05-live-model--t1-the-live-model-reads-a-screen-time-image-you-confirm-next--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/05-live-model.spec.ts:8 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/05-live-model.spec.ts",
+      "line": 29,
+      "title": "Image instructions are data: a hostile invoice cannot create a payment",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 4863,
+      "features": [
+        "0.4s Live model reading an invoice that contains instructions",
+        "4.6s Instructions flagged and ignored; nothing paid or approved"
+      ],
+      "captures": [
+        "invoice-injection"
+      ],
+      "recording": "recordings/05-live-model--image-instructions-are-data-a-hostile-invoice-cannot-create---phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/05-live-model.spec.ts:29 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/05-live-model.spec.ts",
+      "line": 45,
+      "title": "Student ID read by the live model unlocks bundle verification",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 7001,
+      "features": [
+        "0.4s Live model reading a synthetic student ID",
+        "6.9s T3 verification available from the confirmed fact"
+      ],
+      "captures": [],
+      "recording": "recordings/05-live-model--student-id-read-by-the-live-model-unlocks-bundle-verificatio--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/05-live-model.spec.ts:45 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/05-live-model.spec.ts",
+      "line": 58,
+      "title": "Agent: a question answered by the planner, with the planner disclosed",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 13441,
+      "features": [
+        "0.4s Ask in your own words",
+        "0.5s Planner chooses typed tools; code does the money",
+        "13.2s Answered by the live model"
+      ],
+      "captures": [
+        "agent-answer"
+      ],
+      "recording": "recordings/05-live-model--agent-a-question-answered-by-the-planner-with-the-planner-di--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/05-live-model.spec.ts:58 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/06-money-back.spec.ts",
+      "line": 3,
+      "title": "A7: an accepted refund is not money until the bank credit posts, once",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 3035,
+      "features": [
+        "0.5s Refund tracker: accepted, not credited",
+        "1.4s Follow-up sent to StudioMart",
+        "1.6s Labs: StudioMart pays; the bank credit arrives as a separate event",
+        "2.9s Credited once: +249.00 RON"
+      ],
+      "captures": [
+        "a7-waiting",
+        "a7-credited"
+      ],
+      "recording": "recordings/06-money-back--a7-an-accepted-refund-is-not-money-until-the-bank-credit-pos--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/06-money-back.spec.ts:3 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/06-money-back.spec.ts",
+      "line": 31,
+      "title": "A8 and A9: duplicate-charge check and a price-protection claim",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 3035,
+      "features": [
+        "0.4s A8 tells a card hold apart from two settled payments",
+        "2.3s Claim submitted to TechBits",
+        "2.4s A9 price protection window",
+        "2.9s Request tracked as a recovery"
+      ],
+      "captures": [],
+      "recording": "recordings/06-money-back--a8-and-a9-duplicate-charge-check-and-a-price-protection-clai--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/06-money-back.spec.ts:31 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/07-goals-purchases.spec.ts",
+      "line": 3,
+      "title": "O1 and A10: home goal with and without the phone, true cost, saved plan",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 1168,
+      "features": [
+        "0.5s O1 dated home readiness with each phone",
+        "0.8s Assumption changed; dates recalculated",
+        "1.0s Saved decision with its input revision",
+        "1.0s A10 two-year cost of each phone"
+      ],
+      "captures": [
+        "o1"
+      ],
+      "recording": "recordings/07-goals-purchases--o1-and-a10-home-goal-with-and-without-the-phone-true-cost-sa--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/07-goals-purchases.spec.ts:3 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/07-goals-purchases.spec.ts",
+      "line": 22,
+      "title": "A12 and A14: use expiring credit, verify a card benefit, buy the eSIM",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 5896,
+      "features": [
+        "0.4s A12 credit before it expires",
+        "2.3s A14 trip costs: data, cards, currency",
+        "2.4s Card credit verified from the bank record"
+      ],
+      "captures": [],
+      "recording": "recordings/07-goals-purchases--a12-and-a14-use-expiring-credit-verify-a-card-benefit-buy-th--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/07-goals-purchases.spec.ts:22 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/08-business.spec.ts",
+      "line": 3,
+      "title": "Business: order conditions, stock order, owner pay, receivables, funding packet, unused seats",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 8057,
+      "features": [
+        "0.4s O1 the 40,000 RON order: conditions to keep the reserve",
+        "0.8s O2 compare suppliers and order",
+        "2.7s O3 owner pay before household bills",
+        "4.7s O4 receivables and a reminder",
+        "6.8s O5 two fictional funding offers compared",
+        "7.3s Funding packet prepared, never sent",
+        "7.4s A13 unused software seats"
+      ],
+      "captures": [
+        "o1-business",
+        "funding-packet"
+      ],
+      "recording": "recordings/08-business--business-order-conditions-stock-order-owner-pay-receivables---phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/08-business.spec.ts:3 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/09-batch.spec.ts",
+      "line": 23,
+      "title": "200 recurring payments: inspect, approve an exact list, read back every outcome, resolve exceptions",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 20676,
+      "features": [
+        "0.3s Batch review: 200 recurring payments",
+        "2.3s Inspection finished: 120 ready, 80 left out with reasons",
+        "2.7s Approved 120 exact actions; workers run with bounded concurrency",
+        "4.4s Phone reload mid-run: progress comes back from the server",
+        "9.4s Outcomes 100 / 8 / 5 / 4 / 3; 2,824.00 RON avoided; funds unchanged",
+        "9.5s CSV export, formula-safe",
+        "10.1s Lost responses reconciled by read-back after the provider's 6 hour lag; never resent",
+        "10.6s Manual reviews finished after 48 hours",
+        "10.7s Changed terms: a fresh review with the new price; the old approval is not reused",
+        "14.6s Sign-in needed: you sign in on the provider page, then approve again",
+        "20.6s All exceptions resolved; balance still unchanged"
+      ],
+      "captures": [
+        "batch-review",
+        "batch-running",
+        "batch-results",
+        "batch-terms",
+        "batch-followups"
+      ],
+      "recording": "recordings/09-batch--200-recurring-payments-inspect-approve-an-exact-list-read-ba--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/09-batch.spec.ts:23 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/09-batch.spec.ts",
+      "line": 96,
+      "title": "Stop during a batch: nothing new starts; requests already sent may finish",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 3029,
+      "features": [
+        "2.4s Stop pressed while the batch runs",
+        "2.9s Stopped: 116 not started, 4 already sent and confirmed"
+      ],
+      "captures": [
+        "batch-stopped"
+      ],
+      "recording": "recordings/09-batch--stop-during-a-batch-nothing-new-starts-requests-already-sent--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/09-batch.spec.ts:96 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/09-batch.spec.ts",
+      "line": 117,
+      "title": "Worker process killed mid-batch: the supervisor restarts it and leases recover without duplicates",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 8931,
+      "features": [
+        "3.3s Worker 70718 killed with SIGKILL mid-run",
+        "3.3s Supervisor restarted the worker",
+        "8.8s After restart: 100 confirmed, one receipt each, funds unchanged"
+      ],
+      "captures": [],
+      "recording": "recordings/09-batch--worker-process-killed-mid-batch-the-supervisor-restarts-it-a--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/09-batch.spec.ts:117 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/10-security-terms.spec.ts",
+      "line": 3,
+      "title": "Isolation: another session cannot open this session's action, receipt or proposal",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 3385,
+      "features": [
+        "2.2s Session A owns an action, a receipt and a proposal",
+        "2.8s Session B (another copy) gets Not found for all of them"
+      ],
+      "captures": [
+        "isolation-denied",
+        "isolation-owner"
+      ],
+      "recording": "recordings/10-security-terms--isolation-another-session-cannot-open-this-session-s-action---phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/10-security-terms.spec.ts:3 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/10-security-terms.spec.ts",
+      "line": 32,
+      "title": "Forged, cross-site, replayed and wrong-context approvals are refused",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 2979,
+      "features": [
+        "0.3s A proposal for the business context",
+        "0.4s Forged digest 409, missing CSRF 403, cross-site 403",
+        "0.7s Wrong context: the sheet shows whose it is and approval is refused",
+        "2.8s Replay returns the same approval; one receipt, one change"
+      ],
+      "captures": [],
+      "recording": "recordings/10-security-terms--forged-cross-site-replayed-and-wrong-context-approvals-are-r--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/10-security-terms.spec.ts:32 --project=phone-390"
+    },
+    {
+      "file": "tests/e2e/10-security-terms.spec.ts",
+      "line": 64,
+      "title": "Changed terms before approval: nothing is sent and the plan asks for a fresh check",
+      "project": "phone-390",
+      "status": "passed",
+      "durationMs": 2135,
+      "features": [
+        "0.6s Approval sheet open for the student bundle",
+        "0.6s Labs: the provider removes offline playback from the offer (new terms revision)",
+        "1.9s Refused before any request: no attempt exists; Review updated plan"
+      ],
+      "captures": [
+        "terms-changed"
+      ],
+      "recording": "recordings/10-security-terms--changed-terms-before-approval-nothing-is-sent-and-the-plan-a--phone-390.webm",
+      "error": null,
+      "reproduce": "npx playwright test tests/e2e/10-security-terms.spec.ts:64 --project=phone-390"
+    }
+  ]
+}
