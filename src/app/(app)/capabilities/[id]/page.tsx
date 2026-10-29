@@ -94,6 +94,16 @@ export default function CapabilityPage({ params, searchParams }: { params: Promi
       {data.inputs?.length ? (
         <Section title={cap === "O9" ? "Choose what can wait" : "Assumptions you can change"} id="assumptions">
           {cap === "O9" ? <p className="small muted">Essential bills, storage and student tools stay protected. Choose a service change, then review its exact terms before anything is sent.</p> : null}
+          {cap === "O9" && airbagAll(data.inputs) ? (
+            <div className="actions" style={{ marginTop: 0, marginBottom: 12 }}>
+              <button type="button" className="btn primary block" onClick={() => apply(airbagAll(data.inputs)!)} disabled={recalc.busy}>
+                Deploy the airbag
+              </button>
+              <p className="caption" style={{ margin: 0, textAlign: "center" }}>
+                One tap picks a pause or renewal-off for every optional service. Nothing is sent until you approve.
+              </p>
+            </div>
+          ) : null}
           <InputsForm key={JSON.stringify(data.inputs.map((f: any) => [f.key, f.value]))} fields={data.inputs} onApply={apply} busy={recalc.busy} />
           <ErrorBox error={recalc.error} />
           {cap === "O1" ? (
@@ -174,4 +184,18 @@ export default function CapabilityPage({ params, searchParams }: { params: Promi
       </details>
     </>
   );
+}
+
+// The airbag's one tap: every optional service gets its provider pause, or renewal-off where no pause exists. These are
+// only form inputs; the server recalculates and the customer still approves the exact list.
+function airbagAll(fields: any[]): Record<string, unknown> | null {
+  const values = Object.fromEntries(fields.map((f) => [f.key, f.value]));
+  let changed = false;
+  for (const f of fields) {
+    if (!f.key.startsWith("airbag_") || f.type !== "select") continue;
+    const opts = (f.options ?? []).map((o: any) => o.value);
+    const pick = opts.includes("pause") ? "pause" : opts.includes("stop") ? "stop" : null;
+    if (pick && f.value === "keep") (values[f.key] = pick), (changed = true);
+  }
+  return changed ? values : null;
 }
