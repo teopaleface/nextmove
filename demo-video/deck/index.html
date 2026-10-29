@@ -41,9 +41,9 @@
   .nw { white-space: nowrap; }
 
   /* Phone frame around app stills, scaled by --w */
-  .phone { --w: 400px; position: absolute; width: var(--w); padding: calc(var(--w) * 0.028); border-radius: calc(var(--w) * 0.12); background: var(--ink); box-shadow: 0 40px 80px -30px rgba(21, 21, 21, 0.45); }
+  .phone { --w: 400px; position: absolute; width: var(--w); padding: calc(var(--w) * 0.028); border-radius: calc(var(--w) * 0.12); background: var(--ink); }
   .phone img { display: block; width: 100%; border-radius: calc(var(--w) * 0.095); }
-  .ink .phone { box-shadow: 0 0 0 2px #3c3c38, 0 40px 90px -30px rgba(0, 0, 0, 0.8); }
+  .ink .phone { outline: 2px solid #3c3c38; }
   .phone.flow { position: relative; }
   .cap { font-size: 28px; line-height: 1.25; font-weight: 500; color: var(--muted); letter-spacing: -0.01em; }
   .cap b { display: block; font-size: 36px; line-height: 1.1; color: var(--ink); letter-spacing: -0.03em; margin-bottom: 6px; }
@@ -91,7 +91,8 @@
   .feats { position: absolute; left: 140px; top: 290px; width: 1640px; display: grid; grid-template-columns: repeat(6, 238px); justify-content: space-between; }
   .feats .phone { --w: 238px; }
   .feats .cap { margin-top: 30px; }
-  .feats .cap b { font-size: 32px; }
+  .feats .cap { font-size: 26px; }
+  .feats .cap b { font-size: 29px; }
 
   /* 9 Agent numbers */
   .nums { position: absolute; left: 140px; top: 520px; display: grid; grid-template-columns: repeat(3, 360px); gap: 0; }
@@ -107,8 +108,8 @@
   /* 11 Off script */
   .odd { position: absolute; left: 140px; top: 270px; width: 1640px; display: grid; grid-template-columns: repeat(4, 360px); justify-content: space-between; }
   .odd .phone { --w: 250px; position: relative; }
-  .odd .q { margin-top: 34px; font-size: 40px; line-height: 1.08; font-weight: 720; letter-spacing: -0.035em; }
-  .odd .lab { margin-top: 12px; }
+  .odd .q { margin-top: 34px; font-size: 36px; line-height: 1.08; font-weight: 720; letter-spacing: -0.035em; }
+  .odd .lab { margin-top: 12px; font-size: 28px; }
 
   /* 12 Batch */
   .bar { position: absolute; left: 140px; top: 640px; width: 1640px; height: 64px; display: flex; gap: 6px; }
@@ -227,10 +228,10 @@
   <div style="position: absolute; left: 140px; top: 630px; width: 820px;">
     <div style="font-size: 44px; font-weight: 720; letter-spacing: -0.035em; margin-bottom: 16px;">Then grow the rest.</div>
     <div class="pair"><div class="n">82.95<small>RON</small></div><div class="lab">Savings, 5% demo rate</div></div>
-    <div class="pair"><div class="n">83.74<small>RON</small></div><div class="lab">Simulated government bonds, 6%</div></div>
+    <div class="pair"><div class="n">83.74<small>RON</small></div><div class="lab">Simulated bonds, 6%</div></div>
   </div>
-  <div class="phone" style="--w: 360px; left: 1000px; top: 170px;"><img src="img/fitflow-40-receipt.jpg" alt="Receipt NF-1047"></div>
-  <div class="phone" style="--w: 360px; left: 1420px; top: 250px;"><img src="img/grow-picked.jpg" alt="Put the 79 RON to work"></div>
+  <div class="phone" style="--w: 340px; left: 1040px; top: 170px;"><img src="img/fitflow-40-receipt.jpg" alt="Receipt NF-1047"></div>
+  <div class="phone" style="--w: 340px; left: 1440px; top: 250px;"><img src="img/grow-picked.jpg" alt="Put the 79 RON to work"></div>
   <div class="foot">Fictional demo bank, synthetic data. After 12 months; demo and simulated values, not offers.</div>
 </section>
 
@@ -238,7 +239,7 @@
 <section class="slide ink">
   <div class="k"><i></i>Lead feature</div><div class="pn">6</div>
   <div class="h" style="top: 140px; font-size: 120px;">Financial<br>Airbag.</div>
-  <div class="sub" style="position: absolute; left: 140px; top: 400px; width: 640px; font-size: 36px;">One tap prepares a pause or renewal&#8209;off for every optional service.</div>
+  <div class="sub" style="position: absolute; left: 140px; top: 400px; width: 620px; font-size: 36px;">One tap prepares a pause<br>or renewal-off for every<br>optional service.</div>
   <div style="position: absolute; left: 140px; top: 600px;">
     <div style="font-size: 150px; line-height: 0.9; font-weight: 760; letter-spacing: -0.06em;" class="yt">358.99</div>
     <div style="margin-top: 18px; font-size: 40px; font-weight: 680; letter-spacing: -0.03em;">RON less due in 30 days</div>
@@ -256,7 +257,7 @@
 <!-- 7. What-if -->
 <section class="slide">
   <div class="k"><i></i>Plan before you spend</div><div class="pn">7</div>
-  <div class="h" style="font-size: 92px; width: 1000px; line-height: 1.04;">Can I buy a 6,000 RON phone and still reach my home goal?</div>
+  <div class="h" style="font-size: 84px; width: 900px; line-height: 1.04;">Can I buy a 6,000 RON phone and still reach my home goal?</div>
   <div style="position: absolute; left: 140px; top: 580px; width: 940px;">
     <div style="font-size: 64px; font-weight: 730; letter-spacing: -0.045em; line-height: 1.1;">Drag the term.<br>February or March 2027.</div>
     <div style="margin-top: 36px; font-size: 44px; font-weight: 700; letter-spacing: -0.03em;"><span class="mk">A what-if. Nothing moves.</span></div>
