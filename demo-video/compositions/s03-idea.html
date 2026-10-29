@@ -1,0 +1,41 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+    #s03-lockup { position: absolute; left: 0; right: 0; top: 212px; display: flex; justify-content: center; align-items: center; gap: 40px; }
+    #s03-mark { width: 148px; height: 148px; border-radius: 37px; background: #fee600; display: grid; place-items: center; }
+    #s03-word { font-size: 136px; font-weight: 700; letter-spacing: -0.05em; line-height: 1; }
+    #s03-tag { position: absolute; left: 0; right: 0; top: 432px; text-align: center; font-size: 40px; font-weight: 460; color: #60605a; letter-spacing: -0.015em; }
+    #s03-verbs { position: absolute; left: 0; right: 0; top: 590px; display: flex; justify-content: center; gap: 44px; font-size: 88px; font-weight: 660; letter-spacing: -0.042em; line-height: 1.05; }
+    #s03-you { position: absolute; left: 0; right: 0; top: 724px; display: flex; justify-content: center; }
+    #s03-you-t { position: relative; font-size: 88px; font-weight: 700; letter-spacing: -0.042em; line-height: 1.05; padding: 0 10px; }
+    #s03-hl { position: absolute; left: 0; right: 0; bottom: 6px; height: 34px; background: #fee600; border-radius: 4px; transform-origin: 0 50%; }
+    #s03-you-w { position: relative; }
+    #s03-foot { position: absolute; left: 0; right: 0; top: 966px; text-align: center; font-size: 28px; font-weight: 500; color: #60605a; }
+  </style>
+  <div id="root" data-composition-id="s03" data-width="1920" data-height="1080">
+    <div id="s03-lockup">
+      <div id="s03-mark"><svg width="90" height="90" viewBox="0 0 16 16"><path d="M3 13V3h2.2l5.6 6.6V3H13v10h-2.2L5.2 6.4V13z" fill="#151515" /></svg></div>
+      <div id="s03-word">NextMove</div>
+    </div>
+    <div id="s03-tag">A mobile bank with an agent built in, for people and small businesses.</div>
+    <div id="s03-verbs"><span id="s03-v1">Reads.</span><span id="s03-v2">Calculates.</span><span id="s03-v3">Prepares.</span></div>
+    <div id="s03-you" data-hold><div id="s03-you-t"><div id="s03-hl"></div><span id="s03-you-w">You approve.</span></div></div>
+    <div id="s03-foot">A fictional demo bank. Every account, merchant and amount is synthetic.</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    tl.fromTo("#s03-mark", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 1.1, ease: "back.out(1.6)" }, 0.2);
+    tl.fromTo("#s03-word", { opacity: 0, x: -36 }, { opacity: 1, x: 0, duration: 1.2, ease: IN }, 0.6);
+    tl.fromTo("#s03-tag", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 1.1, ease: IN }, 1.5);
+    tl.fromTo("#s03-foot", { opacity: 0 }, { opacity: 1, duration: 1.0, ease: "power2.out" }, 2.0);
+    ["#s03-v1", "#s03-v2", "#s03-v3"].forEach((id, i) => {
+      tl.fromTo(id, { opacity: 0, y: 30, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.0, ease: IN }, 3.2 + i * 0.75);
+    });
+    tl.fromTo("#s03-you-w", { opacity: 0, y: 30, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.0, ease: IN }, 6.0);
+    tl.fromTo("#s03-hl", { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: "power3.inOut" }, 6.7);
+    tl.fromTo(["#s03-lockup", "#s03-tag", "#s03-verbs", "#s03-you", "#s03-foot"], { opacity: 1 }, { opacity: 0, duration: 0.6, ease: "power2.in", immediateRender: false }, 11.4);
+    window.__timelines["s03"] = tl;
+  </script>
+</template>

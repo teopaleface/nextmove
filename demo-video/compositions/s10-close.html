@@ -1,0 +1,40 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #f7f7f2; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+    #s10-bg { position: absolute; inset: 0; background: #151515; }
+    #s10-lockup { position: absolute; left: 0; right: 0; top: 300px; display: flex; justify-content: center; align-items: center; gap: 40px; }
+    #s10-mark { width: 148px; height: 148px; border-radius: 37px; background: #fee600; display: grid; place-items: center; }
+    #s10-word { font-size: 136px; font-weight: 700; letter-spacing: -0.05em; line-height: 1; }
+    #s10-tag { position: absolute; left: 0; right: 0; top: 520px; text-align: center; font-size: 64px; font-weight: 640; letter-spacing: -0.035em; line-height: 1.1; }
+    #s10-tag b { color: #fee600; font-weight: 640; }
+    #s10-credit { position: absolute; left: 0; right: 0; top: 730px; text-align: center; font-size: 34px; font-weight: 520; letter-spacing: -0.012em; color: #f7f7f2; }
+    #s10-credit span { color: #a3a39b; }
+    #s10-for { position: absolute; left: 0; right: 0; top: 800px; text-align: center; font-size: 30px; font-weight: 480; letter-spacing: -0.01em; color: #d6d6cf; }
+    #s10-disc { position: absolute; left: 0; right: 0; top: 950px; text-align: center; font-size: 28px; font-weight: 480; color: #a3a39b; letter-spacing: -0.003em; }
+  </style>
+  <div id="root" data-composition-id="s10" data-width="1920" data-height="1080">
+    <div id="s10-bg"></div>
+    <div id="s10-lockup">
+      <div id="s10-mark"><svg width="90" height="90" viewBox="0 0 16 16"><path d="M3 13V3h2.2l5.6 6.6V3H13v10h-2.2L5.2 6.4V13z" fill="#151515" /></svg></div>
+      <div id="s10-word">NextMove</div>
+    </div>
+    <div id="s10-tag">Prepared by the agent. <b>Approved by you.</b></div>
+    <div id="s10-credit" data-hold>Built by Mr Laziz <span>·</span> Teo, Retr0 and Cosman</div>
+    <div id="s10-for">Built for the Raiffeisen Bank challenge at NEXXT 2026</div>
+    <div id="s10-disc">NextMove is a fictional demo bank. All customers, accounts, merchants and money shown are synthetic.</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    tl.fromTo("#s10-bg", { opacity: 0 }, { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 0.0);
+    tl.fromTo("#s10-mark", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 1.2, ease: "back.out(1.6)" }, 0.5);
+    tl.fromTo("#s10-word", { opacity: 0, x: -36 }, { opacity: 1, x: 0, duration: 1.2, ease: IN }, 0.8);
+    tl.fromTo("#s10-tag", { opacity: 0, y: 24, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.2, ease: IN }, 1.8);
+    tl.fromTo("#s10-credit", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 1.1, ease: IN }, 3.3);
+    tl.fromTo("#s10-for", { opacity: 0 }, { opacity: 1, duration: 1.0, ease: "power2.out" }, 3.9);
+    tl.fromTo("#s10-disc", { opacity: 0 }, { opacity: 1, duration: 1.0, ease: "power2.out" }, 4.5);
+    tl.fromTo(["#s10-lockup", "#s10-tag", "#s10-credit", "#s10-for", "#s10-disc"], { opacity: 1 }, { opacity: 0, duration: 0.8, ease: "power2.inOut", immediateRender: false }, 9.1);
+    window.__timelines["s10"] = tl;
+  </script>
+</template>

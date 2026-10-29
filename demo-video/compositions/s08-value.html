@@ -1,0 +1,104 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+    .phone { position: absolute; width: 448px; height: 938px; padding: 14px; border-radius: 68px; background: #151515; box-shadow: 0 50px 90px -40px rgba(21, 21, 21, 0.45), 0 18px 40px -20px rgba(21, 21, 21, 0.25); }
+    .screen { position: relative; width: 420px; height: 910px; border-radius: 55px; overflow: hidden; background: #f7f7f2; }
+    .screen video { position: absolute; left: 0; top: 0; width: 420px; height: 910px; object-fit: cover; }
+    .title { position: absolute; left: 160px; top: 110px; font-size: 92px; line-height: 1.02; font-weight: 680; letter-spacing: -0.042em; }
+
+    /* 1. What it is worth */
+    #s08-stats { position: absolute; left: 160px; top: 300px; width: 1600px; }
+    .stat { display: grid; grid-template-columns: 560px 1fr; align-items: center; height: 168px; border-top: 1.5px solid #e4e5df; }
+    .stat:last-child { border-bottom: 1.5px solid #e4e5df; }
+    .stat .n { font-size: 104px; font-weight: 700; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .stat .n small { font-size: 44px; font-weight: 620; letter-spacing: -0.03em; margin-left: 10px; color: #60605a; }
+    .stat .d { font-size: 38px; line-height: 1.25; font-weight: 520; letter-spacing: -0.02em; }
+    .stat .d span { display: block; font-size: 30px; font-weight: 450; color: #60605a; margin-top: 6px; letter-spacing: -0.01em; }
+    #s08-foot1 { position: absolute; left: 160px; top: 856px; font-size: 28px; font-weight: 500; color: #60605a; }
+
+    /* 2. The same loop */
+    #s08-t2 { position: absolute; left: 0; right: 0; top: 58px; text-align: center; font-size: 68px; font-weight: 680; letter-spacing: -0.04em; }
+    .lab { position: absolute; top: 164px; width: 520px; text-align: center; font-size: 32px; font-weight: 560; color: #60605a; letter-spacing: -0.015em; }
+    #s08-l1 { left: 220px; } #s08-l2 { left: 700px; } #s08-l3 { left: 1180px; }
+    #s08-p1 { left: 256px; top: 168px; } #s08-p2 { left: 736px; top: 168px; } #s08-p3 { left: 1216px; top: 168px; }
+
+    /* 3. What is different */
+    #s08-cols { position: absolute; left: 160px; top: 330px; width: 1600px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 56px; }
+    .col { border-top: 6px solid #fee600; padding-top: 34px; }
+    .col .h { font-size: 52px; line-height: 1.06; font-weight: 680; letter-spacing: -0.035em; }
+    .col .b { margin-top: 24px; font-size: 32px; line-height: 1.32; font-weight: 450; color: #60605a; letter-spacing: -0.012em; }
+    #s08-foot3 { position: absolute; left: 160px; top: 852px; width: 1600px; font-size: 34px; line-height: 1.3; font-weight: 560; letter-spacing: -0.015em; }
+
+    #s08-g2, #s08-g3 { opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="s08" data-width="1920" data-height="1080">
+    <div id="s08-g1">
+      <div id="s08-t1" class="title">What Alex gets.</div>
+      <div id="s08-stats">
+        <div class="stat" id="s08-r1"><div class="n">79<small>RON</small></div><div class="d">kept from one trial, before it charged<span>Next 30 days: 242 → 163 RON. Balance unchanged.</span></div></div>
+        <div class="stat" id="s08-r2"><div class="n">1<small>tap</small></div><div class="d">to approve an action that was read, calculated and explained for him<span>And one receipt that proves what happened.</span></div></div>
+        <div class="stat" id="s08-r3"><div class="n">2,824<small>RON</small></div><div class="d">of future charges avoided in a 200-subscription batch run (synthetic)<span>A separate scenario: 100 confirmed stops, bank funds unchanged.</span></div></div>
+      </div>
+      <div id="s08-foot1">Synthetic data. The batch run is a separate 200-item scenario, not added to the FitFlow case.</div>
+    </div>
+
+    <div id="s08-g2">
+      <div id="s08-t2">The same loop, for any question with a number in it.</div>
+      <div id="s08-l1" class="lab">A big purchase</div>
+      <div id="s08-l2" class="lab">A business order</div>
+      <div id="s08-l3" class="lab">A gym he stopped using</div>
+      <div id="s08-p1" class="phone"><div class="screen">
+        <video id="s08-v1" class="clip" data-start="9.4" data-duration="11" data-media-start="0" data-track-index="1" src="assets/media/phone-a.mp4" muted playsinline></video>
+      </div></div>
+      <div id="s08-p2" class="phone"><div class="screen">
+        <video id="s08-v2" class="clip" data-start="9.4" data-duration="11" data-media-start="0" data-track-index="2" src="assets/media/order-a.mp4" muted playsinline></video>
+      </div></div>
+      <div id="s08-p3" class="phone"><div class="screen">
+        <video id="s08-v3" class="clip" data-start="9.4" data-duration="11" data-media-start="0" data-track-index="3" src="assets/media/gym-a.mp4" muted playsinline></video>
+      </div></div>
+    </div>
+
+    <div id="s08-g3">
+      <div id="s08-t3" class="title">What makes it different.</div>
+      <div id="s08-cols">
+        <div class="col" id="s08-k1"><div class="h">It acts, not just advises.</div><div class="b">It prepares one exact action, carries it out after your approval, and proves the result.</div></div>
+        <div class="col" id="s08-k2"><div class="h">Numbers come from code.</div><div class="b">The model plans and explains. Deterministic calculations own every amount, and its sentences are checked.</div></div>
+        <div class="col" id="s08-k3"><div class="h">Proof after every step.</div><div class="b">Outcomes are read back on their own, and every step carries its evidence level.</div></div>
+      </div>
+      <div id="s08-foot3">Built as a feature inside a bank app: personal and business customers, one approval model.</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    const OUT = { opacity: 0, duration: 0.6, ease: "power2.in", immediateRender: false };
+
+    // 1. Value, 0 to 9.4 s.
+    tl.fromTo("#s08-t1", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.1, ease: IN }, 0.2);
+    ["#s08-r1", "#s08-r2", "#s08-r3"].forEach((id, i) => {
+      tl.fromTo(id, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 1.0, ease: IN }, 1.0 + i * 1.3);
+    });
+    tl.fromTo("#s08-foot1", { opacity: 0 }, { opacity: 1, duration: 0.9, ease: "power2.out" }, 4.2);
+    tl.fromTo("#s08-g1", { opacity: 1 }, OUT, 8.8);
+
+    // 2. The same loop, 9.4 to 20.4 s.
+    tl.fromTo("#s08-g2", { opacity: 0 }, { opacity: 1, duration: 0.01, immediateRender: false }, 9.4);
+    tl.fromTo("#s08-t2", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 1.1, ease: IN }, 9.6);
+    ["1", "2", "3"].forEach((n, i) => {
+      tl.fromTo("#s08-p" + n, { opacity: 0, y: 140, scale: 0.78 }, { opacity: 1, y: 0, scale: 0.78, duration: 1.3, ease: IN }, 9.5 + i * 0.22);
+      tl.fromTo("#s08-l" + n, { opacity: 0 }, { opacity: 1, duration: 0.9, ease: "power2.out" }, 10.3 + i * 0.22);
+    });
+    tl.fromTo(["#s08-t2", "#s08-l1", "#s08-l2", "#s08-l3", "#s08-p1", "#s08-p2", "#s08-p3"], { opacity: 1 }, OUT, 19.8);
+
+    // 3. What is different, 20.4 to 30 s.
+    tl.fromTo("#s08-g3", { opacity: 0 }, { opacity: 1, duration: 0.01, immediateRender: false }, 20.4);
+    tl.fromTo("#s08-t3", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.1, ease: IN }, 20.5);
+    ["#s08-k1", "#s08-k2", "#s08-k3"].forEach((id, i) => {
+      tl.fromTo(id, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.0, ease: IN }, 21.3 + i * 0.6);
+    });
+    tl.fromTo("#s08-foot3", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 1.0, ease: IN }, 24.0);
+    tl.fromTo(["#s08-t3", "#s08-cols", "#s08-foot3"], { opacity: 1 }, OUT, 29.3);
+    window.__timelines["s08"] = tl;
+  </script>
+</template>

@@ -1,0 +1,71 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+    .phone { position: absolute; width: 448px; height: 938px; padding: 14px; border-radius: 68px; background: #151515; box-shadow: 0 50px 90px -40px rgba(21, 21, 21, 0.45), 0 18px 40px -20px rgba(21, 21, 21, 0.25); }
+    .screen { position: relative; width: 420px; height: 910px; border-radius: 55px; overflow: hidden; background: #f7f7f2; }
+    .screen img, .screen video { position: absolute; left: 0; top: 0; width: 420px; height: 910px; object-fit: cover; }
+    .cap { position: absolute; left: 160px; top: 100px; width: 800px; height: 620px; display: flex; flex-direction: column; justify-content: center; }
+    .cap .t { font-size: 88px; line-height: 1.03; font-weight: 680; letter-spacing: -0.042em; }
+    .cap .s { margin-top: 32px; font-size: 36px; line-height: 1.3; font-weight: 450; color: #60605a; letter-spacing: -0.014em; }
+    #s04-cam { position: absolute; inset: 0; }
+    #s04-phone { left: 1156px; top: 71px; }
+    #s04-skip { position: absolute; left: 1380px; top: 520px; }
+    #s04-skip-in { transform: translateX(-50%); padding: 14px 26px; border-radius: 999px; background: rgba(21, 21, 21, 0.86); color: #f7f7f2; font-size: 28px; font-weight: 560; letter-spacing: -0.01em; white-space: nowrap; }
+    .why { position: absolute; left: 160px; top: 742px; width: 800px; padding: 24px 30px 26px; border-radius: 22px; background: #ffffff; border: 1.5px solid #e4e5df; box-shadow: 0 22px 44px -30px rgba(21, 21, 21, 0.3); opacity: 0; }
+    .why .h { display: flex; align-items: center; gap: 12px; font-size: 28px; font-weight: 600; color: #60605a; letter-spacing: -0.005em; }
+    .why .h i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; background: #fee600; }
+    .why .b { margin-top: 10px; font-size: 32px; line-height: 1.28; font-weight: 560; letter-spacing: -0.012em; color: #151515; }
+  </style>
+  <div id="root" data-composition-id="s04" data-width="1920" data-height="1080">
+    <div id="s04-c1" class="cap">
+      <div class="t">Alex asks.</div>
+      <div class="s">In plain words, about his own money.</div>
+    </div>
+    <div id="s04-c2" class="cap">
+      <div class="t">It reads, then does the maths.</div>
+      <div class="s">Accounts and upcoming charges first. With renewal off, the next 30 days drop from 242 to 163 RON.</div>
+    </div>
+    <div id="s04-c3" class="cap">
+      <div class="t">Then prepares one exact action.</div>
+      <div class="s">Nothing has been sent. You see every term first.</div>
+    </div>
+    <div id="s04-w1" class="why"><div class="h"><i></i>Technical decision</div><div class="b">The model picks one of seven tools per step, in a fixed schema. None of them can move money, browse or sign in.</div></div>
+    <div id="s04-w2" class="why"><div class="h"><i></i>Technical decision</div><div class="b">Amounts come from NextMove’s deterministic calculations, never from the model. The model only explains them.</div></div>
+    <div id="s04-w3" class="why"><div class="h"><i></i>Technical decision</div><div class="b">The agent only prepares. Nothing moves until you approve this exact proposal.</div></div>
+    <div id="s04-cam" data-layout-allow-overflow>
+      <div id="s04-phone" class="phone">
+        <div class="screen">
+          <img id="s04-proposal" src="assets/media/fitflow-12-proposal.png" alt="" />
+          <video id="s04-v1" class="clip" data-start="0" data-duration="10.2" data-media-start="0" data-track-index="1" src="assets/media/ff-ask.mp4" muted playsinline></video>
+          <video id="s04-v2" class="clip" data-start="10.2" data-duration="9.1" data-media-start="0" data-track-index="2" src="assets/media/ff-done.mp4" muted playsinline></video>
+        </div>
+      </div>
+    </div>
+    <div id="s04-skip"><div id="s04-skip-in">35 seconds later</div></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    tl.fromTo("#s04-phone", { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 1.3, ease: IN }, 0.0);
+    tl.fromTo("#s04-c1", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.2, ease: IN }, 0.4);
+    tl.fromTo("#s04-c1", { opacity: 1, y: 0 }, { opacity: 0, y: -14, duration: 0.5, ease: "power2.in", immediateRender: false }, 9.7);
+    // The model's working time is cut; the badge says so.
+    tl.fromTo("#s04-skip", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.45, ease: "power3.out" }, 9.9);
+    tl.fromTo("#s04-skip", { opacity: 1 }, { opacity: 0, duration: 0.5, ease: "power2.in", immediateRender: false }, 11.9);
+    tl.fromTo("#s04-c2", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.2, ease: IN }, 10.6);
+    tl.fromTo("#s04-c2", { opacity: 1, y: 0 }, { opacity: 0, y: -14, duration: 0.5, ease: "power2.in", immediateRender: false }, 18.9);
+    // The proposal, closer.
+    tl.fromTo("#s04-cam", { scale: 1, transformOrigin: "1380px 560px" }, { scale: 1.62, transformOrigin: "1380px 560px", duration: 1.3, ease: "power3.inOut" }, 19.5);
+    tl.fromTo("#s04-c3", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.2, ease: IN }, 19.6);
+    // Technical decisions, at the moment they apply.
+    const W_IN = { opacity: 1, y: 0, duration: 0.9, ease: IN };
+    tl.fromTo("#s04-w1", { opacity: 0, y: 20 }, W_IN, 1.6);
+    tl.fromTo("#s04-w1", { opacity: 1 }, { opacity: 0, duration: 0.45, ease: "power2.in", immediateRender: false }, 9.5);
+    tl.fromTo("#s04-w2", { opacity: 0, y: 20 }, { ...W_IN, immediateRender: false }, 11.4);
+    tl.fromTo("#s04-w2", { opacity: 1 }, { opacity: 0, duration: 0.45, ease: "power2.in", immediateRender: false }, 18.9);
+    tl.fromTo("#s04-w3", { opacity: 0, y: 20 }, { ...W_IN, immediateRender: false }, 20.6);
+    tl.fromTo(["#s04-c3", "#s04-cam", "#s04-w3"], { opacity: 1 }, { opacity: 0, duration: 0.6, ease: "power2.in", immediateRender: false }, 25.3);
+    window.__timelines["s04"] = tl;
+  </script>
+</template>

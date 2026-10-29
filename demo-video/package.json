@@ -1,0 +1,14 @@
+{
+  "name": "nextmove-demo-video",
+  "private": true,
+  "version": "1.0.0",
+  "description": "NextMove product demo film, built with HyperFrames (HTML rendered to video).",
+  "type": "module",
+  "scripts": {
+    "check": "hyperframes check --json",
+    "render": "hyperframes render --quality delivery --output out/nextmove-demo.mp4"
+  },
+  "devDependencies": {
+    "hyperframes": "0.8.214"
+  }
+}

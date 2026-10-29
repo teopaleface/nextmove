@@ -1,0 +1,110 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+    .title { position: absolute; left: 160px; top: 96px; font-size: 80px; line-height: 1.02; font-weight: 680; letter-spacing: -0.042em; }
+
+    /* 1. Architecture */
+    #s09-dia { position: absolute; left: 160px; top: 250px; width: 1600px; height: 700px; }
+    .box { position: absolute; width: 280px; height: 160px; padding: 22px 24px; border-radius: 20px; background: #ffffff; border: 1.5px solid #e4e5df; box-shadow: 0 18px 36px -28px rgba(21, 21, 21, 0.3); }
+    .box .h { font-size: 32px; font-weight: 660; letter-spacing: -0.02em; line-height: 1.1; }
+    .box .b { margin-top: 10px; font-size: 28px; line-height: 1.2; font-weight: 450; color: #60605a; letter-spacing: -0.01em; }
+    .box.key { background: #151515; border-color: #151515; }
+    .box.key .h { color: #fee600; }
+    .box.key .b { color: #d6d6cf; }
+    .box.side { background: #fffbd6; border-color: #efe28a; }
+    .arrow { position: absolute; height: 3px; background: #151515; transform-origin: 0 50%; }
+    .arrow::after { content: ""; position: absolute; right: -2px; top: -7px; border-left: 14px solid #151515; border-top: 8.5px solid transparent; border-bottom: 8.5px solid transparent; }
+    .varrow { position: absolute; width: 3px; background: #151515; transform-origin: 50% 0; }
+    .varrow::after { content: ""; position: absolute; bottom: -2px; left: -7px; border-top: 14px solid #151515; border-left: 8.5px solid transparent; border-right: 8.5px solid transparent; }
+    .dash { position: absolute; border-left: 3px dashed #a3a39b; }
+    #s09-log { position: absolute; left: 0; top: 612px; width: 1600px; height: 84px; border-radius: 20px; border: 1.5px dashed #a3a39b; display: flex; align-items: center; gap: 18px; padding: 0 28px; font-size: 30px; font-weight: 560; letter-spacing: -0.012em; }
+    #s09-log span { font-weight: 450; color: #60605a; }
+    #s09-log i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; background: #fee600; flex: none; }
+
+    /* 2. Verify, limits, next */
+    #s09-cols { position: absolute; left: 160px; top: 300px; width: 1600px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 64px; }
+    .col { border-top: 7px solid #151515; padding-top: 34px; }
+    .col.y { border-top-color: #fee600; }
+    .col .h { font-size: 58px; font-weight: 680; letter-spacing: -0.035em; line-height: 1.05; }
+    .col ul { list-style: none; margin-top: 30px; }
+    .col li { position: relative; padding-left: 32px; margin-top: 24px; font-size: 36px; line-height: 1.26; font-weight: 480; letter-spacing: -0.012em; }
+    .col li::before { content: ""; position: absolute; left: 0; top: 17px; width: 12px; height: 12px; border-radius: 3px; background: #a3a39b; }
+    .col li b { font-weight: 680; }
+    .mono { font-size: 32px; font-weight: 600; letter-spacing: 0; background: #ecece5; padding: 2px 10px; border-radius: 8px; white-space: nowrap; }
+
+    #s09-g2 { opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="s09" data-width="1920" data-height="1080">
+    <div id="s09-g1">
+      <div id="s09-t1" class="title">How it is built.</div>
+      <div id="s09-dia">
+        <!-- Row 1: request to proposal -->
+        <div class="box" id="s09-b1" style="left:0; top:0"><div class="h">Phone app</div><div class="b">Next.js UI and API</div></div>
+        <div class="box key" id="s09-b2" style="left:440px; top:0"><div class="h">Agent loop</div><div class="b">7 tools, one per step</div></div>
+        <div class="box" id="s09-b3" style="left:880px; top:0"><div class="h">Capabilities</div><div class="b">deterministic maths</div></div>
+        <div class="box key" id="s09-b4" style="left:1320px; top:0"><div class="h">Exact approval</div><div class="b">signed manifest</div></div>
+        <!-- Model and its fallback -->
+        <div class="box side" id="s09-m" style="left:440px; top:250px; width: 400px"><div class="h">Live model</div><div class="b">Claude via local CLI; labelled fallback planner</div></div>
+        <!-- Row 2: execution -->
+        <div class="box" id="s09-b5" style="left:1320px; top:250px"><div class="h">Durable worker</div><div class="b">SQLite leases</div></div>
+        <div class="box key" id="s09-b6" style="left:880px; top:250px"><div class="h">Dispatch gate</div><div class="b">one request, never resent</div></div>
+        <div class="box" id="s09-b7" style="left:880px; top:440px; width: 720px; height: 130px"><div class="h">Simulated merchant, isolated browser</div><div class="b">then an independent read-back and a receipt</div></div>
+
+        <div class="arrow" id="s09-a1" style="left:290px; top:79px; width:140px"></div>
+        <div class="arrow" id="s09-a2" style="left:730px; top:79px; width:140px"></div>
+        <div class="arrow" id="s09-a3" style="left:1170px; top:79px; width:140px"></div>
+        <div class="varrow" id="s09-a4" style="left:1459px; top:170px; height:70px"></div>
+        <div class="arrow" id="s09-a5" style="left:1170px; top:329px; width:140px; transform: scaleX(-1); transform-origin: 50% 50%;"></div>
+        <div class="varrow" id="s09-a6" style="left:1019px; top:412px; height:14px"></div>
+        <div class="dash" id="s09-d1" style="left:579px; top:170px; height:70px"></div>
+
+        <div id="s09-log"><i></i>Evidence log <span>· every step stored with its evidence level · SQLite, per-tenant · runs on loopback</span></div>
+      </div>
+    </div>
+
+    <div id="s09-g2">
+      <div id="s09-t2" class="title">Check it. Know its limits.</div>
+      <div id="s09-cols">
+        <div class="col y" id="s09-k1"><div class="h">Verify it</div><ul>
+          <li><b>678</b> automated tests in 55 files</li>
+          <li><b>310</b> extension checks</li>
+          <li><b>26</b> phone end-to-end scenarios pass</li>
+          <li>Evidence index with videos: <span class="mono">evidence/MANIFEST.md</span></li>
+        </ul></div>
+        <div class="col" id="s09-k2"><div class="h">Honest limits</div><ul>
+          <li>A fictional demo bank with synthetic data</li>
+          <li>Merchants are simulated</li>
+          <li>No real payments, cards or sign-ins</li>
+          <li>Runs on loopback only; no production deployment</li>
+        </ul></div>
+        <div class="col y" id="s09-k3"><div class="h">Next step</div><ul>
+          <li>A pilot as a feature inside a partner bank</li>
+          <li>After its own legal, privacy, security and integration review</li>
+          <li>Real merchants only through supported, verified workflows</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    // 1. Diagram, built along the path a request takes (0 to 10.6 s).
+    tl.fromTo("#s09-t1", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.0, ease: IN }, 0.1);
+    const seq = [["#s09-b1", 0.5], ["#s09-a1", 1.1], ["#s09-b2", 1.3], ["#s09-d1", 1.9], ["#s09-m", 2.1], ["#s09-a2", 2.8], ["#s09-b3", 3.0], ["#s09-a3", 3.7], ["#s09-b4", 3.9], ["#s09-a4", 4.6], ["#s09-b5", 4.8], ["#s09-a5", 5.5], ["#s09-b6", 5.7], ["#s09-a6", 6.3], ["#s09-b7", 6.4], ["#s09-log", 7.3]];
+    seq.forEach(([id, t]) => {
+      if (id.includes("-a") || id.includes("-d")) tl.fromTo(id, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, t);
+      else tl.fromTo(id, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.8, ease: IN }, t);
+    });
+    tl.fromTo("#s09-g1", { opacity: 1 }, { opacity: 0, duration: 0.6, ease: "power2.in", immediateRender: false }, 10.4);
+
+    // 2. Verify, limits, next step (11 to 20 s).
+    tl.fromTo("#s09-g2", { opacity: 0 }, { opacity: 1, duration: 0.01, immediateRender: false }, 11.0);
+    tl.fromTo("#s09-t2", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.0, ease: IN }, 11.1);
+    ["#s09-k1", "#s09-k2", "#s09-k3"].forEach((id, i) => {
+      tl.fromTo(id, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.0, ease: IN }, 11.7 + i * 0.6);
+    });
+    tl.fromTo(["#s09-t2", "#s09-cols"], { opacity: 1 }, { opacity: 0, duration: 0.6, ease: "power2.in", immediateRender: false }, 19.4);
+    window.__timelines["s09"] = tl;
+  </script>
+</template>

@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1920" />
+<title>NextMove deck</title>
+<!--
+  NextMove pitch deck: 12 slides at 1920x1080, same story and visual system as the demo film.
+  Export to PDF with: node deck/export.mjs  (writes out/nextmove-deck.pdf, one slide per page).
+  Screens in img/ are stills of the running app, captured on isolated demo tenants.
+  NextMove is a fictional demo bank; every customer, merchant and amount is synthetic.
+-->
+<style>
+  @font-face { font-family: "InterV"; src: url("fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+  @page { size: 1920px 1080px; margin: 0; }
+  :root { --canvas: #f7f7f2; --ink: #151515; --muted: #60605a; --border: #e4e5df; --yellow: #fee600; --success: #067647; --soft: #ecece5; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #d9d9d2; }
+  body { font-family: "InterV", "Inter", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; font-feature-settings: "tnum" 1; }
+  .slide { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--canvas); page-break-after: always; break-after: page; margin: 0 auto 40px; }
+  @media print { html, body { background: var(--canvas); } .slide { margin: 0; } }
+  .slide.ink { background: var(--ink); color: #fff; }
+
+  .kicker { position: absolute; left: 160px; top: 84px; display: flex; align-items: center; gap: 14px; font-size: 28px; font-weight: 600; color: var(--muted); letter-spacing: -0.005em; }
+  .kicker i { width: 14px; height: 14px; border-radius: 4px; background: var(--yellow); }
+  h1 { position: absolute; left: 160px; top: 130px; font-size: 72px; line-height: 1.04; font-weight: 690; letter-spacing: -0.042em; }
+  .lede { position: absolute; left: 160px; top: 222px; width: 1500px; font-size: 32px; line-height: 1.3; font-weight: 460; color: var(--muted); letter-spacing: -0.012em; }
+  .foot { position: absolute; left: 160px; right: 160px; bottom: 44px; display: flex; justify-content: space-between; font-size: 28px; font-weight: 500; color: #8a8a82; }
+  .ink .foot { color: #8a8a82; }
+  b, strong { font-weight: 680; }
+  .y { background: linear-gradient(transparent 62%, var(--yellow) 62%); padding: 0 4px; }
+  code, .code { font-family: "InterV", "Inter", sans-serif; font-weight: 620; font-size: 28px; background: var(--soft); padding: 2px 10px; border-radius: 8px; white-space: nowrap; letter-spacing: 0; }
+
+  /* Phone frame around app stills */
+  .phone { position: relative; border-radius: 44px; background: var(--ink); padding: 12px; }
+  .phone img { display: block; width: 100%; border-radius: 33px; }
+
+  ul.dots { list-style: none; }
+  ul.dots li { position: relative; padding-left: 30px; font-size: 30px; line-height: 1.3; font-weight: 470; letter-spacing: -0.01em; margin-top: 14px; }
+  ul.dots li::before { content: ""; position: absolute; left: 0; top: 14px; width: 12px; height: 12px; border-radius: 3px; background: #a3a39b; }
+  ul.dots.yb li::before { background: var(--yellow); }
+  .col-h { font-size: 40px; font-weight: 690; letter-spacing: -0.03em; line-height: 1.1; padding-top: 24px; border-top: 6px solid var(--ink); }
+  .col-h.yl { border-top-color: var(--yellow); }
+
+  /* 1. Title */
+  .lock { position: absolute; left: 160px; top: 300px; display: flex; align-items: center; gap: 36px; }
+  .mark { width: 150px; height: 150px; border-radius: 36px; background: var(--yellow); color: var(--ink); display: grid; place-items: center; font-size: 96px; font-weight: 760; letter-spacing: -0.04em; }
+  .word { font-size: 150px; font-weight: 700; letter-spacing: -0.055em; line-height: 1; }
+  .t-sub { position: absolute; left: 160px; top: 520px; font-size: 44px; font-weight: 500; color: #d6d6cf; letter-spacing: -0.02em; }
+  .t-tag { position: absolute; left: 160px; top: 600px; font-size: 64px; font-weight: 680; letter-spacing: -0.04em; }
+  .t-tag span { color: var(--yellow); }
+  .t-meta { position: absolute; left: 160px; top: 800px; font-size: 30px; line-height: 1.55; color: #d6d6cf; font-weight: 480; }
+  .t-meta b { color: #fff; }
+
+  /* 2. Problem */
+  .leaks { position: absolute; left: 160px; top: 330px; width: 820px; }
+  .leak { display: flex; justify-content: space-between; align-items: baseline; padding: 18px 0; border-bottom: 1.5px solid var(--border); }
+  .leak .w { font-size: 32px; font-weight: 620; letter-spacing: -0.015em; }
+  .leak .w span { display: block; font-size: 28px; font-weight: 460; color: var(--muted); margin-top: 4px; }
+  .leak .n { font-size: 36px; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+  .leak .n small { font-size: 28px; font-weight: 480; color: var(--muted); }
+  .rules { position: absolute; left: 1080px; top: 330px; width: 680px; }
+  .rules .col-h { font-size: 34px; padding-top: 18px; border-top-width: 5px; }
+  .rules ul.dots li { font-size: 28px; margin-top: 10px; }
+  .rules .gap { height: 34px; }
+
+  /* 3. Solution */
+  .steps4 { position: absolute; left: 160px; top: 330px; width: 1060px; }
+  .step4 { display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding: 26px 0; border-top: 1.5px solid var(--border); }
+  .step4 .h { font-size: 48px; font-weight: 700; letter-spacing: -0.04em; }
+  .step4:last-child .h { background: linear-gradient(transparent 62%, var(--yellow) 62%); justify-self: start; padding: 0 4px; }
+  .step4 .b { font-size: 30px; line-height: 1.32; color: var(--muted); font-weight: 470; letter-spacing: -0.01em; padding-top: 8px; }
+  .sol-phone { position: absolute; left: 1360px; top: 120px; width: 400px; }
+
+  /* 4. Workflow */
+  .flow { position: absolute; left: 160px; top: 250px; width: 1600px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 25px; }
+  .flow .phone { width: 220px; margin: 0 auto 0 0; border-radius: 32px; padding: 9px; }
+  .flow .phone img { border-radius: 24px; }
+  .flow .cap { margin-top: 24px; padding-right: 10px; font-size: 28px; line-height: 1.28; font-weight: 470; color: var(--muted); letter-spacing: -0.01em; }
+  .flow .cap b { display: block; color: var(--ink); font-size: 30px; line-height: 1.15; margin-bottom: 6px; }
+  .flow .num { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--yellow); font-size: 28px; font-weight: 760; margin-bottom: 10px; color: var(--ink); }
+  .arrowrow { position: absolute; top: 590px; height: 3px; width: 26px; background: var(--ink); }
+
+  /* 5. Agent design, 7. testability */
+  .grid6 { position: absolute; left: 160px; top: 250px; width: 1600px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .card { background: #fff; border: 1.5px solid var(--border); border-radius: 26px; padding: 28px 30px 30px; }
+  .card.dark { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .card.dark .h { color: var(--yellow); }
+  .card.dark p, .card.dark li { color: #e4e4dc; }
+  .card .h { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; }
+  .card p { margin-top: 14px; font-size: 28px; line-height: 1.32; font-weight: 460; color: var(--muted); letter-spacing: -0.008em; }
+  .card p b { color: var(--ink); }
+  .card.dark p b { color: #fff; }
+  .chips { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .chips span { font-size: 28px; font-weight: 600; background: var(--soft); border-radius: 10px; padding: 3px 12px; letter-spacing: -0.005em; }
+
+  /* 6. Unexpected */
+  .odd { position: absolute; left: 160px; top: 290px; width: 1600px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; }
+  .odd .item { display: grid; grid-template-columns: 170px 1fr; gap: 22px; align-items: start; }
+  .odd .phone { width: 170px; border-radius: 26px; padding: 7px; }
+  .odd .phone img { border-radius: 20px; }
+  .odd .lab { font-size: 28px; font-weight: 600; color: var(--muted); }
+  .odd .q { margin-top: 8px; font-size: 32px; line-height: 1.12; font-weight: 700; letter-spacing: -0.025em; }
+  .odd .a { margin-top: 12px; font-size: 28px; line-height: 1.3; color: var(--muted); font-weight: 460; }
+  .odd2 { grid-template-columns: repeat(2, 1fr); gap: 44px 80px; }
+  .odd2 .item { grid-template-columns: 150px 1fr; gap: 34px; }
+  .odd2 .phone { width: 150px; border-radius: 24px; padding: 6px; }
+  .odd2 .phone img { border-radius: 19px; }
+  .scale { position: absolute; left: 160px; right: 160px; top: 930px; display: flex; gap: 18px; align-items: baseline; font-size: 28px; color: var(--muted); font-weight: 470; }
+
+  /* 8. Architecture */
+  .dia { position: absolute; left: 160px; top: 270px; width: 1600px; height: 720px; }
+  .box { position: absolute; width: 340px; height: 176px; padding: 24px 26px; border-radius: 22px; background: #fff; border: 1.5px solid var(--border); }
+  .box .h { font-size: 34px; font-weight: 680; letter-spacing: -0.022em; line-height: 1.1; }
+  .box .b { margin-top: 10px; font-size: 28px; line-height: 1.25; color: var(--muted); font-weight: 460; letter-spacing: -0.01em; }
+  .box.key { background: var(--ink); border-color: var(--ink); }
+  .box.key .h { color: var(--yellow); }
+  .box.key .b { color: #d6d6cf; }
+  .box.side { background: #fffbd6; border-color: #efe28a; }
+  .ar { position: absolute; height: 3px; background: var(--ink); }
+  .ar::after { content: ""; position: absolute; right: -2px; top: -7px; border-left: 14px solid var(--ink); border-top: 8.5px solid transparent; border-bottom: 8.5px solid transparent; }
+  .ar.l::after { right: auto; left: -2px; border-left: 0; border-right: 14px solid var(--ink); }
+  .va { position: absolute; width: 3px; background: var(--ink); }
+  .va::after { content: ""; position: absolute; bottom: -2px; left: -7px; border-top: 14px solid var(--ink); border-left: 8.5px solid transparent; border-right: 8.5px solid transparent; }
+  .dash { position: absolute; border-left: 3px dashed #a3a39b; }
+  .log { position: absolute; left: 0; top: 640px; width: 1600px; height: 80px; border-radius: 20px; border: 1.5px dashed #a3a39b; display: flex; align-items: center; gap: 18px; padding: 0 28px; font-size: 30px; font-weight: 600; }
+  .log span { font-weight: 460; color: var(--muted); }
+  .log i { width: 14px; height: 14px; border-radius: 4px; background: var(--yellow); flex: none; }
+
+  /* 9. Setup */
+  .term { position: absolute; left: 160px; top: 290px; width: 1000px; background: var(--ink); color: #f1f1ea; border-radius: 26px; padding: 40px 44px; font-size: 30px; line-height: 1.62; font-weight: 520; letter-spacing: 0; }
+  .term .c { color: #9a9a92; font-weight: 450; }
+  .term .p { color: var(--yellow); }
+  .setside { position: absolute; left: 1240px; top: 290px; width: 520px; }
+
+  /* 10. Value */
+  .stats { position: absolute; left: 160px; top: 290px; width: 1600px; }
+  .stat { display: grid; grid-template-columns: 420px 1fr; align-items: baseline; padding: 20px 0; border-top: 1.5px solid var(--border); }
+  .stat .n { font-size: 84px; font-weight: 720; letter-spacing: -0.05em; line-height: 1; }
+  .stat .n small { font-size: 36px; font-weight: 560; letter-spacing: -0.02em; color: var(--muted); margin-left: 8px; }
+  .stat .t { font-size: 34px; font-weight: 600; letter-spacing: -0.02em; }
+  .stat .t span { display: block; font-size: 28px; color: var(--muted); font-weight: 460; margin-top: 6px; letter-spacing: -0.01em; }
+  .tight .stat { padding: 14px 0; }
+  .tight .stat .n { font-size: 76px; }
+  .foot span:first-child { max-width: 1480px; }
+  .diff { position: absolute; left: 160px; top: 790px; width: 1600px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 56px; }
+  .diff .h { font-size: 34px; font-weight: 700; letter-spacing: -0.025em; padding-top: 18px; border-top: 5px solid var(--yellow); }
+  .diff p { margin-top: 10px; font-size: 28px; line-height: 1.3; color: var(--muted); font-weight: 460; }
+
+  /* 11. Limits */
+  .cols3 { position: absolute; left: 160px; top: 290px; width: 1600px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 90px; }
+
+  /* 12. Team */
+  .team { position: absolute; left: 160px; top: 330px; }
+  .team .n { font-size: 150px; font-weight: 720; letter-spacing: -0.055em; line-height: 1; }
+  .team .m { margin-top: 36px; font-size: 56px; font-weight: 600; letter-spacing: -0.03em; color: #d6d6cf; }
+  .team .m span { color: var(--yellow); }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide ink">
+  <div class="lock"><div class="mark">N</div><div class="word">NextMove</div></div>
+  <div class="t-sub">A mobile bank with an agent built in, for people and small businesses.</div>
+  <div class="t-tag">Prepared by the agent. <span>Approved by you.</span></div>
+  <div class="t-meta"><b>Mr Laziz</b> · Teo, Retr0 and Cosman<br>Built for the Raiffeisen Bank challenge at NEXXT 2026<br>A fictional demo bank. Every customer, account, merchant and amount is synthetic.</div>
+</section>
+
+<!-- 2. User and problem -->
+<section class="slide">
+  <div class="kicker"><i></i>User and problem</div>
+  <h1>Money leaks quietly.</h1>
+  <div class="lede">Alex, a personal customer, and Laziz, who runs a small business and a household. One month of Alex:</div>
+  <div class="leaks">
+    <div class="leak"><div class="w">A free trial turns paid<span>FitFlow, on 30 October</span></div><div class="n">79 RON</div></div>
+    <div class="leak"><div class="w">A gym nobody visits<span>PulseGym, no visit since 2 August</span></div><div class="n">250 RON <small>a month</small></div></div>
+    <div class="leak"><div class="w">Paying twice for storage<span>CloudBox, a duplicate plan</span></div><div class="n">35 RON</div></div>
+    <div class="leak"><div class="w">A price quietly goes up<span>Streamly, from 39 to 49 RON a month</span></div><div class="n">+10 RON <small>a month</small></div></div>
+    <div class="leak"><div class="w">A refund that never arrived<span>StudioMart, accepted but not credited</span></div><div class="n">249 RON</div></div>
+  </div>
+  <div class="rules">
+    <div class="col-h">Rules it must keep</div>
+    <ul class="dots yb">
+      <li>Nothing moves without the customer approving the exact action.</li>
+      <li>Every amount is calculated and traceable to a bank record.</li>
+      <li>Each merchant has its own terms: trial end, notice, review window.</li>
+    </ul>
+    <div class="gap"></div>
+    <div class="col-h" style="border-top-color: var(--ink)">Exceptions it must handle</div>
+    <ul class="dots">
+      <li>Terms change between approval and sending.</li>
+      <li>A reply is lost halfway through a request.</li>
+      <li>The merchant asks for a sign-in or a 48-hour review.</li>
+      <li>A request is vague, negated, or text pretends to be an instruction.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>2</span></div>
+</section>
+
+<!-- 3. Solution -->
+<section class="slide">
+  <div class="kicker"><i></i>Solution</div>
+  <h1>An agent inside the bank app.</h1>
+  <div class="lede" style="width: 1100px">It works on the customer's own data, in the app they already use.</div>
+  <div class="steps4">
+    <div class="step4"><div class="h">Reads.</div><div class="b">Accounts, upcoming charges and the merchant's terms, before it says anything.</div></div>
+    <div class="step4"><div class="h">Calculates.</div><div class="b">Deterministic code produces every amount. The model plans and explains.</div></div>
+    <div class="step4"><div class="h">Prepares.</div><div class="b">One exact action: what changes, the route, the money and a 10-minute window.</div></div>
+    <div class="step4"><div class="h">You approve.</div><div class="b">Then a durable worker carries it out once, reads the result back and keeps a receipt.</div></div>
+  </div>
+  <div class="sol-phone phone"><img src="img/home-00.jpg" alt="NextMove Home screen"></div>
+  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>3</span></div>
+</section>
+
+<!-- 4. Core workflow -->
+<section class="slide">
+  <div class="kicker"><i></i>Core workflow, input to outcome</div>
+  <h1>Stop a trial before it charges.</h1>
+  <div class="flow">
+    <div><div class="phone"><img src="img/fitflow-00-agent.jpg" alt="Agent tab"></div><div class="cap"><span class="num">1</span><b>Ask in plain words</b>"Can you stop the FitFlow trial before it charges me?"</div></div>
+    <div><div class="phone"><img src="img/fitflow-10-answer-top.jpg" alt="Answer"></div><div class="cap"><span class="num">2</span><b>Read, then calculate</b>Upcoming charges: 242 to 163 RON. Nothing sent yet.</div></div>
+    <div><div class="phone"><img src="img/fitflow-20-review.jpg" alt="Review and approve"></div><div class="cap"><span class="num">3</span><b>Approve one exact action</b>Provider, change, date, route and terms revision.</div></div>
+    <div><div class="phone"><img src="img/ffframe-60.2.jpg" alt="Simulated merchant page"></div><div class="cap"><span class="num">4</span><b>Act on the merchant's page</b>In an isolated browser, on a simulated merchant.</div></div>
+    <div><div class="phone"><img src="img/fitflow-40-receipt.jpg" alt="Receipt"></div><div class="cap"><span class="num">5</span><b>Read back, then a receipt</b>NF-1047. 79 RON avoided. Balance unchanged.</div></div>
+  </div>
+  <div class="foot"><span>Recorded on the running app with the live model, on an isolated demo tenant.</span><span>4</span></div>
+</section>
+
+<!-- 5. Agent design -->
+<section class="slide">
+  <div class="kicker"><i></i>Agent design and orchestration</div>
+  <h1>The model plans. Code owns the money.</h1>
+  <div class="grid6">
+    <div class="card dark"><div class="h">7 typed tools</div><p><b>overview, find_capability, analyze, ask_user, prepare_proposal, show_simulation, final_answer.</b> None can move money, sign in or browse.</p></div>
+    <div class="card"><div class="h">A bounded loop</div><p><b>One tool per step</b>, each decision checked against a schema, <b>at most 8 steps</b>. It reads before answering and follows prerequisite chains.</p></div>
+    <div class="card"><div class="h">Guards on output</div><p>Withholds claims that something <b>was done</b> (English and Romanian), <b>numbers no calculation produced</b>, links, PIN requests and lookalike letters.</p></div>
+    <div class="card"><div class="h">Fallbacks and limits</div><p>Live model, or a <b>labelled simulated planner</b> when the model fails or is switched off. Rate limits per IP, account and globally; a <b>daily model budget</b>.</p></div>
+    <div class="card dark"><div class="h">Exact approval</div><p>Approving signs an <b>immutable manifest</b>, one per proposal. An expired window, changed terms or a replay <b>send nothing</b>.</p></div>
+    <div class="card"><div class="h">Send once, then check</div><p>A worker's gate sends <b>one request, no retries</b>. A lost reply is marked <b>unknown</b> and read back with the same idempotency key, never resent.</p></div>
+  </div>
+  <div class="foot"><span>Merchant, customer and document text inside tool results is data, never instructions.</span><span>5</span></div>
+</section>
+
+<!-- 6. Unexpected situations -->
+<section class="slide">
+  <div class="kicker"><i></i>Unexpected situations</div>
+  <h1>When it goes off script.</h1>
+  <div class="odd odd2" style="top: 250px">
+    <div class="item"><div class="phone"><img src="img/edge-all-question.jpg" alt=""></div><div><div class="lab">A vague request</div><div class="q">"Cancel everything."</div><div class="a">It asks which one, prepares one at a time, and nothing happens until you approve.</div></div></div>
+    <div class="item"><div class="phone"><img src="img/edge-negate-10-answer-top.jpg" alt=""></div><div><div class="lab">A negated request</div><div class="q">"Don't cancel anything."</div><div class="a">The model wrote "has been cancelled". NextMove withheld that sentence; nothing was done.</div></div></div>
+    <div class="item"><div class="phone"><img src="img/offer-signed-2.jpg" alt=""></div><div><div class="lab">Merchant text pushes back</div><div class="q">"Approve this offer now."</div><div class="a">Shown as written, marked untrusted and ignored. Only the signed terms count.</div></div></div>
+    <div class="item"><div class="phone"><img src="img/offer-tampered-0.jpg" alt=""></div><div><div class="lab">A tampered offer</div><div class="q">The signature does not match.</div><div class="a">The offer changed after signing, so it is refused and kept on record.</div></div></div>
+  </div>
+  <div class="foot"><span>Separate batch run (synthetic, 200 subscriptions): 120 approved → 100 confirmed, 8 waiting, 5 need sign-in, 4 terms changed, 3 unknown. Funds unchanged.</span><span>6</span></div>
+</section>
+
+<!-- 7. Testability and evidence -->
+<section class="slide">
+  <div class="kicker"><i></i>Testability and evidence</div>
+  <h1>How the jury can check it.</h1>
+  <div class="stats tight" style="top: 225px; width: 1040px">
+    <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">678</div><div class="t">automated tests in 55 files<span><code>npm test</code>: unit and integration, on its own isolated stack.</span></div></div>
+    <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">310</div><div class="t">extension checks<span>Typecheck and tests for extensions E1 to E9.</span></div></div>
+    <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">26</div><div class="t">phone end-to-end scenarios pass<span>Evidence index with videos: <code>evidence/MANIFEST.md</code></span></div></div>
+    <div class="stat" style="grid-template-columns: 300px 1fr"><div class="n">13</div><div class="t">evidence levels<span>Each step says where it came from.</span></div></div>
+  </div>
+  <div style="position: absolute; left: 160px; top: 840px; width: 1040px; font-size: 30px; line-height: 1.38; font-weight: 470; color: var(--muted);"><b style="color: var(--ink)">Try it:</b> run the FitFlow request, open the receipt and "How NextMove checked it". On the Agent tab every task shows its planner, tools, calculations and evidence. Status: <code>docs/IMPLEMENTATION-STATUS.md</code></div>
+  <div class="phone" style="position: absolute; left: 1360px; top: 130px; width: 400px;"><img src="img/fitflow-41-receipt-more.jpg" alt="How NextMove checked it"></div>
+  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>7</span></div>
+</section>
+
+<!-- 8. Architecture -->
+<section class="slide">
+  <div class="kicker"><i></i>Architecture</div>
+  <h1>The path one request takes.</h1>
+  <div class="dia">
+    <div class="box" style="left:0; top:0"><div class="h">Phone app</div><div class="b">Next.js 16 UI and API, with rate limits</div></div>
+    <div class="box key" style="left:420px; top:0"><div class="h">Agent loop</div><div class="b">7 typed tools, one per step, at most 8 steps</div></div>
+    <div class="box" style="left:840px; top:0"><div class="h">Capabilities</div><div class="b">deterministic code owns every amount</div></div>
+    <div class="box key" style="left:1260px; top:0"><div class="h">Exact approval</div><div class="b">signed manifest, one grant per action</div></div>
+
+    <div class="box side" style="left:420px; top:260px; width: 340px"><div class="h">Live model</div><div class="b">server-only CLI, labelled fallback</div></div>
+    <div class="box key" style="left:840px; top:260px"><div class="h">Dispatch gate</div><div class="b">one request, never resent</div></div>
+    <div class="box" style="left:1260px; top:260px"><div class="h">Durable worker</div><div class="b">jobs held by SQLite leases</div></div>
+    <div class="box" style="left:840px; top:480px; width: 760px; height: 130px"><div class="h">Simulated merchant, isolated browser</div><div class="b">then an independent read-back and a receipt</div></div>
+
+    <div class="ar" style="left:350px; top:87px; width:60px"></div>
+    <div class="ar" style="left:770px; top:87px; width:60px"></div>
+    <div class="ar" style="left:1190px; top:87px; width:60px"></div>
+    <div class="va" style="left:1429px; top:186px; height:64px"></div>
+    <div class="ar l" style="left:1190px; top:347px; width:60px"></div>
+    <div class="va" style="left:1009px; top:446px; height:24px"></div>
+    <div class="dash" style="left:589px; top:186px; height:64px"></div>
+
+    <div class="log"><i></i>Evidence log <span>· every step stored with its evidence level · SQLite per tenant · loopback only (127.0.0.1)</span></div>
+  </div>
+  <div class="foot"><span>App on :3210, simulated merchant on :3211. No API key needed.</span><span>8</span></div>
+</section>
+
+<!-- 9. Setup -->
+<section class="slide">
+  <div class="kicker"><i></i>Setup and reproducibility</div>
+  <h1>Running in a few minutes.</h1>
+  <div class="term">
+    <div><span class="c"># Node 24 or later</span></div>
+    <div><span class="p">$</span> npm install</div>
+    <div><span class="p">$</span> npx playwright install chromium</div>
+    <div><span class="p">$</span> npm run demo <span class="c"># merchant, worker, app</span></div>
+    <div><span class="c"># open http://127.0.0.1:3210</span></div>
+    <div><span class="p">$</span> npm run typecheck</div>
+    <div><span class="p">$</span> npm test</div>
+    <div><span class="p">$</span> npm run test:e2e <span class="c"># stack running</span></div>
+    <div><span class="p">$</span> npm run evidence:manifest</div>
+    <div><span class="p">$</span> npm run stop</div>
+  </div>
+  <div class="setside">
+    <div class="col-h yl">Then</div>
+    <ul class="dots yb">
+      <li>Sign in as Alex and tick "Start a separate copy" for an isolated tenant.</li>
+      <li><code>NEXTMOVE_PLANNER</code> = auto, live or simulated.</li>
+      <li>Health: <code>/api/health</code></li>
+      <li><code>npm run reset</code> restores the demo data.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>All commands from the repository README.</span><span>9</span></div>
+</section>
+
+<!-- 10. Value -->
+<section class="slide">
+  <div class="kicker"><i></i>Value and differentiation</div>
+  <h1>What Alex gets.</h1>
+  <div class="stats" style="top: 240px">
+    <div class="stat"><div class="n">79<small>RON</small></div><div class="t">kept from one trial, before it charged<span>Next 30 days: 242 to 163 RON. Balance unchanged.</span></div></div>
+    <div class="stat"><div class="n">1<small>tap</small></div><div class="t">to approve an action that was read, calculated and explained<span>And one receipt that shows what happened.</span></div></div>
+    <div class="stat"><div class="n">2,824<small>RON</small></div><div class="t">of future charges avoided in a 200-subscription batch run (synthetic)<span>A separate scenario from the FitFlow case: 100 confirmed stops, bank funds unchanged.</span></div></div>
+  </div>
+  <div class="diff">
+    <div><div class="h">It acts, not just advises.</div><p>One exact action, carried out after your approval, then proved.</p></div>
+    <div><div class="h">Numbers come from code.</div><p>The model plans and explains; its sentences are checked.</p></div>
+    <div><div class="h">For people and businesses.</div><p>Built as a feature inside a bank app, with one approval model.</p></div>
+  </div>
+  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>10</span></div>
+</section>
+
+<!-- 11. Limits and next steps -->
+<section class="slide">
+  <div class="kicker"><i></i>Limitations and next steps</div>
+  <h1>What it is, and what it is not yet.</h1>
+  <div class="cols3">
+    <div><div class="col-h">Honest limits</div><ul class="dots">
+      <li>A fictional demo bank with synthetic data.</li>
+      <li>Merchants are simulated; no real merchant is contacted.</li>
+      <li>No real payments, cards or sign-ins.</li>
+      <li>Runs on loopback only; no production deployment.</li>
+      <li>The merchant does not yet apply accepted offer prices on its side.</li>
+      <li>No dark mode.</li>
+    </ul></div>
+    <div><div class="col-h yl">Next step</div><ul class="dots yb">
+      <li>A pilot as a feature inside a partner bank's app.</li>
+      <li>Only after that bank's own legal, privacy, security and integration review.</li>
+      <li>Real merchants only through supported, verified workflows.</li>
+    </ul></div>
+  </div>
+  <div class="foot"><span>NextMove · fictional demo bank, synthetic data</span><span>11</span></div>
+</section>
+
+<!-- 12. Team -->
+<section class="slide ink">
+  <div class="kicker" style="color:#a3a39b"><i></i>Team</div>
+  <div class="team">
+    <div class="n">Mr Laziz</div>
+    <div class="m">Teo · Retr0 · Cosman</div>
+  </div>
+  <div class="t-tag" style="top: 640px">Prepared by the agent. <span>Approved by you.</span></div>
+  <div class="t-meta" style="top: 820px">Built for the Raiffeisen Bank challenge at NEXXT 2026<br>NextMove is a fictional demo bank. All customers, accounts, merchants and money shown are synthetic.</div>
+</section>
+
+</body>
+</html>

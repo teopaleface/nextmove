@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>NextMove demo film</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f7f7f2;
+      }
+      @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+      #chap { position: absolute; left: 160px; top: 1016px; height: 40px; width: 900px; z-index: 50; font-family: "InterV", "Inter", sans-serif; font-size: 28px; font-weight: 560; color: #60605a; letter-spacing: -0.008em; opacity: 0; }
+      #chap i { position: absolute; left: 0; top: 14px; width: 12px; height: 12px; border-radius: 3px; background: #fee600; }
+      #chap span { position: absolute; left: 26px; top: 2px; white-space: nowrap; opacity: 0; }
+      #root {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        background: #f7f7f2;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      NextMove demo film, 1920x1080, 30 fps, 180 s.
+      Each scene is a file in compositions/; the scene list and timings are in STORYBOARD.md.
+      The structure follows the organisers' three minutes: 0:00-0:30, 0:30-2:00, 2:00-2:30, 2:30-3:00.
+      Footage in assets/media is real UI recorded from the running app on isolated demo tenants (see capture/).
+    -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="180" data-width="1920" data-height="1080">
+      <!-- 0:00-0:30 user, problem, solution | 0:30-2:00 one workflow, input to outcome | 2:00-2:30 value | 2:30-3:00 build, limits, next -->
+      <div id="s01" data-composition-id="s01" data-composition-src="compositions/s01-open.html" data-start="0" data-duration="6" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="s02" data-composition-id="s02" data-composition-src="compositions/s02-leaks.html" data-start="6" data-duration="12" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="s03" data-composition-id="s03" data-composition-src="compositions/s03-idea.html" data-start="18" data-duration="12" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="s04" data-composition-id="s04" data-composition-src="compositions/s04-ask.html" data-start="30" data-duration="26" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="s05" data-composition-id="s05" data-composition-src="compositions/s05-approve.html" data-start="56" data-duration="18" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="s06" data-composition-id="s06" data-composition-src="compositions/s06-proof.html" data-start="74" data-duration="12" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="s07" data-composition-id="s07" data-composition-src="compositions/s07-offscript.html" data-start="86" data-duration="34" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="s08" data-composition-id="s08" data-composition-src="compositions/s08-value.html" data-start="120" data-duration="30" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="s09" data-composition-id="s09" data-composition-src="compositions/s09-build.html" data-start="150" data-duration="20" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="s10" data-composition-id="s10" data-composition-src="compositions/s10-close.html" data-start="170" data-duration="10" data-track-index="1" data-width="1920" data-height="1080"></div>
+
+      <!-- Chapter marker: which of the organisers' four blocks is on screen. -->
+      <div id="chap"><i></i><span id="chap-1">User, problem and solution</span><span id="chap-2">Working demo: one workflow, input to outcome</span><span id="chap-3">Value and differentiation</span><span id="chap-4">How it is built, limits, next step</span></div>
+
+      <!-- Ambient bed synthesised with ffmpeg by capture/make-audio.py: no third-party music. -->
+      <audio id="bed" class="clip" data-start="0" data-duration="180" data-track-index="2" data-volume="1" src="assets/audio/ambient-bed.mp3"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+      // Chapter marker, hidden on the ink title and closing cards.
+      tl.fromTo("#chap", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out" }, 6.4);
+      [[1, 6.4, 29.6], [2, 30.0, 119.6], [3, 120.0, 149.6], [4, 150.0, 169.4]].forEach(([n, a, b]) => {
+        tl.fromTo("#chap-" + n, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out", immediateRender: false }, a);
+        tl.fromTo("#chap-" + n, { opacity: 1 }, { opacity: 0, duration: 0.4, ease: "power2.in", immediateRender: false }, b);
+      });
+      // Hidden while the receipt phone (s06) sits bottom-left, so the two never overlap.
+      tl.fromTo("#chap", { opacity: 1 }, { opacity: 0, duration: 0.3, ease: "power2.in", immediateRender: false }, 73.6);
+      tl.fromTo("#chap", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out", immediateRender: false }, 86.2);
+      tl.fromTo("#chap", { opacity: 1 }, { opacity: 0, duration: 0.4, ease: "power2.in", immediateRender: false }, 169.4);
+    </script>
+  </body>
+</html>

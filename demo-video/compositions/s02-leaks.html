@@ -1,0 +1,59 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+    #s02-title { position: absolute; left: 160px; top: 118px; font-size: 92px; line-height: 1.02; font-weight: 680; letter-spacing: -0.042em; }
+    #s02-sub { position: absolute; left: 160px; top: 236px; font-size: 34px; line-height: 1.3; font-weight: 450; color: #60605a; letter-spacing: -0.012em; }
+    #s02-list { position: absolute; left: 160px; top: 338px; width: 1600px; }
+    .s02-row { position: relative; height: 108px; border-top: 1.5px solid #e4e5df; display: flex; align-items: center; justify-content: space-between; }
+    .s02-row:last-child { border-bottom: 1.5px solid #e4e5df; }
+    .s02-what { font-size: 40px; font-weight: 600; letter-spacing: -0.025em; }
+    .s02-who { font-size: 28px; font-weight: 480; color: #60605a; margin-top: 4px; letter-spacing: -0.008em; }
+    .s02-amt { font-size: 40px; font-weight: 620; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; text-align: right; }
+    .s02-amt small { font-size: 28px; font-weight: 480; color: #60605a; letter-spacing: -0.008em; }
+    .s02-dot { display: inline-block; width: 14px; height: 14px; border-radius: 4px; background: #fee600; margin-right: 22px; vertical-align: 6px; }
+    #s02-sum { position: absolute; left: 160px; top: 900px; font-size: 40px; font-weight: 620; letter-spacing: -0.025em; }
+    #s02-foot { position: absolute; left: 160px; top: 960px; font-size: 28px; font-weight: 500; color: #60605a; }
+  </style>
+  <div id="root" data-composition-id="s02" data-width="1920" data-height="1080">
+    <div id="s02-title">Money leaks quietly.</div>
+    <div id="s02-sub">Trials, subscriptions, price rises, refunds. One month of one customer:</div>
+    <div id="s02-list">
+      <div class="s02-row" id="s02-r1">
+        <div><div class="s02-what"><span class="s02-dot"></span>A free trial turns paid</div><div class="s02-who" style="margin-left:36px">FitFlow, on 30 October</div></div>
+        <div class="s02-amt">79 RON</div>
+      </div>
+      <div class="s02-row" id="s02-r2">
+        <div><div class="s02-what"><span class="s02-dot"></span>A gym nobody visits</div><div class="s02-who" style="margin-left:36px">PulseGym, no visit since 2 August</div></div>
+        <div class="s02-amt">250 RON <small>a month</small></div>
+      </div>
+      <div class="s02-row" id="s02-r3">
+        <div><div class="s02-what"><span class="s02-dot"></span>Paying twice for storage</div><div class="s02-who" style="margin-left:36px">CloudBox, a duplicate plan</div></div>
+        <div class="s02-amt">35 RON</div>
+      </div>
+      <div class="s02-row" id="s02-r4">
+        <div><div class="s02-what"><span class="s02-dot"></span>A price quietly goes up</div><div class="s02-who" style="margin-left:36px">Streamly, from 39 to 49 RON a month</div></div>
+        <div class="s02-amt">+10 RON <small>a month</small></div>
+      </div>
+      <div class="s02-row" id="s02-r5">
+        <div><div class="s02-what"><span class="s02-dot"></span>A refund that never arrived</div><div class="s02-who" style="margin-left:36px">StudioMart, accepted but not credited</div></div>
+        <div class="s02-amt">249 RON</div>
+      </div>
+    </div>
+    <div id="s02-sum">Each one is easy to miss. Until it has already gone.</div>
+    <div id="s02-foot">Alex, a synthetic demo customer. All names and amounts are fictional.</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    tl.fromTo("#s02-title", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.1, ease: IN }, 0.2);
+    tl.fromTo("#s02-sub", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 1.0, ease: IN }, 0.8);
+    ["#s02-r1", "#s02-r2", "#s02-r3", "#s02-r4", "#s02-r5"].forEach((id, i) => {
+      tl.fromTo(id, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 1.0, ease: IN }, 1.6 + i * 0.9);
+    });
+    tl.fromTo("#s02-foot", { opacity: 0 }, { opacity: 1, duration: 1.0, ease: "power2.out" }, 6.0);
+    tl.fromTo("#s02-sum", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 1.1, ease: IN }, 6.8);
+    tl.fromTo(["#s02-title", "#s02-sub", "#s02-list", "#s02-sum", "#s02-foot"], { opacity: 1, y: 0 }, { opacity: 0, y: -16, duration: 0.7, ease: "power2.in", immediateRender: false }, 11.3);
+    window.__timelines["s02"] = tl;
+  </script>
+</template>

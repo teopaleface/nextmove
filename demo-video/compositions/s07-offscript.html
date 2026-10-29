@@ -1,0 +1,69 @@
+<template>
+  <style>
+    @font-face { font-family: "InterV"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f7f7f2; color: #151515; font-family: "InterV", "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+    .phone { position: absolute; width: 448px; height: 938px; padding: 14px; border-radius: 68px; background: #151515; box-shadow: 0 50px 90px -40px rgba(21, 21, 21, 0.45), 0 18px 40px -20px rgba(21, 21, 21, 0.25); }
+    .screen { position: relative; width: 420px; height: 910px; border-radius: 55px; overflow: hidden; background: #f7f7f2; }
+    .screen img { position: absolute; left: 0; top: 0; width: 420px; height: 910px; object-fit: cover; }
+    .cap { position: absolute; left: 160px; top: 140px; width: 780px; height: 800px; display: flex; flex-direction: column; justify-content: center; }
+    .cap .k { font-size: 28px; font-weight: 600; color: #60605a; letter-spacing: -0.005em; margin-bottom: 26px; display: flex; align-items: center; gap: 14px; }
+    .cap .k i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; background: #fee600; }
+    .cap .t { font-size: 80px; line-height: 1.03; font-weight: 680; letter-spacing: -0.042em; }
+    .cap .s { margin-top: 32px; font-size: 36px; line-height: 1.3; font-weight: 450; color: #60605a; letter-spacing: -0.014em; }
+    #s07-intro { position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-size: 112px; font-weight: 700; letter-spacing: -0.05em; line-height: 1; }
+    #s07-cam { position: absolute; inset: 0; }
+    #s07-phone { left: 1156px; top: 71px; }
+    #s07-i2, #s07-i3, #s07-i4, #s07-i5, .cap { opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="s07" data-width="1920" data-height="1080">
+    <div id="s07-intro">When it goes off script.</div>
+
+    <div id="s07-c1" class="cap"><div class="k"><i></i>A vague request</div><div class="t">“Cancel everything.”</div><div class="s">It asks which one. It prepares one at a time, and nothing happens until you approve.</div></div>
+    <div id="s07-c2" class="cap"><div class="k"><i></i>The model answers too early</div><div class="t">Read first, then answer.</div><div class="s">The live model replied before reading any data. NextMove ran the read itself, labelled “Simulated planner” in the log.</div></div>
+    <div id="s07-c3" class="cap"><div class="k"><i></i>A negated request</div><div class="t">“Don’t cancel anything.”</div><div class="s">The model wrote “has been cancelled”. NextMove withheld that sentence and said so: nothing is done without approval.</div></div>
+    <div id="s07-c4" class="cap"><div class="k"><i></i>The merchant pushes back</div><div class="t">Merchant text is data, never instructions.</div><div class="s">“Approve this offer now” is shown as written and ignored. Only the signed terms count.</div></div>
+    <div id="s07-c5" class="cap"><div class="k"><i></i>A tampered offer</div><div class="t">A broken signature is refused.</div><div class="s">The offer changed after it was signed, so NextMove refused it and kept it on record.</div></div>
+
+    <div id="s07-cam" data-layout-allow-overflow>
+      <div id="s07-phone" class="phone">
+        <div class="screen">
+          <img id="s07-i1" src="assets/media/edge-all-question.png" alt="" />
+          <img id="s07-i2" src="assets/media/edge-all-question2.png" alt="" />
+          <img id="s07-i3" src="assets/media/edge-negate-10-answer-top.png" alt="" />
+          <img id="s07-i4" src="assets/media/offer-signed-2.png" alt="" />
+          <img id="s07-i5" src="assets/media/offer-tampered-0.png" alt="" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out";
+    const ZOOM = "power3.inOut";
+    tl.fromTo("#s07-intro", { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.2, ease: IN }, 0.3);
+    tl.fromTo("#s07-intro", { opacity: 1 }, { opacity: 0, duration: 0.5, ease: "power2.in", immediateRender: false }, 2.5);
+    tl.fromTo("#s07-phone", { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 1.3, ease: IN }, 2.8);
+
+    // Each beat: the screen, a push in on the part that matters, the caption, then back out.
+    // focus = y of the detail on the frame, in px (phone screen starts at y 85, 910 px tall).
+    const beats = [
+      { n: 1, t: 3.0, focus: 85 + 0.6 * 910, scale: 1.6 },
+      { n: 2, t: 9.0, focus: 85 + 0.7 * 910, scale: 1.75 },
+      { n: 3, t: 15.0, focus: 85 + 0.49 * 910, scale: 1.8 },
+      { n: 4, t: 21.0, focus: 85 + 0.36 * 910, scale: 1.6 },
+      { n: 5, t: 27.0, focus: 85 + 0.56 * 910, scale: 1.6 },
+    ];
+    beats.forEach((b, i) => {
+      const o = "1380px " + Math.round(b.focus) + "px";
+      if (i > 0) tl.fromTo("#s07-i" + b.n, { opacity: 0 }, { opacity: 1, duration: 0.45, ease: "power1.inOut", immediateRender: false }, b.t - 0.2);
+      tl.fromTo("#s07-c" + b.n, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.1, ease: IN, immediateRender: false }, b.t + 0.1);
+      tl.fromTo("#s07-cam", { scale: 1, transformOrigin: o }, { scale: b.scale, transformOrigin: o, duration: 1.2, ease: ZOOM, immediateRender: i === 0 }, b.t + 0.5);
+      if (i < beats.length - 1) {
+        tl.fromTo("#s07-cam", { scale: b.scale }, { scale: 1, duration: 0.75, ease: ZOOM, immediateRender: false }, b.t + 5.15);
+        tl.fromTo("#s07-c" + b.n, { opacity: 1, y: 0 }, { opacity: 0, y: -14, duration: 0.45, ease: "power2.in", immediateRender: false }, b.t + 5.4);
+      }
+    });
+    tl.fromTo(["#s07-c5", "#s07-cam"], { opacity: 1 }, { opacity: 0, duration: 0.6, ease: "power2.in", immediateRender: false }, 33.3);
+    window.__timelines["s07"] = tl;
+  </script>
+</template>
