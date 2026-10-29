@@ -4,6 +4,8 @@ A fictional mobile bank with a financial AI agent for personal and business deci
 
 NextMove has its own yellow/ink/white identity inspired by the supplied banking references. It claims no Raiffeisen affiliation. This repository does not establish production banking readiness, legal certification or live merchant coverage, and no production deployment is authorized.
 
+Built by team Mr Laziz (Teo, Eduard and Cosmin) for the Raiffeisen Bank challenge at NEXXT 2026.
+
 ## For reviewers: check it in about ten minutes
 
 1. `npm install && npx playwright install chromium`, then `npm run demo`, and open http://127.0.0.1:3210.

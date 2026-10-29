@@ -8,13 +8,13 @@ Valul aprobat ulterior — Financial Airbag și Bunic Mode — este combinat pe 
 
 | Cod | Propunere (autor) | Ce vede juriul |
 | --- | --- | --- |
-| — | Chat interactiv cu grafice și slidere (Retr0, aprobat de toți) | În răspunsul agentului: card cu rate (sumă, durată, dobândă fictivă) față de obiectivul de locuință, slider de salariu, „Invest the delta” la 1/3/5 ani. |
-| T4 | Scutul Auto-Stop după 0 lei (Cosman) | Verificarea cardului de 0/1 RON pune comerciantul sub supraveghere; prima taxare întreagă e reținută; clientul blochează sau permite, cu chitanță. |
-| A15–A18 | Mecanismele din `message.txt` (Cosman) | Abonament de livrare nerentabil, comision valutar la abonamente în EUR/USD, sală plătită dar nefolosită (fără cheltuieli în jurul ei), asigurare de călătorie dublată de card. |
-| O6 | Google Maps for Money (Retr0) | Traseu spre avansul de locuință; obstacole adăugate de juriu; „Recalculating route…”; 4 trasee, unul respins pentru că atinge rezerva. |
-| O7, O8 | Salary Autopilot / Idle Cash Sniper / Overdraft Shield (Cosman, Retr0) | Banii pentru facturi stau în „Bill vault” și revin cu o zi înainte de scadență; completare exactă din economii înainte de o factură care ar duce contul pe minus. Acțiune nouă: `INTERNAL_TRANSFER`. |
-| O9 | Financial Airbag (Cosman) | Alex Home → alegi servicii opționale, păstrezi protecțiile, recalculezi și aprobi lista exactă; pauza comerciantului și oprirea reînnoirii au rezultate și chitanțe separate. |
-| UI | Bunic Mode / Simple mode (Cosman) | Profile → Display and voice: text și controale mărite, ghid pe ecran, citire la cerere și dictare într-o ciornă editabilă. Vocea nu trimite și nu aprobă singură. |
+| — | Chat interactiv cu grafice și slidere (Eduard, aprobat de toți) | În răspunsul agentului: card cu rate (sumă, durată, dobândă fictivă) față de obiectivul de locuință, slider de salariu, „Invest the delta” la 1/3/5 ani. |
+| T4 | Scutul Auto-Stop după 0 lei (Cosmin) | Verificarea cardului de 0/1 RON pune comerciantul sub supraveghere; prima taxare întreagă e reținută; clientul blochează sau permite, cu chitanță. |
+| A15–A18 | Mecanismele din `message.txt` (Cosmin) | Abonament de livrare nerentabil, comision valutar la abonamente în EUR/USD, sală plătită dar nefolosită (fără cheltuieli în jurul ei), asigurare de călătorie dublată de card. |
+| O6 | Google Maps for Money (Eduard) | Traseu spre avansul de locuință; obstacole adăugate de juriu; „Recalculating route…”; 4 trasee, unul respins pentru că atinge rezerva. |
+| O7, O8 | Salary Autopilot / Idle Cash Sniper / Overdraft Shield (Cosmin, Eduard) | Banii pentru facturi stau în „Bill vault” și revin cu o zi înainte de scadență; completare exactă din economii înainte de o factură care ar duce contul pe minus. Acțiune nouă: `INTERNAL_TRANSFER`. |
+| O9 | Financial Airbag (Cosmin) | Alex Home → alegi servicii opționale, păstrezi protecțiile, recalculezi și aprobi lista exactă; pauza comerciantului și oprirea reînnoirii au rezultate și chitanțe separate. |
+| UI | Bunic Mode / Simple mode (Cosmin) | Profile → Display and voice: text și controale mărite, ghid pe ecran, citire la cerere și dictare într-o ciornă editabilă. Vocea nu trimite și nu aprobă singură. |
 
 ## Demo (Alex, Personal)
 

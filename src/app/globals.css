@@ -24,8 +24,10 @@
   --r-sheet: 24px;
 
   --ease: cubic-bezier(0.23, 1, 0.32, 1);
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* At least some room above the header and below the tabs, so content never touches the screen edge where a
+     status bar or home indicator sits; a notched phone's own inset wins when it is larger. */
+  --safe-top: max(env(safe-area-inset-top, 0px), 16px);
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
   --header-h: 56px;
   --tabs-h: 64px;
   --font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;

@@ -28,7 +28,7 @@ import {
   subscription,
 } from "./core";
 
-// Hidden-loss detectors (Cosman's proposal): losses that are certain from the statement (A15, A16), a behavioural
+// Hidden-loss detectors (Cosmin's proposal): losses that are certain from the statement (A15, A16), a behavioural
 // footprint that is only a signal (A17), and cover the customer may already have (A18). Each shows its evidence,
 // an explicit confidence, and acts only through existing routes (stop renewal, pause) or advisory steps.
 
