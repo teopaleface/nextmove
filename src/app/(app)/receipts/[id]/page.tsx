@@ -7,6 +7,7 @@ import { useSession } from "@/ui/session";
 import { ErrorBox, Group, KV, Loading, PageHead, Section, Sources } from "@/ui/kit";
 import { dayTime, money } from "@/ui/format";
 import { Icon } from "@/ui/icons";
+import { PutToWork } from "@/ui/put-to-work";
 
 export default function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -19,6 +20,8 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
   const forecast = r.money?.forecastChangeMinor ?? a.money?.forecastChangeMinor ?? 0;
   const debit = a.money?.immediateDebitMinor ?? 0;
   const checks: string[] = r.verification?.checks ?? [];
+  // An internal transfer moves money between the customer's own accounts: say how much, not "unchanged".
+  const moved = r.operation === "INTERNAL_TRANSFER" ? r.money?.details : null;
   return (
     <>
       <PageHead back title="Receipt" />
@@ -42,7 +45,12 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
             ...(r.access_until ? [{ label: "Access until", value: dayTime(r.access_until) }] : []),
             ...(r.terms_revision ? [{ label: "Terms", value: `Revision ${r.terms_revision}` }] : []),
             { label: "Future charges", value: forecast < 0 ? `${money(-forecast)} avoided` : forecast > 0 ? `${money(forecast)} added` : "No change" },
-            { label: "Your balance", value: debit ? `${money(-debit)} posted` : "Unchanged by this action" },
+            ...(moved?.amountMinor
+              ? [
+                  { label: "Moved", value: `${money(moved.amountMinor)} between your accounts` },
+                  { label: "Your total funds", value: "Unchanged by this action" },
+                ]
+              : [{ label: "Your balance", value: debit ? `${money(-debit)} posted` : "Unchanged by this action" }]),
             { label: "Verified", value: dayTime(r.verified_at) },
           ]}
         />
@@ -52,6 +60,8 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
           </p>
         ) : null}
       </Section>
+
+      {data.putToWork ? <PutToWork receiptId={r.id} offer={data.putToWork} onChanged={reload} /> : null}
 
       <Section title="How NextMove checked it">
         <Group>

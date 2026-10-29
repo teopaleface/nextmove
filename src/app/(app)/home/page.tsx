@@ -28,6 +28,7 @@ export default function HomePage() {
             <Link key={a.id} href={`/home/accounts/${encodeURIComponent(a.id)}`} className="account-tile" aria-label={`${a.name}, ${short(a.balanceMinor)}`}>
               <div className="label">{a.name}</div>
               <div className="caption">{a.ibanMasked}</div>
+              {a.rateNote ? <div className="caption">{a.rateNote}</div> : null}
               <div className="amt">
                 <Money minor={a.balanceMinor} />
               </div>

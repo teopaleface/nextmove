@@ -35,6 +35,7 @@ import { AUTOPILOT_LABS, runAutopilotLabs } from "../capabilities/cash-autopilot
 import { approveBatch, batchFollowUps, batchSummary, recheckBatch, reviseBatch, startBulkReview, stopBatch } from "../capabilities/batch";
 import { createAgentTask, answerQuestion, stopAgentTask } from "../agent/orchestrator";
 import { cardDraft, paymentDraft, payees } from "../bank/payments";
+import { accountRateNote, putToWorkDismiss, putToWorkDraft, putToWorkOffer } from "../bank/put-to-work";
 import { saveUpload, readUpload } from "../evidence/uploads";
 import { extractFromUpload, manualExtraction, confirmExtraction, DOC_KINDS, type DocKind } from "../evidence/vision";
 import { storeInboxEvent, verifyInboxSignature, applyPendingInbox } from "../execution/inbox";
@@ -164,7 +165,7 @@ get("/home", async (c) => {
   const ses = s(c);
   const db = c.db;
   const ctx = contextsFor(db, ses).find((x) => x.id === ses.contextId)!;
-  const accounts = accountsFor(db, ses.tenantId, ses.contextId);
+  const accounts = accountsFor(db, ses.tenantId, ses.contextId).map((a) => ({ ...a, rateNote: accountRateNote(ses.tenantId, a) }));
   const items = all<any>(db, "SELECT f.*, s.merchant_name FROM forecast_items f LEFT JOIN subscriptions s ON s.id=f.subscription_id WHERE f.tenant_id=? AND f.context_id=? AND f.status='SCHEDULED' AND f.dataset != 'bulk' ORDER BY f.due_at LIMIT 8", ses.tenantId, ses.contextId).map((f) => ({ ...f, data_json: undefined }));
   const upcoming = ctx.kind === "PERSONAL" && customerOf(db, ses.tenantId) === "alex" ? subscriptionWindowTotal(db, ses.tenantId, ses.contextId) : null;
   const findings = all<any>(db, "SELECT * FROM findings WHERE tenant_id=? AND context_id=? AND resolved_at IS NULL ORDER BY priority, created_at DESC LIMIT 4", ses.tenantId, ses.contextId);
@@ -249,7 +250,8 @@ get("/accounts/:id", (c) => {
   const ses = s(c);
   const a = one<any>(c.db, "SELECT * FROM accounts WHERE id=?", c.params.id);
   assertOwned(c.db, ses, a, { activeContextOnly: true });
-  const acct = accountsFor(c.db, ses.tenantId, ses.contextId).find((x) => x.id === a.id);
+  const found = accountsFor(c.db, ses.tenantId, ses.contextId).find((x) => x.id === a.id);
+  const acct = found ? { ...found, rateNote: accountRateNote(ses.tenantId, found) } : found;
   const txns = all<any>(c.db, "SELECT id, merchant_name, category, amount_minor, booked_at, status, reference FROM transactions WHERE tenant_id=? AND account_id=? ORDER BY booked_at DESC LIMIT 40", ses.tenantId, a.id);
   const cardActions = all<any>(c.db, "SELECT id, status, spec_json, updated_at FROM proposal_actions WHERE tenant_id=? AND operation='CARD_FREEZE' AND subject_ref=? ORDER BY updated_at DESC LIMIT 5", ses.tenantId, a.id).map((x) => ({ id: x.id, status: x.status, title: json<any>(x.spec_json, {})?.display?.title, updatedAt: x.updated_at }));
   return { account: acct, transactions: txns, cardActions };
@@ -380,7 +382,14 @@ get("/actions/:id", (c) => {
   const receipt = one<any>(c.db, "SELECT * FROM receipts WHERE action_id=?", a.id);
   const grant = one<any>(c.db, "SELECT status, expires_at, consumed_by_attempt, mandate_id FROM grants WHERE action_id=?", a.id);
   const p = one<any>(c.db, "SELECT task_id, batch_id FROM proposals WHERE id=?", a.proposal_id);
-  return { action: { id: a.id, status: a.status, proposalId: a.proposal_id, taskId: p?.task_id, batchId: p?.batch_id, capability: spec.capability, operation: spec.operation, display: spec.display, route: spec.route, merchantName: spec.merchantName, money: spec.money, consequences: spec.consequences, termsRevision: spec.termsRevision, result: json(a.result_json, null) }, grant, attempts, receipt: receipt ? { ...receipt, verification: json(receipt.verification_json, {}), money: json(receipt.money_effect_json, {}) } : null };
+  const offer = receipt ? putToWorkOffer(c.db, ses, receipt) : null;
+  return {
+    action: { id: a.id, status: a.status, proposalId: a.proposal_id, taskId: p?.task_id, batchId: p?.batch_id, capability: spec.capability, operation: spec.operation, display: spec.display, route: spec.route, merchantName: spec.merchantName, money: spec.money, consequences: spec.consequences, termsRevision: spec.termsRevision, result: json(a.result_json, null) },
+    grant,
+    attempts,
+    receipt: receipt ? { ...receipt, verification: json(receipt.verification_json, {}), money: json(receipt.money_effect_json, {}) } : null,
+    putToWork: offer ? { state: offer.state, amountMinor: offer.amountMinor } : null,
+  };
 });
 post("/actions/:id/check", (c) => {
   const ses = s(c);
@@ -394,7 +403,18 @@ get("/receipts/:id", (c) => {
   const r = one<any>(c.db, "SELECT * FROM receipts WHERE id=?", c.params.id);
   assertOwned(c.db, ses, r);
   const a = r.action_id ? one<any>(c.db, "SELECT spec_json, proposal_id, status FROM proposal_actions WHERE id=?", r.action_id) : null;
-  return { receipt: { ...r, verification: json(r.verification_json, {}), money: json(r.money_effect_json, {}), verification_json: undefined, money_effect_json: undefined }, action: a ? { ...json<any>(a.spec_json, {}), proposalId: a.proposal_id, status: a.status } : null };
+  return { receipt: { ...r, verification: json(r.verification_json, {}), money: json(r.money_effect_json, {}), verification_json: undefined, money_effect_json: undefined }, action: a ? { ...json<any>(a.spec_json, {}), proposalId: a.proposal_id, status: a.status } : null, putToWork: putToWorkOffer(c.db, ses, r) };
+});
+// After a confirmed stop: draft the exact move of the avoided amount (savings or bonds), or record "Not now".
+// The server takes the amount from the receipt; the body only names the option.
+post("/receipts/:id/put-to-work", async (c) => {
+  const ses = s(c);
+  const choice = (await c.body())?.choice;
+  const r = one<any>(c.db, "SELECT * FROM receipts WHERE id=?", c.params.id);
+  assertOwned(c.db, ses, r, { activeContextOnly: true });
+  if (choice === "not-now") return putToWorkDismiss(c.db, ses, r.id);
+  if (choice !== "savings" && choice !== "bonds") throw new HttpError(400, "BAD_CHOICE", "Choose savings, bonds or not-now");
+  return putToWorkDraft(c.db, ses, r.id, choice);
 });
 
 get("/evidence/screens/:file", (c) => {

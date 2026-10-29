@@ -483,4 +483,4 @@ The phone E2E suite (`tests/e2e`) had never been run end to end. It was run agai
 
 A live run of "Block my card" got a model answer that denied the app has cards and sent the customer to "your bank app". A request the router marks out of scope (cards, passwords, PINs, opening or closing accounts) now never reaches the model: NextMove writes the fixed reply, the task is labelled `DETERMINISTIC` and the answer "Written by NextMove". The card reply points to Home → Cards, where freezing is an approved action. Test: `tests/integration/edge-chat-live.test.ts` ("block my card" with a fake CLI that would answer wrongly; the CLI is never called).
 
-**Checks:** `npx tsc --noEmit`: pass. `npm test`: **678 tests passed in 55 files**. `git diff --check`: clean.
+**Checks:** `npx tsc --noEmit`: pass. `npm test`: **681 tests passed in 56 files**. `git diff --check`: clean.

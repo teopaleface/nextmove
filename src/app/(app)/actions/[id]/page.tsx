@@ -6,7 +6,7 @@ import { api, useApi } from "@/ui/api";
 import { useSession } from "@/ui/session";
 import { BrowserFrame } from "@/ui/browser";
 import { ActionStatus, ErrorBox, Group, KV, Loading, Notice, PageHead, Row, Section, Sources, actionState, useAction } from "@/ui/kit";
-import { ROUTE_LABEL, dayTime, money, onDemoClock, time } from "@/ui/format";
+import { ROUTE_LABEL, dayTime, money, onDemoClock, short, time } from "@/ui/format";
 import { Icon } from "@/ui/icons";
 
 const LIVE = new Set(["APPROVED", "EXECUTING"]);
@@ -95,6 +95,11 @@ export default function ActionPage({ params }: { params: Promise<{ id: string }>
           <Link className="btn primary block" href={`/receipts/${data.receipt.id}`}>
             View receipt {data.receipt.issuer_reference}
           </Link>
+          {data.putToWork && ["OFFER", "PREPARED"].includes(data.putToWork.state) ? (
+            <Link className="btn block" href={`/receipts/${data.receipt.id}#put-to-work`} style={{ marginTop: 8 }}>
+              You kept {short(data.putToWork.amountMinor)}. Put it to work?
+            </Link>
+          ) : null}
         </Section>
       ) : null}
 

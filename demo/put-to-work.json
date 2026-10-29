@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "status": "fictional",
+  "description": "Synthetic terms for the after-cancel 'Put it to work' offer. The savings rate is the demo rate in cash-autopilot.json. The Titluri de stat holding is a simulation inside the demo bank: no bond is bought, no real issue, rate or institution is represented, and none of this is an offer.",
+  "currency": "RON",
+  "moneyUnit": "minor (bani)",
+  "projectionDays": 365,
+  "bonds": {
+    "accountLocal": "bonds",
+    "name": "Titluri de stat (simulated)",
+    "kind": "HOLDING",
+    "annualRatePct": 6.0,
+    "termMonths": 12,
+    "rateLabel": "6.00% a year, fixed for 12 months, simulated"
+  }
+}

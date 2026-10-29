@@ -15,7 +15,7 @@ import { formatDayTime, toMs } from "../../shared/time";
 // logical key → receipt. A scheduled leg waits for its approved demo-time date; a crash after the gate leaves the
 // attempt UNKNOWN and reconciliation reads the ledger (the bank's own system of record) before anything else.
 
-export type TransferPurpose = "VAULT_PARK" | "VAULT_RETURN" | "VAULT_RETURN_ALL" | "SHIELD_TOP_UP" | "MANUAL";
+export type TransferPurpose = "VAULT_PARK" | "VAULT_RETURN" | "VAULT_RETURN_ALL" | "SHIELD_TOP_UP" | "PUT_TO_WORK_SAVINGS" | "PUT_TO_WORK_BONDS" | "MANUAL";
 
 export interface TransferParams {
   fromAccountId: string;

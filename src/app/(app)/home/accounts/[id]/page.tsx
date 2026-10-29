@@ -80,7 +80,8 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
       <Section title="Account details">
         <KV
           items={[
-            { label: "Type", value: a.kind === "SAVINGS" ? "Savings" : a.kind === "BUSINESS_CURRENT" ? "Business current account" : "Current account" },
+            { label: "Type", value: a.kind === "SAVINGS" ? "Savings" : a.kind === "HOLDING" ? "Titluri de stat holding (simulated, no bond is bought)" : a.kind === "POCKET" ? "Pocket" : a.kind === "BUSINESS_CURRENT" ? "Business current account" : "Current account" },
+            ...(a.rateNote ? [{ label: "Rate", value: a.rateNote }] : []),
             { label: "IBAN", value: a.ibanMasked ?? "—" },
             { label: "Currency", value: a.currency },
           ]}

@@ -6,7 +6,7 @@
   "moneyUnit": "minor (bani)",
   "pockets": {
     "vault": { "accountLocal": "vault", "name": "Bill vault", "kind": "POCKET", "annualRatePct": 2.0, "withdrawalFeeMinor": 0, "noticeDays": 0, "rateLabel": "2.00% a year, fictional rate" },
-    "savings": { "accountLocal": "savings", "annualRatePct": 2.5, "withdrawalFeeMinor": 0, "noticeDays": 0, "rateLabel": "2.50% a year, fictional rate" }
+    "savings": { "accountLocal": "savings", "annualRatePct": 5.0, "withdrawalFeeMinor": 0, "noticeDays": 0, "rateLabel": "5.00% a year, demo rate" }
   },
   "overdraft": {
     "annualRatePct": 21.9,

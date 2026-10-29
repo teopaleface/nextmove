@@ -923,6 +923,19 @@ details.group[open] > summary {
   gap: 8px;
 }
 
+/* Honesty label next to a rate or option: "Demo rate", "Simulated, not an offer". */
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 .field {
   display: grid;
   gap: 6px;
