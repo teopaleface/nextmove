@@ -13,7 +13,7 @@ Valul aprobat ulterior — Financial Airbag și Bunic Mode — este combinat pe 
 | A15–A18 | Mecanismele din `message.txt` (Cosmin) | Abonament de livrare nerentabil, comision valutar la abonamente în EUR/USD, sală plătită dar nefolosită (fără cheltuieli în jurul ei), asigurare de călătorie dublată de card. |
 | O6 | Google Maps for Money (Eduard) | Traseu spre avansul de locuință; obstacole adăugate de juriu; „Recalculating route…”; 4 trasee, unul respins pentru că atinge rezerva. |
 | O7, O8 | Salary Autopilot / Idle Cash Sniper / Overdraft Shield (Cosmin, Eduard) | Banii pentru facturi stau în „Bill vault” și revin cu o zi înainte de scadență; completare exactă din economii înainte de o factură care ar duce contul pe minus. Acțiune nouă: `INTERNAL_TRANSFER`. |
-| O9 | Financial Airbag (Cosmin) | Alex Home → alegi servicii opționale, păstrezi protecțiile, recalculezi și aprobi lista exactă; pauza comerciantului și oprirea reînnoirii au rezultate și chitanțe separate. |
+| O9 | Financial Airbag (Cosmin) | Alex Home → butonul „Deploy the airbag” (un singur tap) alege pauza sau oprirea reînnoirii pentru fiecare serviciu opțional; sau alegi servicii opționale, păstrezi protecțiile, recalculezi și aprobi lista exactă; pauza comerciantului și oprirea reînnoirii au rezultate și chitanțe separate. |
 | UI | Bunic Mode / Simple mode (Cosmin) | Profile → Display and voice: text și controale mărite, ghid pe ecran, citire la cerere și dictare într-o ciornă editabilă. Vocea nu trimite și nu aprobă singură. |
 
 ## Demo (Alex, Personal)
@@ -30,6 +30,20 @@ Valul aprobat ulterior — Financial Airbag și Bunic Mode — este combinat pe 
 - Stoozing: depinde de dobânzi și cashback inventate.
 - Obiectiv comun cu prietenii care aduce clienți noi: merge în pitch/GTM ca sursă de clienți noi.
 - Ideile B2B (Shadow CFO, e-Factura, granturi, negociere cu furnizori): fiecare e alt produs.
+
+## Restul listei din Discord (verificat 29 octombrie, 03:50)
+
+| Propunere | Stare |
+| --- | --- |
+| Zero-Day Salary Autopilot / Idle Cash Sniper (Cosmin, Eduard) | Implementat ca O7 Bill vault. |
+| Overdraft Shield (Chaos Monkey, trigger 3) | Implementat ca O8. |
+| Guilt Tax (Chaos Monkey, trigger 1) | Neimplementat. Ar muta bani automat fără aprobare exactă, ceea ce contrazice regula aplicației. |
+| Reverse-Auction Bill Terminator | Parțial: pierderile ascunse A15–A18, oprirea abonamentelor și „Put it to work” (suma păstrată → economii 5% demo sau titluri de stat simulate). Fără refinanțare sau RCA/CASCO. |
+| „Pre-Crime” pentru cumpărături impulsive | Parțial: „Can I buy a 6,000 RON phone and still reach my home goal?” cu slidere. Fără overlay în browser sau Monte Carlo. |
+| Time-Machine Financial Twin | Parțial: O6 Route to your home recalculează traseul la obstacole. Fără agenți paraleli. |
+| Life-Event Router, Micro-Treasury FX, Cart-to-Credit Split | Neimplementate. Depind de produse, cursuri și dobânzi inventate. |
+| Co-browsing onboarding, Know Your Supplier, Self-Healing SME, Shadow Buyer | Neimplementate. B2B / onboarding, alt produs. |
+| Joint Goals Mediator | Neimplementat; vezi obiectivul comun mai sus. |
 
 ## Probleme cunoscute
 
