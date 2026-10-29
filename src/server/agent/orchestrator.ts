@@ -457,6 +457,14 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
   const answers = all<any>(db, "SELECT text, answer_json FROM task_questions WHERE task_id=? AND status='ANSWERED'", task.id).map((q) => ({ question: q.text, answer: json(q.answer_json) }));
   let mode: "LIVE_MODEL" | "SIMULATED_PLANNER" = config.planner === "simulated" ? "SIMULATED_PLANNER" : "LIVE_MODEL";
   const ids = [...new Set(CAPABILITIES.filter((c) => c.customer === customerOf(db, task.tenant_id) && c.contextKind === contextKindOf(db, task.context_id)).map((c) => c.id))];
+  // Something this demo cannot do ("block my card") gets NextMove's fixed reply: a model asked anyway has denied a
+  // feature the app has and sent the customer to "your bank app".
+  const fixed = mode === "LIVE_MODEL" && Boolean(route(db, session, task.request_text).outOfScope);
+  if (fixed) {
+    mode = "SIMULATED_PLANNER";
+    run(db, "UPDATE tasks SET planner_mode='DETERMINISTIC' WHERE id=?", task.id);
+    if (!steps.length) taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: "planner", label: "Not something NextMove does from chat; answered without the model", evidence: "SIMULATED_PLANNER" });
+  }
   try {
     for (let i = steps.length; i < task.step_budget; i++) {
       if (one<any>(db, "SELECT state FROM tasks WHERE id=?", task.id)?.state === "STOPPED") break;
@@ -539,7 +547,7 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
           provenance = problem;
           text = a ? `${sentence(a.result.headline)}${steps.some((s) => s.tool === "prepare_proposal" && s.result.proposalId) ? " A proposal is ready for your review; nothing happens until you approve." : ""}` : "Here is what NextMove found.";
         }
-        setBlock(db, task.id, "answer", 40, "answer", { text, by: mode, provenance });
+        setBlock(db, task.id, "answer", 40, "answer", { text, by: fixed ? "NEXTMOVE" : mode, provenance: fixed ? "Written by NextMove; the model was not asked" : provenance });
         const hasProposal = steps.some((s) => s.tool === "prepare_proposal" && s.result.proposalId);
         setTaskState(db, task.id, hasProposal ? "NEEDS_APPROVAL" : "DONE", cut(text, 300));
         break;

@@ -334,7 +334,7 @@ describe("a stop or cancel with nothing named asks what to stop", () => {
 
 describe("requests this demo cannot do", () => {
   it.each([
-    ["block my card", "block, freeze or cancel a card"],
+    ["block my card", "block, freeze or cancel a card from chat (Home → Cards has a Freeze card button you approve yourself)"],
     ["I forgot my password", "help with passwords or signing in"],
     ["change my PIN", "show or change a card PIN"],
     ["close my account", "close an account"],

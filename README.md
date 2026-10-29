@@ -84,7 +84,7 @@ No API key is needed. `npm run smoke:model` runs one live text call and one live
 | Command | Notes |
 | --- | --- |
 | `npm run typecheck` | `tsc --noEmit`. |
-| `npm test` | Vitest unit and integration tests: 677 tests in 55 files, about 60 s. The integration suite starts its own isolated stack on random loopback ports. |
+| `npm test` | Vitest unit and integration tests: 678 tests in 55 files, about 60 s. The integration suite starts its own isolated stack on random loopback ports. |
 | `npm run test:live` | Reserved for live-model Vitest tests (`tests/live`, not written yet). The live model is exercised by `tests/e2e/05-live-model.spec.ts` instead. |
 | `npm run test:e2e` | Playwright phone E2E in `tests/e2e` (26 scenarios, about 2.5 min), against an already running stack. Runs at 390x844, plus 360 and 430 for tests tagged `@layout`. Records a video of every test. |
 | `npm run evidence:manifest` | Turns the last E2E run into [evidence/MANIFEST.md](evidence/MANIFEST.md): each scenario's result, test, reproduce command and video timestamps. Copies the videos to `evidence/recordings/` (ignored by Git). |

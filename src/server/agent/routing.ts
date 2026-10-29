@@ -105,7 +105,7 @@ const BULK_VERBS = new Set([...GENERIC, "pause", "break", "block", "hold"]);
 // Things a bank app does that this demo does not. The reply says so instead of routing a stray word ("block" is the
 // Trial Shield's merchant block, "forgot" a forgotten trial).
 const OUT_OF_SCOPE: [RegExp, string][] = [
-  [/\b(?:block|freeze|unfreeze|unblock|lock|unlock|cancel|deactivate)\w* (?:my |the |this |a |our )?(?:debit |credit |bank |business |lost |stolen )?cards?\b(?! (?:charge|check|cover|on file|updater|subscription|payment))|\bblocheaz\w* (?:\w+ )?card\w*/, "block, freeze or cancel a card"],
+  [/\b(?:block|freeze|unfreeze|unblock|lock|unlock|cancel|deactivate)\w* (?:my |the |this |a |our )?(?:debit |credit |bank |business |lost |stolen )?cards?\b(?! (?:charge|check|cover|on file|updater|subscription|payment))|\bblocheaz\w* (?:\w+ )?card\w*/, "block, freeze or cancel a card from chat (Home → Cards has a Freeze card button you approve yourself)"],
   [/\b(?:password|passwords|passcode|parola|parolei)\b|\b(?:can'?t|cannot|forgot\w*|unable to) (?:to )?(?:log ?in|sign ?in)\b/, "help with passwords or signing in"],
   [/\bpin(?: code)?s?\b/, "show or change a card PIN"],
   [/\b(?:close|closing|delete|deleting|terminate)\w* (?:my |the |this |a |an |our )?(?:\w+ )?account\b|\binchid\w* (?:\w+ )?cont(?:ul)?\b/, "close an account"],

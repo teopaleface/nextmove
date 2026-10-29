@@ -377,3 +377,20 @@ describe("other model text on its way to the customer", () => {
     expect(JSON.stringify(api)).not.toMatch(/pulsegym-help|already cancelled/);
   });
 });
+
+describe("requests this demo cannot do, with the live model on", () => {
+  it("“block my card” gets NextMove's fixed reply; the model is never asked", async () => {
+    await liveWorker("live");
+    const a = await stack.login("alex");
+    script([final("There is no card feature here; please use your bank app to block it.")]);
+    const before = payloads().length;
+    const v = await run(a, "Block my card");
+    expect(payloads().length).toBe(before);
+    expect(v.task.plannerMode).toBe("DETERMINISTIC");
+    expect(answerOf(v).by).toBe("NEXTMOVE");
+    expect(answerOf(v).text).toMatch(/^This demo can't block, freeze or cancel a card from chat \(Home → Cards has a Freeze card button/);
+    expect(JSON.stringify(v)).not.toMatch(/your bank app/);
+    expect(events(v.task.id)).toContain("Not something NextMove does from chat; answered without the model");
+    expect(proposalsOf(v.task.id)).toHaveLength(0);
+  });
+});
