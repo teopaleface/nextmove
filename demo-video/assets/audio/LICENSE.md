@@ -29,11 +29,12 @@ The credit appears on the film's closing card and in `demo-video/README.md`.
 CC BY 4.0 asks us to say whether the work was changed. We did change it. `score-nonstop.mp3` is an excerpt of the track:
 
 - it starts 7.55 s into the original, so the film's cuts land on its beat grid;
+- it is re-edited on whole bars (1 bar = 1.875 s) by `capture/build-score.sh`: three intro bars (1.875–7.5 s of the excerpt) play twice, and bars 77–78 and 86 are left out, with a 4 ms ramp at each join;
 - it is 180 s long and ends on the track's own final hit, with a 0.6 s fade at the very end;
 - the level is lowered by 2.8 dB to about −16 LUFS, with a peak limiter;
 - it is re-encoded as 48 kHz MP3 at 256 kbps.
 
-There is no remix, and nothing is overlaid on the music.
+Apart from those bar edits there is no remix, and nothing is overlaid on the music.
 
 ## Not used any more
 

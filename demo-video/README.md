@@ -7,12 +7,12 @@ NextMove is a fictional demo bank. Every customer, account, merchant and amount 
 - Output: `out/nextmove-demo.mp4` (1920x1080, 30 fps, H.264 + AAC, 3:00)
 - Script and scene list: `STORYBOARD.md` (ten scenes in four blocks: 0:00–0:30 user, problem and solution; 0:30–2:00 the FitFlow stop and put-to-work, off-script cases, the what-if, Financial Airbag; 2:00–2:30 value; 2:30–3:00 build, limits, next step)
 - Music: "Nonstop" by Kevin MacLeod (incompetech.com), CC BY 4.0; the film is cut to its 128 BPM grid
-- Slide deck: `deck/index.html` (12 slides, 1920x1080), exported to `out/nextmove-deck.pdf`
+- Slide deck: `deck/index.html` (16 slides, 1920x1080), exported to `out/nextmove-deck.pdf`
 
 ## Layout
 
 ```
-index.html              root composition: mounts the 10 scenes, the block indicator and the music
+index.html              root composition: mounts the 10 scenes and the music
 film/scenes/c1..c10     the scene sources; film/shared.* holds the shared CSS and GSAP helpers (beat b(n), shot, pop, cam)
 film/build.mjs          builds film/scenes into compositions/ (adds the shared helpers and the logo SVG)
 compositions/c1..c10    built scenes, one per file (HTML + CSS + GSAP timeline inside <template>); v1/ is the earlier cut
@@ -60,13 +60,14 @@ MODEL_BUDGET=19 node capture/shot-sim.mjs           # the phone what-if, sliders
 # other live shots: each run sends one question to the model (plus one per follow-up answer)
 node capture/shot-chat.mjs order   laziz BUSINESS "Can we take the 40,000 RON order?"
 ANSWER="stopped going" node capture/shot-chat.mjs gym2 alex PERSONAL "Am I paying for a gym I don't use?"
-node capture/shot-chat.mjs edge-all alex PERSONAL "Cancel everything"
+NO_ANSWER=1 node capture/shot-chat.mjs edge-all alex PERSONAL "Cancel everything"   # stops at the question
 node capture/shot-chat.mjs edge-negate alex PERSONAL "Don't cancel anything, just show my balance"
 
 capture/build-assets.sh            # cut captures/rec/*.mp4 into assets/media/v2
+capture/build-score.sh             # re-cut the licensed track on whole bars into assets/audio/score-nonstop.mp3
 ```
 
-`capture/lib.mjs` counts every request that can reach the model (`POST /api/tasks`, `POST /api/tasks/:id/answer`) in `captures/model-requests.log` and refuses to go past `MODEL_BUDGET` (default 15). Live answers differ from run to run, so after a re-capture check the in/out points in `build-assets.sh`, and the `data-media-start` values and caption timings in `film/scenes/`, against the new recordings (`captures/rec/<name>.json` has the marks). The film used 19 model requests in all.
+`capture/lib.mjs` counts every request that can reach the model (`POST /api/tasks`, `POST /api/tasks/:id/answer`) in `captures/model-requests.log` and refuses to go past `MODEL_BUDGET` (default 15). Live answers differ from run to run, so after a re-capture check the in/out points in `build-assets.sh`, and the `data-media-start` values and caption timings in `film/scenes/`, against the new recordings (`captures/rec/<name>.json` has the marks). The film used 24 model requests in all.
 
 `capture/explore.mjs` and `capture/scout-t2.mjs` are scouting helpers that save stills of the main screens; they send no model requests.
 
@@ -81,7 +82,7 @@ It uses the repository's Playwright (`../node_modules/playwright`). Open `deck/i
 
 ## Audio and licences
 
-- Music: "Nonstop" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License, http://creativecommons.org/licenses/by/4.0/. The film uses a 180 s excerpt, levelled and re-encoded; `assets/audio/LICENSE.md` lists the source, checksum and changes. The credit is on the closing card.
+- Music: "Nonstop" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License, http://creativecommons.org/licenses/by/4.0/. The film uses a 180 s edit of the track, cut on whole bars, levelled and re-encoded (`capture/build-score.sh`); `assets/audio/LICENSE.md` lists the source, checksum and changes. The credit is on the closing card.
 - Font: Inter, SIL Open Font License 1.1 (`assets/fonts/LICENSE-Inter-OFL.txt`).
 - HyperFrames and GSAP: used as tools; HyperFrames is Apache-2.0, and GSAP is free to use under its standard licence.
 - No voiceover.

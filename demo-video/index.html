@@ -25,10 +25,6 @@
         position: relative;
         background: #f7f7f2;
       }
-      /* Block indicator: four short bars, the current block filled. */
-      #blk { position: absolute; left: 150px; top: 1024px; z-index: 50; display: flex; gap: 10px; opacity: 0; }
-      #blk i { display: block; width: 44px; height: 6px; border-radius: 3px; background: rgba(120, 120, 112, 0.35); }
-      #blk i.on { background: #fee600; box-shadow: 0 0 0 1px rgba(21, 21, 21, 0.35); }
     </style>
   </head>
   <body>
@@ -36,21 +32,20 @@
       NextMove demo film, 1920x1080, 30 fps, 180 s, cut to "Nonstop" (128 BPM): every scene starts on a downbeat.
       Scenes are written in film/scenes/ and built into compositions/ by `node film/build.mjs`. See STORYBOARD.md.
       Footage in assets/media/v2 is real UI recorded from the running app on isolated demo tenants (see capture/).
-      Blocks: 0:00-0:30 user, problem, solution | 0:30-2:00 working demo | 2:00-2:30 value | 2:30-3:00 build, limits, next.
+      Blocks: 0:00-0:36 user, problem, solution | 0:36-2:06 working demo | 2:06-2:32 value | 2:32-3:00 build, limits, next.
+      The score is re-cut on whole bars to match (capture/build-score.sh): 3 intro bars repeated, 2 bars before c9 and 1 bar in c9 removed.
     -->
     <div id="root" data-composition-id="main" data-start="0" data-duration="180" data-width="1920" data-height="1080">
-      <div id="c1" data-composition-id="c1" data-composition-src="compositions/c1-open.html" data-start="0" data-duration="30" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div id="c2" data-composition-id="c2" data-composition-src="compositions/c2-fitflow.html" data-start="30" data-duration="30" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div id="c3" data-composition-id="c3" data-composition-src="compositions/c3-putwork.html" data-start="60" data-duration="7.5" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div id="c4" data-composition-id="c4" data-composition-src="compositions/c4-offscript.html" data-start="67.5" data-duration="22.5" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div id="c5" data-composition-id="c5" data-composition-src="compositions/c5-sim.html" data-start="90" data-duration="11.25" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div id="c6" data-composition-id="c6" data-composition-src="compositions/c6-airbag.html" data-start="101.25" data-duration="11.25" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div id="c7" data-composition-id="c7" data-composition-src="compositions/c7-more.html" data-start="112.5" data-duration="7.5" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div id="c8" data-composition-id="c8" data-composition-src="compositions/c8-value.html" data-start="120" data-duration="30" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div id="c9" data-composition-id="c9" data-composition-src="compositions/c9-build.html" data-start="150" data-duration="20.625" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="c1" data-composition-id="c1" data-composition-src="compositions/c1-open.html" data-start="0" data-duration="35.625" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="c2" data-composition-id="c2" data-composition-src="compositions/c2-fitflow.html" data-start="35.625" data-duration="30" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="c3" data-composition-id="c3" data-composition-src="compositions/c3-putwork.html" data-start="65.625" data-duration="7.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="c4" data-composition-id="c4" data-composition-src="compositions/c4-offscript.html" data-start="73.125" data-duration="22.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="c5" data-composition-id="c5" data-composition-src="compositions/c5-sim.html" data-start="95.625" data-duration="11.25" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="c6" data-composition-id="c6" data-composition-src="compositions/c6-airbag.html" data-start="106.875" data-duration="11.25" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="c7" data-composition-id="c7" data-composition-src="compositions/c7-more.html" data-start="118.125" data-duration="7.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="c8" data-composition-id="c8" data-composition-src="compositions/c8-value.html" data-start="125.625" data-duration="26.25" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="c9" data-composition-id="c9" data-composition-src="compositions/c9-build.html" data-start="151.875" data-duration="18.75" data-track-index="1" data-width="1920" data-height="1080"></div>
       <div id="c10" data-composition-id="c10" data-composition-src="compositions/c10-close.html" data-start="170.625" data-duration="9.375" data-track-index="1" data-width="1920" data-height="1080"></div>
-
-      <div id="blk"><i id="blk-1"></i><i id="blk-2"></i><i id="blk-3"></i><i id="blk-4"></i></div>
 
       <!-- "Nonstop" by Kevin MacLeod (incompetech.com), CC BY 4.0. See assets/audio/LICENSE.md. -->
       <audio id="score" class="clip" data-start="0" data-duration="180" data-track-index="2" data-volume="1" src="assets/audio/score-nonstop.mp3"></audio>
@@ -59,16 +54,6 @@
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
       window.__timelines["main"] = tl;
-      // Shown from the first content shot to the closing card.
-      tl.fromTo("#blk", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 3.75);
-      [[1, 0, 30], [2, 30, 120], [3, 120, 150], [4, 150, 180]].forEach(([n, a, z]) => {
-        tl.set("#blk-" + n, { className: "on" }, a);
-        tl.set("#blk-" + n, { className: "" }, z);
-      });
-      // The montage (131.25-142.5) puts the phone on the left, under the bars: step them aside.
-      tl.fromTo("#blk", { opacity: 1 }, { opacity: 0, duration: 0.25, ease: "power2.in", immediateRender: false }, 131.0);
-      tl.fromTo("#blk", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out", immediateRender: false }, 142.5);
-      tl.fromTo("#blk", { opacity: 1 }, { opacity: 0, duration: 0.3, ease: "power2.in", immediateRender: false }, 170.3);
     </script>
   </body>
 </html>

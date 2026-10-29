@@ -8,9 +8,9 @@
     #c9-flow .n.y::after { content: ""; position: absolute; right: 24px; top: 22px; width: 16px; height: 16px; border-radius: 50%; background: #fee600; box-shadow: 0 0 0 1.5px #151515 inset; }
     #c9-t { position: absolute; left: 120px; top: 190px; }
     #c9-f { position: absolute; left: 120px; top: 820px; }
-    #c9-nums { position: absolute; inset: 0; display: grid; grid-template-columns: 1.15fr 1fr 1fr; align-items: center; padding: 0 120px; gap: 40px; }
+    #c9-nums { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, max-content); justify-content: space-between; align-content: center; align-items: start; padding: 0 160px; gap: 40px; }
     #c9-nums .h0 { font-size: 220px; }
-    #c9-nums .lab { font-size: 40px; font-weight: 600; letter-spacing: -0.015em; color: #60605a; margin-top: 8px; line-height: 1.15; }
+    #c9-nums .lab { font-size: 40px; font-weight: 600; letter-spacing: -0.015em; color: #60605a; margin-top: 8px; line-height: 1.15; white-space: nowrap; }
   </style>
   <div id="root" data-composition-id="c9" data-width="1920" data-height="1080">
     <div class="shot" id="c9-a">
@@ -31,7 +31,7 @@
     <div class="shot" id="c9-b"><div id="c9-nums">
       <div><div class="h0"><span class="count" id="c9-n1"></span></div><div class="lab k" id="c9-l1">automated tests</div></div>
       <div><div class="h0"><span class="count" id="c9-n2"></span></div><div class="lab k" id="c9-l2">extension checks</div></div>
-      <div><div class="h0"><span class="count" id="c9-n3"></span></div><div class="lab k" id="c9-l3">phone end-to-end scenarios</div></div>
+      <div><div class="h0"><span class="count" id="c9-n3"></span></div><div class="lab k" id="c9-l3">phone scenarios</div></div>
     </div></div>
 
     <div class="shot ink" id="c9-c"><div class="center">
@@ -48,28 +48,28 @@
   </div>
   <script>
 /*@JS*/
-    // 150.0: the music's breakdown. One node per beat.
+    // 151.875: the music's breakdown. One node per beat.
     shot("#c9-a", 0, b(16));
     pop("#c9-t", 0);
     snap("#c9-flow .n", b(2), { st: B });
     pop("#c9-f", b(11));
-    // 157.5: the lift. Count-ups.
-    shot("#c9-b", b(16), b(28));
+    // 159.375: the lift. Count-ups, a beat apart (one bar shorter than before: the time went to the leaks in c1).
+    shot("#c9-b", b(16), b(24));
     counter("c9-n1", 0, 681, b(16), b(3));
     pop("#c9-l1", b(16), { y: 12 });
-    counter("c9-n2", 0, 310, b(18), b(3));
-    pop("#c9-l2", b(18), { y: 12 });
-    counter("c9-n3", 0, 28, b(20), b(3));
-    pop("#c9-l3", b(20), { y: 12 });
+    counter("c9-n2", 0, 310, b(17), b(3));
+    pop("#c9-l2", b(17), { y: 12 });
+    counter("c9-n3", 0, 26, b(18), b(3));
+    pop("#c9-l3", b(18), { y: 12 });
     // Limits, plainly.
-    shot("#c9-c", b(28), b(36));
-    pop("#c9-c1", b(28));
-    pop("#c9-c2", b(30));
-    pop("#c9-c3", b(32));
-    shot("#c9-d", b(36), b(44));
-    pop("#c9-d1", b(36), { y: 12 });
-    pop("#c9-d2", b(37));
-    pop("#c9-d3", b(39));
+    shot("#c9-c", b(24), b(32));
+    pop("#c9-c1", b(24));
+    pop("#c9-c2", b(26));
+    pop("#c9-c3", b(28));
+    shot("#c9-d", b(32), b(40));
+    pop("#c9-d1", b(32), { y: 12 });
+    pop("#c9-d2", b(33));
+    pop("#c9-d3", b(35));
     window.__timelines["c9"] = tl;
   </script>
 </template>

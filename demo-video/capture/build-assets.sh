@@ -17,13 +17,13 @@ s home-00 home                       # shots-ui.mjs home
 s scout-laziz_home laziz-home        # explore.mjs
 s airbag-03-numbers airbag-numbers
 s airbag-04-list airbag-list
-s v2-edge-all-chips edge-chips       # edge-all.mp4 stills (live)
+s v2-edge-all-chips edge-chips       # edge-all.mp4 at 13.8 s and 17.5 s (live, NO_ANSWER=1)
 s v2-edge-all-planner edge-planner
 s edge-negate-10-answer-top negate   # live
 s offer-signed-2 offer-signed        # shots-ui.mjs offer (deterministic)
 s offer-tampered-0 offer-tampered
 s order-10-answer-top order          # live
-s gym2-10-answer-top gym             # live
+s v2-gym2-question gym               # gym2.mp4 at 15.5 s, the question it asks back (live)
 for m in T4 O7 O8 A15 A17 O9; do s "mont-$m-0" "mont-$m"; done   # shots-montage.mjs
 s mont-O6-0 mont-O6
 s mont-simple_home mont-simple

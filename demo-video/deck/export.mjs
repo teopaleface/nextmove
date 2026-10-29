@@ -2,13 +2,15 @@
 // Usage, from demo-video/: node deck/export.mjs
 // Uses the repository's Playwright install (../node_modules/playwright).
 import { chromium } from "../../node_modules/playwright/index.mjs";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const out = path.resolve(here, "../out");
 mkdirSync(path.join(out, "deck-pages"), { recursive: true });
+// Remove pages from an earlier, longer export so the folder matches the deck.
+for (const f of readdirSync(path.join(out, "deck-pages"))) if (/^slide-\d+\.png$/.test(f)) rmSync(path.join(out, "deck-pages", f));
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });

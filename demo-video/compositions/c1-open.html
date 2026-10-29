@@ -45,9 +45,9 @@
   </style>
   <div id="root" data-composition-id="c1" data-width="1920" data-height="1080">
     <!-- 0.000 Money leaks. -->
-    <div class="shot" id="c1-a"><div class="center"><div class="h1" id="c1-a1">Money leaks.</div><div class="h1 mute k" id="c1-a2">Quietly.</div></div></div>
+    <div class="shot" id="c1-a"><div class="center"><div class="h1" id="c1-a1">Money leaks.</div><div class="h1 k" id="c1-a2"><span class="mark">Quietly.</span></div></div></div>
 
-    <!-- 3.750 five leaks, two beats each -->
+    <!-- 3.750 five leaks, one bar each -->
     <div class="shot" id="c1-leak">
       <div class="center" id="c1-l1"><div class="name">FitFlow</div><div class="h0 amt">79 RON</div><div class="h3 what">Trial about to charge</div></div>
       <div class="center k" id="c1-l2"><div class="name">PulseGym</div><div class="h0 amt">250 RON</div><div class="h3 what">A month. No visits.</div></div>
@@ -57,10 +57,10 @@
       <div class="tiny" id="c1-alex">Alex · fictional customer · synthetic data</div>
     </div>
 
-    <!-- 8.438 the gap -->
+    <!-- 13.125 the gap -->
     <div class="shot" id="c1-b"><div class="center"><div class="h2" id="c1-b1">Your bank shows where it went.</div><div class="h2 gap k" id="c1-b2"><span class="mark">Not where it’s going.</span></div></div></div>
 
-    <!-- 13.125 logo, on ink -->
+    <!-- 18.750 logo, on ink -->
     <div class="shot ink" id="c1-logo">
       <div id="c1-logo-wrap"><style>#c1lg-n,#c1lg-move,#c1lg-wordmark,#c1lg-draw{visibility:hidden;opacity:0}</style><svg class="logo" id="c1lg-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 928 256">
   
@@ -76,7 +76,7 @@
       <div class="h3 k" id="c1-agent">A bank with an agent inside.</div>
     </div>
 
-    <!-- 16.875 what it does -->
+    <!-- 22.500 what it does -->
     <div class="shot" id="c1-steps"><div class="center">
       <div class="h2 k" id="c1-s1">It reads.</div>
       <div class="h2 k" id="c1-s2">It does the maths.</div>
@@ -84,13 +84,13 @@
       <div class="h2 k" id="c1-s4"><span class="mark">You approve.</span></div>
     </div></div>
 
-    <!-- 22.500 Meet Alex -->
+    <!-- 28.125 Meet Alex -->
     <div class="shot" id="c1-alexshot">
       <div class="left"><div class="h1 k" id="c1-m1">Meet Alex.</div><div class="sub gap k" id="c1-m2">Fictional customer · synthetic data</div></div>
       <div class="ph" id="c1-ph"><div class="scr"><img src="assets/media/v2/home.png" alt="" /></div></div>
     </div>
 
-    <!-- 26.250 people and businesses -->
+    <!-- 31.875 people and businesses -->
     <div class="shot" id="c1-split">
       <div class="col" style="left: 0"><div class="cap h3 k" id="c1-p1">For people.</div><div class="k" id="c1-w2" style="position:absolute;inset:0"><div class="ph" id="c1-ph2"><div class="scr"><img src="assets/media/v2/home.png" alt="" /></div></div></div></div>
       <div class="col" style="left: 960px"><div class="cap h3 k" id="c1-p2">For small businesses.</div><div class="k" id="c1-w3" style="position:absolute;inset:0"><div class="ph" id="c1-ph3"><div class="scr"><img src="assets/media/v2/laziz-home.png" alt="" /></div></div></div></div>
@@ -160,46 +160,46 @@
     shot("#c1-a", 0, b(8));
     tl.fromTo("#c1-a1", { scale: 0.97 }, { scale: 1, duration: b(8), ease: "power1.out" }, 0);
     pop("#c1-a2", b(4));
-    // 3.75 five leaks, cut on every second beat
-    shot("#c1-leak", b(8), b(18));
+    // 3.75 five leaks, one bar each (1.875 s: name, amount and what it is, read comfortably)
+    shot("#c1-leak", b(8), b(28));
     ["#c1-l1", "#c1-l2", "#c1-l3", "#c1-l4", "#c1-l5"].forEach((s, i) => {
-      if (i) tl.set(s, { autoAlpha: 1 }, b(8 + 2 * i));
-      if (i < 4) tl.set(s, { autoAlpha: 0 }, b(10 + 2 * i));
-      tl.fromTo(s + " .amt", { scale: 1.12 }, { scale: 1, duration: 0.4, ease: IN, immediateRender: false }, b(8 + 2 * i));
+      if (i) tl.set(s, { autoAlpha: 1 }, b(8 + 4 * i));
+      if (i < 4) tl.set(s, { autoAlpha: 0 }, b(12 + 4 * i));
+      tl.fromTo(s + " .amt", { scale: 1.12 }, { scale: 1, duration: 0.4, ease: IN, immediateRender: false }, b(8 + 4 * i));
     });
     pop("#c1-alex", b(8), { y: 12 });
-    // 8.44 the gap
-    shot("#c1-b", b(18), b(28));
-    pop("#c1-b1", b(18));
-    pop("#c1-b2", b(22));
-    // 13.125 logo: the N draws on, the dot drops on the beat, then the wordmark
-    shot("#c1-logo", b(28), b(36));
-    tl.set("#c1lg-draw", { autoAlpha: 1 }, b(28));
-    tl.fromTo("#c1lg-draw", { attr: { "stroke-dashoffset": 360 } }, { attr: { "stroke-dashoffset": 0 }, duration: b(2) - 0.05, ease: "power2.inOut", immediateRender: false }, b(28));
-    tl.set("#c1lg-n", { autoAlpha: 1 }, b(30));
-    tl.set("#c1lg-draw", { autoAlpha: 0 }, b(30));
-    tl.fromTo("#c1lg-move", { autoAlpha: 1, y: -150 }, { autoAlpha: 1, y: 0, duration: 0.38, ease: "bounce.out", immediateRender: false }, b(30) - 0.2);
-    tl.fromTo("#c1lg-wordmark", { autoAlpha: 0, x: -24 }, { autoAlpha: 1, x: 0, duration: 0.5, ease: IN, immediateRender: false }, b(31));
-    pop("#c1-agent", b(32));
-    // 16.875 what it does, one line a bar-half
-    shot("#c1-steps", b(36), b(48));
-    pop("#c1-s1", b(36));
-    pop("#c1-s2", b(38));
-    pop("#c1-s3", b(40));
-    pop("#c1-s4", b(42));
-    // 22.5 Meet Alex: the home screen, pushing in on the balance
-    shot("#c1-alexshot", b(48), b(56));
-    pop("#c1-m1", b(48));
-    pop("#c1-m2", b(50), { y: 16 });
-    move("#c1-ph", b(48), b(8), cam(1.05, 195, 422, 1380, 540), cam(1.55, 195, 330, 1380, 540), "power2.out");
-    // 26.25 for people, for small businesses
-    shot("#c1-split", b(56));
+    // 13.125 the gap (the music's first lift lands on it)
+    shot("#c1-b", b(28), b(40));
+    pop("#c1-b1", b(28));
+    pop("#c1-b2", b(32));
+    // 18.75 logo: the N draws on, the dot drops on the beat, then the wordmark
+    shot("#c1-logo", b(40), b(48));
+    tl.set("#c1lg-draw", { autoAlpha: 1 }, b(40));
+    tl.fromTo("#c1lg-draw", { attr: { "stroke-dashoffset": 360 } }, { attr: { "stroke-dashoffset": 0 }, duration: b(2) - 0.05, ease: "power2.inOut", immediateRender: false }, b(40));
+    tl.set("#c1lg-n", { autoAlpha: 1 }, b(42));
+    tl.set("#c1lg-draw", { autoAlpha: 0 }, b(42));
+    tl.fromTo("#c1lg-move", { autoAlpha: 1, y: -150 }, { autoAlpha: 1, y: 0, duration: 0.38, ease: "bounce.out", immediateRender: false }, b(42) - 0.2);
+    tl.fromTo("#c1lg-wordmark", { autoAlpha: 0, x: -24 }, { autoAlpha: 1, x: 0, duration: 0.5, ease: IN, immediateRender: false }, b(43));
+    pop("#c1-agent", b(44));
+    // 22.5 what it does, one line a bar-half
+    shot("#c1-steps", b(48), b(60));
+    pop("#c1-s1", b(48));
+    pop("#c1-s2", b(50));
+    pop("#c1-s3", b(52));
+    pop("#c1-s4", b(54));
+    // 28.125 Meet Alex: the home screen, pushing in on the balance
+    shot("#c1-alexshot", b(60), b(68));
+    pop("#c1-m1", b(60));
+    pop("#c1-m2", b(62), { y: 16 });
+    move("#c1-ph", b(60), b(8), cam(1.05, 195, 422, 1380, 540), cam(1.55, 195, 330, 1380, 540), "power2.out");
+    // 31.875 for people, for small businesses
+    shot("#c1-split", b(68));
     place("#c1-ph2", 0, cam(0.95, 195, 422, 480, 610));
     place("#c1-ph3", 0, cam(0.95, 195, 422, 480, 610));
-    pop("#c1-p1", b(56));
-    pop("#c1-w2", b(56), { y: 80, s: 1 });
-    pop("#c1-p2", b(58));
-    pop("#c1-w3", b(58), { y: 80, s: 1 });
+    pop("#c1-p1", b(68));
+    pop("#c1-w2", b(68), { y: 80, s: 1 });
+    pop("#c1-p2", b(70));
+    pop("#c1-w3", b(70), { y: 80, s: 1 });
     window.__timelines["c1"] = tl;
   </script>
 </template>
