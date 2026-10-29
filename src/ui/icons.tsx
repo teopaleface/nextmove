@@ -213,9 +213,12 @@ export const Icon = {
 /** The N mark: a small geometric glyph on the yellow square. */
 export function NMark({ size = 28 }: { size?: number }) {
   return (
-    <span className="nmark" style={{ width: size, height: size }} aria-hidden="true">
-      <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 16 16">
-        <path d="M3 13V3h2.2l5.6 6.6V3H13v10h-2.2L5.2 6.4V13z" fill="#151515" />
+    <span className="nmark" style={{ width: size, height: size, background: "none" }} aria-hidden="true">
+      {/* The app icon (demo-video/assets/brand/nextmove-icon.svg): an N whose last stroke stops short, then the move. */}
+      <svg width={size} height={size} viewBox="0 0 256 256">
+        <rect width="256" height="256" rx="56" fill="#151515" />
+        <path fill="#F7F7F2" d="M82.88 190.57A17.86 17.86 0 0 1 47.16 190.57L47.16 70.25A17.86 17.86 0 0 1 82.88 70.25ZM52.39 82.88A17.86 17.86 0 0 1 77.65 57.62L197.97 177.94A17.86 17.86 0 0 1 172.71 203.2ZM203.2 190.57A17.86 17.86 0 0 1 167.48 190.57L167.48 151.09A17.86 17.86 0 0 1 203.2 151.09Z" />
+        <path fill="#FEE600" d="M160.9 73.07A24.439999999999998 24.439999999999998 0 1 1 209.78 73.07A24.439999999999998 24.439999999999998 0 1 1 160.9 73.07Z" />
       </svg>
     </span>
   );

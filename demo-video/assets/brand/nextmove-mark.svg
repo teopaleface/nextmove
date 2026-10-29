@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">NextMove mark</title>
+  <path id="n" fill="#151515" d="M81 192A20 20 0 0 1 41 192L41 64A20 20 0 0 1 81 64ZM46.86 78.14A20 20 0 0 1 75.14 49.86L203.14 177.86A20 20 0 0 1 174.86 206.14ZM209 192A20 20 0 0 1 169 192L169 150A20 20 0 0 1 209 150Z"/>
+  <path id="move" fill="#FEE600" d="M163 67A26 26 0 1 1 215 67A26 26 0 1 1 163 67Z"/>
+</svg>
