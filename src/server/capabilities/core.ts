@@ -259,6 +259,9 @@ export function inputInt(env: CapEnv, key: string, fallback: number, min: number
   return Math.min(max, Math.max(min, Number.isFinite(n) ? n : fallback));
 }
 
+/** Capabilities that can turn renewal off for each of Alex's merchants (existing core flows). */
+export const RENEWAL_FLOW: Record<string, string> = { fitflow: "T2", streamly: "T3", studyplus: "T3", cloudbox: "A1", dasheats: "A15", pulsegym: "A17", safetrip: "A18" };
+
 export const PROVENANCE: Record<string, string> = {
   READ_FROM_IMAGE: "Read from your image",
   MATCHED_BANK_RECORD: "Matched to a bank record",

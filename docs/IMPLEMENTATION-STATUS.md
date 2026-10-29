@@ -429,3 +429,35 @@ Open:
 **Checks:** `npx tsc --noEmit`: pass. `npm test`: **598 tests passed in 52 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean. UI crawl (labs on): no issues.
 
 The stale dev cache came back after a plain restart: pages reloaded about 650 times a second. Removing `.next/dev` again fixed it, so after restarting the stack, check that a page settles before a demo.
+
+### Open chat items closed, reload loop fixed, CLI sign-in setting (2026-10-29)
+
+**Routing:**
+- **A request with several intents.** "Cancel FitFlow and check whether rent clears" analyses each capability it names, up to 3, in one answer. It prepares exactly one action and names the others as analysed only, ready to prepare next. A what-would-happen part is analysed but never prepared, and a negated part names nothing.
+- **A bare "stop" or "cancel".** "Cancel everything", "stop" or "anulează" with no subject asks "What should I stop?" with the customer's stoppable subscriptions as options, soonest charge first. Picking one prepares only that one. When nothing can be stopped, the overview says so.
+- **Requests the demo can't do.** Blocking a card, passwords, PINs, and opening or closing an account get an honest "This demo can't …; nothing is prepared" in front of the overview.
+- **Fixed misroutes:**
+  - "moving house" (Laziz) → the overview;
+  - "PayPal paid me back" → the overview;
+  - "schedule of payments" → O7;
+  - "my income" alone → the overview, with no what-if.
+- **`roadblocksFromText`** matches whole words. Rent and income count only when the customer names a change.
+- **Short-text exceptions.** The three exceptions in the routing tests are gone.
+
+**Model output:**
+- **Lookalike letters.** Cyrillic, Greek, Armenian, fullwidth and small-capital lookalikes are folded to Latin before every check. A word that mixes alphabets ("Rеvolut") is withheld unless the customer or a tool wrote it.
+- **Step budget.** A task that runs out of steps now gets an answer written from tool results only: "I stopped after N planning steps…", what was found so far, and whether anything was prepared. The task page shows "Step budget reached" next to it.
+- **Payload to the model.** It is always whole JSON of at most 24,000 characters. The oldest steps are dropped first; the request, the customer's answers and the newest step are always kept.
+- **CLI exit code.** A CLI result counts as a success only with exit code 0.
+- **Other model text.** The model's free-text `reason` is checked before it is stored in the timeline. The model name shown on an answer must be a plain model id.
+- **Timeout setting.** An unreadable or out-of-range `NEXTMOVE_MODEL_TIMEOUT_MS` falls back to 90 s.
+
+**App:**
+- **Reload loop.** The cause was Turbopack's on-disk dev cache (`.next/dev`). It survived restarts with chunk hashes the server no longer built, so pages reloaded hundreds of times a second. `next.config.ts` now turns it off (`turbopackFileSystemCacheForDev: false`). Checked: three restarts with it off loaded normally (33 requests in 8 s). Two restarts with it on looped (about 5,600 requests in 8 s).
+- **Malformed URLs.** A path with broken percent-encoding (`src/proxy.ts`) gets a JSON 400 under `/api` and the app's not-found page elsewhere. Next's bare 400 page no longer appears.
+- **Focus after answering.** After the customer answers a question, focus moves to the task's status line, which is also announced (`aria-live`).
+- **CLI sign-in setting.** `NEXTMOVE_CLAUDE_CONFIG_DIR` chooses which Claude sign-in the model CLI uses, passed to it as `CLAUDE_CONFIG_DIR`, with `~` expanded. When it is unset, the server's own `CLAUDE_CONFIG_DIR` passes through. Before, the CLI's minimal environment dropped it.
+
+Still open: there is no dark mode. Lookalike letters outside the folding table (for example Cherokee) are not caught. For Alex, "moving house" goes to O1, because house is part of his home goal.
+
+**Checks:** `npx tsc --noEmit`: pass. `npm test`: **677 tests passed in 55 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.

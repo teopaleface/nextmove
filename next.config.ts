@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["playwright", "playwright-core"],
   typedRoutes: false,
   agentRules: false,
+  experimental: {
+    // Turbopack's on-disk dev cache (.next/dev) survived restarts with chunk hashes that no longer matched what the
+    // server built, and every page then reloaded itself in a loop ("HMR hash mismatch"). Each dev start now compiles
+    // from scratch: a few seconds slower, never stuck.
+    turbopackFileSystemCacheForDev: false,
+  },
   async headers() {
     return [
       {

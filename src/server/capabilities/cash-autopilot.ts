@@ -78,7 +78,7 @@ const O7: CapabilityDef = {
   group: "Bills",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["salary", "payday", "paid", "rent", "bill vault", "vault", "park", "idle", "interest", "autopilot", "set aside"],
+  keywords: ["salary", "payday", "get paid", "got paid", "been paid", "payment schedule", "schedule of payments", "upcoming payments", "rent", "bill vault", "vault", "park", "idle", "interest", "autopilot", "set aside"],
   async analyze(env) {
     const cfg = autopilotConfig();
     const rules = cfg.vaultRules;

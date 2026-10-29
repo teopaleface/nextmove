@@ -3,7 +3,7 @@ import { all, one, run, tx } from "../../db/connection";
 import { sha256Hex } from "../../canonical";
 import { FIXTURE_INSTANT } from "../../clock";
 import { toLocalIso } from "../../../shared/time";
-import { type Analysis, type Block, type CapEnv, type CapabilityDef, fmtDate, money } from "../../capabilities/core";
+import { type Analysis, type Block, type CapEnv, type CapabilityDef, RENEWAL_FLOW, fmtDate, money } from "../../capabilities/core";
 import type { ExtensionModule } from "../types";
 import {
   cancellationDifficulty,
@@ -28,8 +28,6 @@ const K = DEFAULT_TRACK_RECORD_POLICY.minCustomers;
 const DAY = 86_400_000;
 const SYNTHETIC = "Synthetic demo cohort";
 
-/** Capabilities that can turn renewal off for each of Alex's merchants (existing core flows). */
-const RENEWAL_FLOW: Record<string, string> = { fitflow: "T2", streamly: "T3", studyplus: "T3", cloudbox: "A1", dasheats: "A15", pulsegym: "A17", safetrip: "A18" };
 
 /* ------------------------------------------------------------------------------------------ seed */
 

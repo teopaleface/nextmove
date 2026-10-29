@@ -108,7 +108,8 @@ export function simulationIntent(text: string): SimulationKind | null {
   // A pay rise or a salary that changes; not a merchant that "raised its price" or "when does my salary arrive?".
   if (/\b((a|my|the|pay|salary|\d+ ?%) raise|raise (of|by) \d)\b/.test(t)) return "income";
   if (/\bsalary (drops?|dropped|falls?|fell|goes|went|rises?|rose|increases?|increased|decreases?|decreased|changes?|changed|is cut|cut)\b|\b(cut|drop|rise|increase|decrease|change) (in|to|of) my salary\b|\b(higher|lower|bigger|smaller|new) salary\b/.test(t)) return "income";
-  if (/\b(pay ?rise|pay ?cut|income (drop|change|goes|falls|rises))|\bmy income\b/.test(t)) return "income";
+  // "my income" alone states no change, so it is not a what-if.
+  if (/\b(pay ?rise|pay ?cut|income (drop|change|goes|went|falls|fell|rises|rose|increase|decrease|is cut|cut))|\b(lower|higher|less|more|reduced|smaller|bigger) income\b/.test(t)) return "income";
   if (/\b(loan|installments?|instalments?|borrow|financing|pay (it )?over)\b/.test(t)) return "loan";
   if (/\b(buy|afford|purchase)\b/.test(t) && /\bphone\b/.test(t) && /\bhome|house|goal\b/.test(t)) return "loan";
   return null;

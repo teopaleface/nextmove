@@ -1,4 +1,5 @@
 import { assertMinor } from "../../shared/money";
+import { hasKeyword, normalizeRequest } from "../agent/routing";
 
 // Route to a goal (O6). A deterministic planning model on the same inputs as home readiness (O1): today's liquid
 // funds, a target that already contains the protected reserve, and discrete equal monthly contributions. Roadblocks
@@ -89,20 +90,24 @@ export interface RoadblockDef {
 // Fictional demo events. Amounts are scenario inputs, not observed bills.
 export const ROADBLOCKS: RoadblockDef[] = [
   { id: "dental", label: "Unexpected 900 RON dental bill", kind: "ONE_OFF", amountMinor: 90000, keywords: ["dental", "dentist", "tooth", "teeth", "medical bill"] },
-  { id: "rent", label: "Rent +100 RON a month", kind: "MONTHLY", amountMinor: 10000, keywords: ["rent"] },
+  { id: "rent", label: "Rent +100 RON a month", kind: "MONTHLY", amountMinor: 10000, keywords: ["rent rise", "rent rose", "rent increase", "rent went up", "rent goes up", "rent is going up", "rent up", "higher rent", "rent hike"] },
   { id: "tool", label: "Forgot to cancel a 50 RON/month tool", kind: "MONTHLY", amountMinor: 5000, keywords: ["forgot to cancel", "software", "tool"] },
-  { id: "income", label: "Income −20% for 2 months", kind: "INCOME_DROP", incomeShare: 0.2, months: 2, keywords: ["income", "salary", "pay cut", "paid less", "earn less"] },
+  { id: "income", label: "Income −20% for 2 months", kind: "INCOME_DROP", incomeShare: 0.2, months: 2, keywords: ["income drop", "income fell", "income cut", "lower income", "less income", "pay cut", "salary cut", "salary drop", "lower salary", "paid less", "earn less"] },
 ];
 
 export function roadblock(id: string): RoadblockDef | undefined {
   return ROADBLOCKS.find((r) => r.id === id);
 }
 
-/** Roadblock ids named in free text or a comma list ("dental,rent", "A 900 RON dental bill just came in"). */
+/**
+ * Roadblock ids from a list of ids ("dental,rent") or named in free text ("A 900 RON dental bill just came in"), on
+ * whole words. Rent and income count only with a change ("my rent rose"), never for the word alone.
+ */
 export function roadblocksFromText(text: string): RoadblockId[] {
-  const t = String(text ?? "").toLowerCase();
-  const out = ROADBLOCKS.filter((r) => t.split(/[\s,;]+/).includes(r.id) || r.keywords.some((k) => t.includes(k))).map((r) => r.id);
-  return [...new Set(out)];
+  const t = normalizeRequest(text);
+  const ids = t.split(/[\s,;]+/).filter(Boolean);
+  if (ids.length && ids.every((x) => roadblock(x))) return [...new Set(ids)] as RoadblockId[];
+  return ROADBLOCKS.filter((r) => r.keywords.some((k) => hasKeyword(t, k))).map((r) => r.id);
 }
 
 export function incomeDropMinor(def: RoadblockDef, incomeMinor: number) {

@@ -24,7 +24,7 @@ process.stdin.on("end", () => {
   let payload;
   try { payload = JSON.parse(text); } catch { payload = { history: [] }; }
   const scenario = JSON.parse(fs.readFileSync(dir + "/scenario.json", "utf8"));
-  const d = { ...scenario[Math.min((payload.history ?? []).length, scenario.length - 1)] };
+  const d = { ...scenario[Math.min((payload.omittedSteps ?? 0) + (payload.history ?? []).length, scenario.length - 1)] };
   const out = (s) => process.stdout.write(s);
   if (d.$hang) return void setInterval(() => undefined, 1000);
   if (d.$exit !== undefined) process.exitCode = d.$exit;
@@ -88,6 +88,7 @@ describe("a broken CLI: auto falls back to the labelled deterministic planner, s
     ["number", { $structured: 42 }],
     ["unknown tool", { $structured: { tool: "transfer_money", reason: "x", amountMinor: 100000 } }],
     ["output over the size cap", { $big: 600_000, tool: "final_answer", reason: "x", text: "I cancelled PulseGym." }],
+    ["valid result, non-zero exit", { $exit: 1, tool: "final_answer", reason: "x", text: "I cancelled PulseGym." }],
   ];
 
   it("auto: every broken output falls back, nothing invented reaches the customer", async () => {
@@ -109,7 +110,7 @@ describe("a broken CLI: auto falls back to the labelled deterministic planner, s
   it("strict live: a broken output fails the task with no answer, question or proposal, and the job ends", async () => {
     await liveWorker("live");
     const a = await stack.login("alex");
-    for (const [name, d] of broken.filter(([n]) => ["not JSON", "is_error", "unknown tool"].includes(n))) {
+    for (const [name, d] of broken.filter(([n]) => ["not JSON", "is_error", "unknown tool", "valid result, non-zero exit"].includes(n))) {
       script([d]);
       const v = await run(a, "Stop the FitFlow trial");
       expect(v.task.state, name).toBe("FAILED");
@@ -156,6 +157,10 @@ describe("final answers from the live model", () => {
       ["Claim your refund at http://pulsegym-refunds.example/claim before Friday.", /with a link/],
       ["To finish, reply with your card number and PIN.", /PIN, password/],
       [" ​ \n ", /empty answer/],
+      ["PulseGym was canc\u0435lled this morning.", /"was cancelled"/],
+      ["Claim it at htt\u0440s://pulsegym-refunds.example today.", /with a link/],
+      ["Reply with your P\u0406N to finish.", /PIN, password/],
+      ["Your R\u0435volut card is safe.", /look-alike letters/],
       ["You paid 750.00 RON to PulseGym with no visit since August. Nothing happens until you approve.", null],
       ["Ai plătit 750,00 lei; nimic nu se întâmplă până nu aprobi.", null],
       ["Once you approve, PulseGym is paused. Never share your PIN with anyone.", null],
@@ -282,5 +287,93 @@ describe("inputs, keys and simulations the model makes up", () => {
     const loan = stepsOf((await run(a, "What if I buy a 6,000 RON phone in 12 installments?")).task.id)[0].result;
     expect(loan.ignoredInputs).toEqual(["amountRon", "termMonths"]);
     expect(JSON.stringify(loan.sources)).toMatch(/6,000\.00 RON|6\.000,00 RON/);
+  });
+});
+
+describe("the step budget runs out", () => {
+  it("writes an honest answer: how many steps, what was found, and that nothing was prepared", async () => {
+    await liveWorker("live");
+    const a = await stack.login("alex");
+    script([{ tool: "analyze", capabilityId: "A17", reason: "check" }, { tool: "find_capability", query: "gym", reason: "look again" }]);
+    const v = await run(a, "Is PulseGym worth it?");
+    expect(v.task.state).toBe("DONE");
+    expect(v.task.stepCount).toBe(8);
+    const ans = answerOf(v);
+    expect(ans.stepBudget).toBe(8);
+    expect(ans.text).toMatch(/^I stopped after 8 planning steps/);
+    expect(ans.text).toMatch(/You paid 750\.00 RON to PulseGym/);
+    expect(ans.text).toMatch(/Nothing was prepared/);
+    expect(ans.text).not.toMatch(/proposal is ready/);
+    expect(ans.provenance).toMatch(/step budget/i);
+    expect(proposalsOf(v.task.id)).toHaveLength(0);
+  });
+
+  it("says a proposal is ready when one really is", async () => {
+    await liveWorker("live");
+    const a = await stack.login("alex");
+    script([{ tool: "analyze", capabilityId: "T2", reason: "check" }, { tool: "prepare_proposal", capabilityId: "T2", candidateKeys: ["stop-fitflow"], reason: "prepare" }, { tool: "find_capability", query: "trial", reason: "look again" }]);
+    const v = await run(a, "Stop the FitFlow trial");
+    expect(v.task.state).toBe("NEEDS_APPROVAL");
+    const ans = answerOf(v);
+    expect(ans.text).toMatch(/^I stopped after 8 planning steps/);
+    expect(ans.text).toMatch(/A proposal is ready for your review; nothing happens until you approve/);
+    expect(ans.text).not.toMatch(/Nothing was prepared/);
+    expect(proposalsOf(v.task.id)).toHaveLength(1);
+  });
+});
+
+describe("an oversized history", () => {
+  it("drops the oldest steps first: every payload is whole JSON within 24 KB and keeps the request, answers and newest step", async () => {
+    await liveWorker("live");
+    const a = await stack.login("alex");
+    const original = stack.q1<any>("SELECT merchant_name FROM subscriptions WHERE tenant_id=? AND merchant_name LIKE 'PulseGym%'", a.tenantId)!.merchant_name as string;
+    // A very long merchant name makes every analysis result big.
+    const long = `PulseGym ${"Premium ".repeat(1500)}`.trim();
+    stack.exec("UPDATE subscriptions SET merchant_name=? WHERE tenant_id=? AND merchant_name=?", long, a.tenantId, original);
+    stack.exec("UPDATE transactions SET merchant_name=? WHERE tenant_id=? AND merchant_name=?", long, a.tenantId, original);
+    try {
+      fs.rmSync(path.join(dir, "payloads.jsonl"), { force: true });
+      script([
+        { tool: "analyze", capabilityId: "A17", reason: "check" },
+        { tool: "ask_user", question: "Do you still go to the gym?", options: [], reason: "need" },
+        { tool: "analyze", capabilityId: "A17", reason: "again" },
+        { tool: "analyze", capabilityId: "A17", reason: "and again" },
+        { tool: "find_capability", query: "gym", reason: "look again" },
+      ]);
+      const asked = await run(a, "Is PulseGym worth it?");
+      const q = asked.questions.find((x: any) => x.status === "OPEN");
+      await a.ok(`/api/tasks/${asked.task.id}/answer`, { questionId: q.id, answer: "Not since the summer" });
+      await settle(a, asked.task.id, ["DONE", "NEEDS_APPROVAL", "FAILED"]);
+      const sent = payloads().map((t) => {
+        expect(t.length).toBeLessThanOrEqual(24_000);
+        return JSON.parse(t);
+      });
+      expect(sent.length).toBeGreaterThan(3);
+      expect(sent.some((p) => p.omittedSteps > 0)).toBe(true);
+      for (const p of sent) {
+        expect(p.request).toBe("Is PulseGym worth it?");
+        // The newest step is always there.
+        expect((p.omittedSteps ?? 0) + p.history.length).toBe(p.step - 1);
+        if (p.step > 1) expect(p.history.length).toBeGreaterThan(0);
+      }
+      const late = sent.filter((p) => p.step > 3);
+      expect(late.every((p) => p.answers.some((x: any) => x.answer === "Not since the summer"))).toBe(true);
+    } finally {
+      stack.exec("UPDATE subscriptions SET merchant_name=? WHERE tenant_id=? AND merchant_name=?", original, a.tenantId, long);
+      stack.exec("UPDATE transactions SET merchant_name=? WHERE tenant_id=? AND merchant_name=?", original, a.tenantId, long);
+    }
+  });
+});
+
+describe("other model text on its way to the customer", () => {
+  it("a reason with a claim, link or invented number is not stored with the timeline event", async () => {
+    await liveWorker("live");
+    const a = await stack.login("alex");
+    script([{ tool: "analyze", capabilityId: "A17", reason: "I already cancelled PulseGym; see pulsegym-help.ro" }, { tool: "final_answer", reason: "Short and clean", text: "Here is the PulseGym picture; nothing happens until you approve." }]);
+    const v = await run(a, "Is PulseGym worth it?");
+    const reasons = stack.q<any>("SELECT kind, payload_json FROM task_events WHERE task_id=? AND kind IN ('analyze','final_answer') ORDER BY seq", v.task.id).map((e) => JSON.parse(e.payload_json ?? "{}").reason ?? null);
+    expect(reasons).toEqual([null, "Short and clean"]);
+    const api = await a.json(`/api/tasks/${v.task.id}`);
+    expect(JSON.stringify(api)).not.toMatch(/pulsegym-help|already cancelled/);
   });
 });

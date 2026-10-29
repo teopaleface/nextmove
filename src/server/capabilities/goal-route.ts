@@ -321,6 +321,6 @@ export const O6_ALEX: CapabilityDef = {
   group: "Goals",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["on track", "off track", "route", "roadblock", "recalculate", "recalculation", "dental", "unexpected", "surprise", "rent went", "rent rise", "rent increase", "income", "forgot to cancel"],
+  keywords: ["on track", "off track", "route", "roadblock", "recalculate", "recalculation", "dental", "unexpected", "surprise", "rent went", "rent rise", "rent rose", "rent increase", "lower income", "less income", "income drop", "forgot to cancel"],
   analyze: O6_PERSONAL,
 };

@@ -493,7 +493,7 @@ const A4: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["price increase", "price went up", "more expensive", "streamly", "price change", "raised the price", "raised its price", "price hike", "costs more", "went up", "price rose"],
+  keywords: ["price increase", "price went up", "more expensive", "streamly", "price change", "raised the price", "raised its price", "price hike", "costs more", "went up", "price rose", "rose"],
   async analyze(env) {
     const sub = subscription(env, "streamly");
     const live = (await liveContract(env, sub)).contract;
@@ -566,7 +566,7 @@ const A5: CapabilityDef = {
   group: "Subscriptions",
   customer: "alex",
   contextKind: "PERSONAL",
-  keywords: ["shows", "tv show", "series", "content", "cinemax", "schedule", "rotate", "watch"],
+  keywords: ["shows", "tv show", "series", "content", "cinemax", "show schedule", "release schedule", "rotate", "watch"],
   async analyze(env) {
     const cat = fixture("demo/capability-scenarios.json").alex.contentCatalog;
     const wanted = [

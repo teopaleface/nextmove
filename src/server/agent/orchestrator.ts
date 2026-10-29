@@ -6,7 +6,7 @@ import { config } from "../config";
 import { HttpError, type Session } from "../auth/session";
 import { callModel } from "../model/claude-cli";
 import { enqueueJob, finishJob, renewLease, type Job } from "../execution/jobs";
-import type { Block } from "../capabilities/core";
+import { RENEWAL_FLOW, type Block } from "../capabilities/core";
 import { analyzeCapability, capabilitiesFor, proposeFromCapability, CAPABILITIES, customerOf, contextKindOf } from "../capabilities/registry";
 import { accountsFor } from "../bank/ledger";
 import { subscriptionWindowTotal } from "../bank/forecast";
@@ -18,7 +18,7 @@ import type { WorkerCtx } from "../execution/executor";
 import { ensureSimulation, showSimulation, simulatedSimulationDecision } from "./simulations";
 import { acceptPlannerInputs, answerKey, plannerRule, settableInputs, showInputs, type CustomerSaid } from "./planner-inputs";
 import { SIMULATION_KINDS } from "../../shared/simulations";
-import { routeRequest, smallTalk } from "./routing";
+import { routeRequest, smallTalk, type Intent } from "./routing";
 import { fromTools, plainText, textProblem } from "./guards";
 
 export { checkClaims, checkNumbers } from "./guards";
@@ -128,14 +128,38 @@ function sessionFor(db: DatabaseSync, task: any): Session {
 }
 
 /** Whole-word keyword routing over this context's capabilities (routing.ts); negated clauses do not count. */
-function route(db: DatabaseSync, session: Session, text: string) {
+function capsHere(db: DatabaseSync, session: Session) {
   const customer = customerOf(db, session.tenantId);
   const kind = contextKindOf(db, session.contextId);
-  return routeRequest(text, CAPABILITIES.filter((c) => c.customer === customer && c.contextKind === kind));
+  return CAPABILITIES.filter((c) => c.customer === customer && c.contextKind === kind);
 }
 
+function route(db: DatabaseSync, session: Session, text: string) {
+  return routeRequest(text, capsHere(db, session));
+}
+
+/** find_capability: each part of a request with several first, then the rest; nothing for a bare stop or what the demo cannot do. */
 function rank(db: DatabaseSync, session: Session, text: string) {
-  return route(db, session, text).matches.map((x) => ({ id: x.c.id, title: x.c.title, short: x.c.short }));
+  const r = route(db, session, text);
+  if (r.outOfScope || r.unspecified) return [];
+  const caps = [...new Set([...r.intents.map((x) => x.c), ...r.matches.map((x) => x.c)])];
+  return caps.map((c) => ({ id: c.id, title: c.title, short: c.short }));
+}
+
+/** Subscriptions the customer could stop here, each with the one capability that stops only that merchant, soonest charge first. */
+function stoppable(db: DatabaseSync, session: Session) {
+  const here = new Set(capsHere(db, session).map((c) => c.id));
+  const flows = Object.values(RENEWAL_FLOW);
+  const rows = all<any>(db, "SELECT merchant_id, merchant_name, state FROM subscriptions WHERE tenant_id=? AND context_id=? AND dataset<>'bulk' AND state IN ('ACTIVE','TRIAL') ORDER BY next_charge_at", session.tenantId, session.contextId);
+  const out = new Map<string, string>();
+  for (const s of rows) {
+    const cap = RENEWAL_FLOW[s.merchant_id];
+    // A flow shared by several merchants (the student bundle) does not stop one of them on its own.
+    if (!cap || !here.has(cap) || flows.filter((f) => f === cap).length > 1) continue;
+    const label = s.state === "TRIAL" ? `${s.merchant_name} trial` : String(s.merchant_name);
+    if (!out.has(label)) out.set(label, cap);
+  }
+  return [...out].slice(0, 5).map(([label, capabilityId]) => ({ label, capabilityId }));
 }
 
 function compactAnalysis(a: any) {
@@ -268,19 +292,65 @@ const CHOOSE = "Choose one of the offered actions";
 const NOTHING = "Nothing for now";
 /** The planner asked the customer to pick one of a capability's offered actions (the last option is always NOTHING). */
 const isChoice = (s: Step) => s.tool === "ask_user" && !s.args?.capabilityId && (s.args?.options as string[] | undefined)?.at(-1) === NOTHING;
+// "Cancel everything" or a bare "stop": which one, from what the customer can actually stop. Never several at once.
+const WHICH = "What should I stop? I prepare one at a time, and nothing happens until you approve.";
+const NONE = "None of these";
+const isWhich = (s: Step) => s.tool === "ask_user" && s.args?.question === WHICH;
+const NOTHING_DONE = "Nothing is prepared and nothing has changed. You can come back to this at any time.";
+
+const analyzeStep = (id: string, text: string, reason: string): DecisionT => {
+  const roadblocks = id === "O6" ? roadblocksFromText(text) : [];
+  return { tool: "analyze", capabilityId: id, inputs: roadblocks.length ? [{ key: "roadblocks", value: roadblocks.join(",") }] : undefined, reason };
+};
+
+/** One answer for a request with several parts: every analysis, the one proposal if any, and what was only analysed. */
+function severalAnswer(steps: Step[], intents: Intent<{ id: string; title: string; keywords: string[] }>[]) {
+  const done = intents.map((x) => ({ ...x, a: steps.find((s) => s.tool === "analyze" && s.args?.capabilityId === x.c.id && !s.result?.error)?.result })).filter((x) => x.a);
+  const p = steps.find((s) => s.tool === "prepare_proposal" && s.result?.proposalId);
+  const n = p?.result.actions.length ?? 0;
+  const rest = done.filter((x) => x.c.id !== p?.args?.capabilityId && !x.hypothetical).map((x) => x.c.title);
+  const whatIf = done.filter((x) => x.hypothetical).map((x) => x.c.title);
+  return [
+    ...done.map((x) => sentence(x.a.headline)),
+    p ? `I prepared ${n} action${n > 1 ? "s" : ""} for your review: ${p.result.actions.join("; ")}. Nothing happens until you approve.` : "",
+    rest.length ? `Only analysed, nothing prepared: ${rest.join("; ")}. Ask me to prepare ${rest.length > 1 ? "one of them" : "it"} next.` : "",
+    whatIf.length ? `You asked what would happen for ${whatIf.join("; ")}, so nothing is prepared there.` : "",
+  ].filter(Boolean).join(" ");
+}
 
 function simulatedDecision(db: DatabaseSync, session: Session, task: any, steps: Step[]): DecisionT {
   const sim = simulatedSimulationDecision(task.request_text, steps, customerOf(db, session.tenantId) === "alex" && session.contextKind === "PERSONAL");
   if (sim) return sim;
   const last = steps[steps.length - 1];
+  const r = route(db, session, task.request_text);
   if (!last) {
+    // Something this demo cannot do, or a stop with nothing named: never a capability a stray word points to.
+    if (r.outOfScope) return { tool: "overview", reason: "Not something this demo can do" };
+    if (r.unspecified) {
+      const subs = stoppable(db, session);
+      return subs.length ? { tool: "ask_user", question: WHICH, options: [...subs.map((s) => s.label), NONE], reason: "Nothing named to stop" } : { tool: "overview", reason: "Nothing here to stop" };
+    }
+    if (r.intents.length > 1) return analyzeStep(r.intents[0].c.id, task.request_text, "First part of the request");
     // A balance question ("Hold on, what's my balance?") gets the overview unless a capability matches more strongly.
-    const r = route(db, session, task.request_text);
     const m = r.matches[0] && r.matches[0].score > r.overview ? r.matches[0].c : undefined;
-    const roadblocks = m?.id === "O6" ? roadblocksFromText(task.request_text) : [];
-    return m ? { tool: "analyze", capabilityId: m.id, inputs: roadblocks.length ? [{ key: "roadblocks", value: roadblocks.join(",") }] : undefined, reason: "Keyword match" } : { tool: "overview", reason: "No specific capability matched" };
+    return m ? analyzeStep(m.id, task.request_text, "Keyword match") : { tool: "overview", reason: "No specific capability matched" };
   }
-  if (last.tool === "overview") return { tool: "final_answer", reason: "Overview", text: `${smallTalk(task.request_text) ? `${smallTalk(task.request_text)} ` : ""}Here is ${last.result.context}: ${last.result.accounts.map((a: any) => `${a.name} ${formatMoney(a.balanceMinor)}`).join(", ")}. Try asking about trials, bills, refunds, travel or goals.` };
+  if (last.tool === "overview") {
+    const subs = r.unspecified && !r.outOfScope ? stoppable(db, session) : [];
+    const lead = r.outOfScope
+      ? `This demo can't ${r.outOfScope}; nothing is prepared.`
+      : r.unspecified
+        ? subs.length ? `Nothing is prepared; tell me which one to stop: ${subs.map((s) => s.label).join(", ")}.` : "NextMove found nothing here it can stop for you, so nothing is prepared."
+        : smallTalk(task.request_text);
+    return { tool: "final_answer", reason: "Overview", text: `${lead ? `${lead} ` : ""}Here is ${last.result.context}: ${last.result.accounts.map((a: any) => `${a.name} ${formatMoney(a.balanceMinor)}`).join(", ")}. Try asking about trials, bills, refunds, travel or goals.` };
+  }
+  // The customer picked what to stop (or none of it); a question that could not be asked falls back to the overview.
+  if (isWhich(last)) {
+    if (last.result?.error) return { tool: "overview", reason: "Could not ask what to stop" };
+    const picked = String(json(one<any>(db, "SELECT answer_json FROM task_questions WHERE task_id=? AND status='ANSWERED' ORDER BY answered_at DESC LIMIT 1", task.id)?.answer_json, ""));
+    const s = stoppable(db, session).find((x) => x.label === picked);
+    return s ? analyzeStep(s.capabilityId, task.request_text, "The customer chose what to stop") : { tool: "final_answer", reason: "Customer chose nothing", text: NOTHING_DONE };
+  }
   // After the customer answered a capability's own question, analyse again with that answer.
   const { capabilityId: askedCap, inputKey: askedKey } = (last.args ?? {}) as { capabilityId?: string; inputKey?: string };
   if (last.tool === "ask_user" && askedCap && askedKey) {
@@ -293,14 +363,28 @@ function simulatedDecision(db: DatabaseSync, session: Session, task: any, steps:
     const picked = String(json(one<any>(db, "SELECT answer_json FROM task_questions WHERE task_id=? AND status='ANSWERED' ORDER BY answered_at DESC LIMIT 1", task.id)?.answer_json, ""));
     const c = prior?.candidates.find((x: any) => x.available && x.title === picked);
     if (c) return { tool: "prepare_proposal", capabilityId: prior.capability, candidateKeys: [...(c.dependsOn ?? []), c.key], reason: "The customer chose this action" };
-    return { tool: "final_answer", reason: "Customer chose nothing", text: "Nothing is prepared and nothing has changed. You can come back to this at any time." };
+    return { tool: "final_answer", reason: "Customer chose nothing", text: NOTHING_DONE };
   }
   const analysis = [...steps].reverse().find((s) => s.tool === "analyze" && !s.result.error)?.result;
   const intro = analysis ? [sentence(analysis.headline), String(analysis.summary ?? "").length <= 400 ? sentence(analysis.summary) : ""].filter(Boolean).join(" ") : "";
+  // Several requests in one message: analyse each part, then prepare at most one (the first with a ready action, never
+  // a what-would-happen part); the answer says which parts were only analysed.
+  const several = r.intents.length > 1 && !steps.some(isWhich);
+  if (several && last.tool === "analyze") {
+    const analysed = new Set(steps.filter((s) => s.tool === "analyze").map((s) => s.args?.capabilityId));
+    const next = r.intents.find((x) => !analysed.has(x.c.id));
+    if (next) return analyzeStep(next.c.id, task.request_text, "Next part of the request");
+    for (const x of r.intents.filter((i) => !i.hypothetical)) {
+      const a = steps.find((s) => s.tool === "analyze" && s.args?.capabilityId === x.c.id && !s.result?.error)?.result;
+      const ready = a && !a.done ? preparable(a.candidates.filter((c: any) => c.available && c.defaultSelected)) : [];
+      if (ready.length) return { tool: "prepare_proposal", capabilityId: x.c.id, candidateKeys: ready.map((c: any) => c.key), reason: "First part with a ready action" };
+    }
+    return { tool: "final_answer", reason: "Several parts, nothing ready to prepare", text: severalAnswer(steps, r.intents) };
+  }
+  if (several && last.tool === "prepare_proposal" && last.result.proposalId) return { tool: "final_answer", reason: "Summarize several parts", text: severalAnswer(steps, r.intents) };
   if (last.tool === "analyze") {
     if (last.result.error) return { tool: "final_answer", reason: "Analysis failed", text: `I could not read this right now: ${last.result.error}.` };
     // "Don't cancel my trial" or "what would happen if I cancelled it?": show the analysis, prepare nothing.
-    const r = route(db, session, task.request_text);
     if ((r.declined || r.hypothetical) && !last.result.done)
       return { tool: "final_answer", reason: r.declined ? "The customer asked not to change anything" : "A what-would-happen question", text: `${intro} ${r.declined ? "You asked me not to change anything, so nothing is prepared." : "Nothing is prepared; ask me to prepare it when you want to go ahead."}`.trim() };
     // An action whose prerequisite cannot be prepared waits with it (e.g. activating a bundle before eligibility is checked).
@@ -325,6 +409,44 @@ function simulatedDecision(db: DatabaseSync, session: Session, task: any, steps:
   return { tool: "final_answer", reason: "Fallback", text: "I could not find a matching NextMove capability." };
 }
 
+const PAYLOAD_MAX = 24_000;
+
+/**
+ * The planner's input as whole JSON within `max` characters. The oldest steps go first (counted in omittedSteps); the
+ * request, the customer's answers and the newest step always stay, the newest step's result cut down if it alone is too big.
+ */
+export function plannerPayload(base: Record<string, unknown>, history: { tool: string; args?: unknown; result: unknown }[], max = PAYLOAD_MAX) {
+  const text = (from: number, h = history.slice(from)) => JSON.stringify({ ...base, ...(from ? { omittedSteps: from } : {}), history: h });
+  for (let from = 0; from < history.length; from++) {
+    const t = text(from);
+    if (t.length <= max) return t;
+  }
+  if (!history.length) return text(0);
+  const last = history[history.length - 1];
+  const whole = JSON.stringify(last.result) ?? "";
+  let room = max - text(history.length - 1, [{ ...last, result: { cut: "" } }]).length;
+  for (;;) {
+    const t = text(history.length - 1, [{ ...last, result: { cut: whole.slice(0, Math.max(0, room)) } }]);
+    // Escaped quotes make the cut longer than its slice; shrink until it fits (or nothing of the result is left).
+    if (t.length <= max || room <= 0) return t;
+    room -= t.length - max;
+  }
+}
+
+/** The answer when the step budget ran out, written by NextMove from tool results only: what was found and whether anything was prepared. */
+function budgetAnswer(steps: Step[]) {
+  const n = steps.length;
+  const found = steps.filter((s) => (s.tool === "analyze" || s.tool === "show_simulation") && s.result?.headline && !s.result.error).pop();
+  const prepared = steps.some((s) => s.tool === "prepare_proposal" && s.result?.proposalId);
+  return [
+    `I stopped after ${n} planning step${n === 1 ? "" : "s"} without finishing my answer.`,
+    found ? `So far: ${sentence(found.result.headline)}` : "",
+    prepared ? "A proposal is ready for your review; nothing happens until you approve." : "Nothing was prepared and nothing has changed.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
   const task = one<any>(db, "SELECT * FROM tasks WHERE id=?", job.ref_id);
   if (!task || !["QUEUED", "RUNNING"].includes(task.state)) return void finishJob(db, job, ctx.workerId, { status: "DONE" });
@@ -341,8 +463,9 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
       let d: DecisionT | null = null;
       if (mode === "LIVE_MODEL") {
         const ctxName = one<any>(db, "SELECT name FROM contexts WHERE id=?", task.context_id)?.name;
-        const payload = { request: task.request_text, context: ctxName, step: i + 1, budget: task.step_budget, capabilities: capabilitiesFor(db, session).filter((c) => c.inThisContext).map((c) => ({ id: c.id, title: c.title, short: c.short })), answers, history: steps.map((s) => ({ tool: s.tool, args: s.args, result: s.result })) };
-        const res = await callModel(db, { purpose: "planner", system: SYSTEM, text: JSON.stringify(payload).slice(0, 24_000), schema: decisionSchema(ids), tenantId: task.tenant_id, taskId: task.id });
+        const base = { request: task.request_text, context: ctxName, step: i + 1, budget: task.step_budget, capabilities: capabilitiesFor(db, session).filter((c) => c.inThisContext).map((c) => ({ id: c.id, title: c.title, short: c.short })), answers };
+        const text = plannerPayload(base, steps.map((s) => ({ tool: s.tool, args: s.args, result: s.result })));
+        const res = await callModel(db, { purpose: "planner", system: SYSTEM, text, schema: decisionSchema(ids), tenantId: task.tenant_id, taskId: task.id });
         if (res.ok) {
           const parsed = Decision.safeParse(res.output);
           if (parsed.success) {
@@ -398,9 +521,12 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
         d.tool === "find_capability" ? `Looked up matching capabilities` :
         d.tool === "show_simulation" ? (out.result.error ? `Could not show the what-if: ${out.result.error}` : `Prepared a what-if: ${out.result.title}`) :
         d.tool === "overview" ? "Read your balances and upcoming charges" : "Answer ready";
-      taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: d.tool, label, evidence, payload: { reason: d.reason === undefined ? undefined : cut(d.reason, 200) } });
+      // The model's reason is served with the event, so it passes the same checks as its answers or is left out.
+      const reason = d.reason === undefined || (by === "LIVE_MODEL" && textProblem(d.reason, steps, customerSaid(db, task).text, untrustedNames(db, task.tenant_id))) ? undefined : cut(plainText(d.reason), 200);
+      taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: d.tool, label, evidence, payload: { reason } });
       if (out.stop === "ASK") {
-        setTaskState(db, task.id, "WAITING_USER", out.result.asked ?? d.question ?? null);
+        // Only the question as asked (checked, or the capability's own), never the model's raw wording.
+        setTaskState(db, task.id, "WAITING_USER", out.result.asked ?? null);
         break;
       }
       if (out.stop === "DONE") {
@@ -420,7 +546,10 @@ export async function runAgentJob(db: DatabaseSync, job: Job, ctx: WorkerCtx) {
       }
     }
     // Out of steps, including a run that resumed after an answer with the budget already spent: end, never stay RUNNING.
-    if (one<any>(db, "SELECT state FROM tasks WHERE id=?", task.id)?.state === "RUNNING") setTaskState(db, task.id, steps.some((s) => s.tool === "prepare_proposal" && s.result.proposalId) ? "NEEDS_APPROVAL" : "DONE", "Step budget reached");
+    if (one<any>(db, "SELECT state FROM tasks WHERE id=?", task.id)?.state === "RUNNING") {
+      setBlock(db, task.id, "answer", 40, "answer", { text: budgetAnswer(steps), by: "NEXTMOVE", provenance: "Written by NextMove when the step budget ran out; the numbers come from NextMove calculations", stepBudget: steps.length });
+      setTaskState(db, task.id, steps.some((s) => s.tool === "prepare_proposal" && s.result.proposalId) ? "NEEDS_APPROVAL" : "DONE", "Step budget reached");
+    }
   } catch (e: any) {
     setTaskState(db, task.id, "FAILED", String(e?.message ?? e).slice(0, 200));
     taskEvent(db, { taskId: task.id, tenantId: task.tenant_id, kind: "error", label: "The task stopped: the live model is required but unavailable", evidence: null });

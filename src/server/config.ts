@@ -1,5 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
+import os from "node:os";
 import { randomBytes } from "node:crypto";
 
 export type PlannerMode = "live" | "simulated" | "auto";
@@ -43,8 +44,18 @@ export const config = {
   get claudeBin() {
     return env("NEXTMOVE_CLAUDE_BIN", "claude");
   },
+  /**
+   * The CLI's config directory (its sign-in and settings), passed to it as CLAUDE_CONFIG_DIR. Empty: whatever
+   * CLAUDE_CONFIG_DIR the server was started with, else the CLI's default (~/.claude). A leading ~ is the home folder.
+   */
+  get claudeConfigDir() {
+    const v = env("NEXTMOVE_CLAUDE_CONFIG_DIR", process.env.CLAUDE_CONFIG_DIR ?? "");
+    return v.startsWith("~") ? path.join(os.homedir(), v.slice(1)) : v;
+  },
+  /** Per-call timeout; an unreadable or out-of-range setting falls back to 90 s instead of timing out at once. */
   get modelTimeoutMs() {
-    return Number(env("NEXTMOVE_MODEL_TIMEOUT_MS", "90000"));
+    const v = Number(env("NEXTMOVE_MODEL_TIMEOUT_MS", "90000"));
+    return Number.isFinite(v) && v >= 1000 && v <= 600_000 ? v : 90_000;
   },
   get modelMaxBudgetUsd() {
     return env("NEXTMOVE_MODEL_MAX_BUDGET_USD", "0.50");

@@ -62,6 +62,7 @@ function minimalEnv(): NodeJS.ProcessEnv {
   const keep = ["PATH", "HOME", "USER", "LOGNAME", "LANG", "TMPDIR", "SHELL", "TERM"];
   const env: Record<string, string> = {};
   for (const k of keep) if (process.env[k]) env[k] = process.env[k];
+  if (config.claudeConfigDir) env.CLAUDE_CONFIG_DIR = config.claudeConfigDir;
   env.NO_COLOR = "1";
   env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";
   return env as NodeJS.ProcessEnv;
@@ -218,6 +219,8 @@ export async function callModel(db: DatabaseSync | null, req: ModelRequest): Pro
         if (!resultLine) return done({ ok: false, status: "ERROR", error: sanitizeError(errText || `CLI exited with code ${code} without a result`), callId });
         const costUsd = typeof resultLine.total_cost_usd === "number" ? resultLine.total_cost_usd : null;
         if (resultLine.is_error || resultLine.subtype !== "success") return done({ ok: false, status: "ERROR", error: sanitizeError(String(resultLine.result ?? resultLine.subtype ?? "model error")), callId, costUsd });
+        // A success line from a run that then failed or was killed is not trusted: success needs exit code 0 as well.
+        if (code !== 0) return done({ ok: false, status: "ERROR", error: sanitizeError(`CLI exited with ${code === null ? "a signal" : `code ${code}`} after a success result${errText ? `: ${errText}` : ""}`), callId, costUsd });
         let output = resultLine.structured_output;
         if (output === undefined && typeof resultLine.result === "string") {
           try {
@@ -227,7 +230,9 @@ export async function callModel(db: DatabaseSync | null, req: ModelRequest): Pro
           }
         }
         if (output === undefined) return done({ ok: false, status: "ERROR", error: "The model did not return structured output", callId, costUsd });
-        const usedModel = Object.keys(resultLine.modelUsage ?? {})[0] ?? model;
+        // Shown to the customer as "Answer by …", so only a plain model id.
+        const reported = Object.keys(resultLine.modelUsage ?? {})[0];
+        const usedModel = reported && /^[\w.:@[\]/-]{1,80}$/.test(reported) ? reported : model;
         done({ ok: true, output: sanitizeValue(output), model: usedModel, durationMs: Date.now() - started, costUsd, callId });
       });
       child.stdin.on("error", () => undefined);

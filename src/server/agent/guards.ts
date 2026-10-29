@@ -15,6 +15,28 @@ export function plainText(s: string) {
   return s.normalize("NFKC").replace(/[­͏؜ᅟᅠ᠎​-‏‪-‮⁠-⁯ㅤ︀-️﻿ﾠ]/g, "");
 }
 
+// Cyrillic, Greek, Armenian and small-capital letters that read as Latin ones, and the ideographic full stop that
+// browsers accept in a domain name. Fullwidth and mathematical letters are already folded by NFKC.
+const LOOKALIKES: Record<string, string> = {
+  а: "a", в: "b", е: "e", і: "i", ј: "j", к: "k", м: "m", н: "h", о: "o", п: "n", р: "p", с: "c", т: "t", у: "y", х: "x", ѕ: "s", һ: "h", ԁ: "d", ԛ: "q", ԝ: "w", ү: "y", ӏ: "l",
+  А: "A", В: "B", Е: "E", І: "I", Ј: "J", К: "K", М: "M", Н: "H", О: "O", Р: "P", С: "C", Т: "T", Х: "X", У: "Y", Ѕ: "S", Ԛ: "Q", Ԝ: "W", Ү: "Y", Ӏ: "I",
+  α: "a", β: "b", ε: "e", ι: "i", κ: "k", ν: "v", ο: "o", ρ: "p", τ: "t", υ: "u", χ: "x", γ: "y",
+  Α: "A", Β: "B", Ε: "E", Ζ: "Z", Η: "H", Ι: "I", Κ: "K", Μ: "M", Ν: "N", Ο: "O", Ρ: "P", Τ: "T", Υ: "Y", Χ: "X",
+  օ: "o", ս: "u", ց: "g", հ: "h", ո: "n",
+  ᴀ: "a", ʙ: "b", ᴄ: "c", ᴅ: "d", ᴇ: "e", ꜰ: "f", ɢ: "g", ʜ: "h", ɪ: "i", ᴊ: "j", ᴋ: "k", ʟ: "l", ᴍ: "m", ɴ: "n", ᴏ: "o", ᴘ: "p", ʀ: "r", ꜱ: "s", ᴛ: "t", ᴜ: "u", ᴠ: "v", ᴡ: "w", ʏ: "y", ᴢ: "z", ı: "i", ɑ: "a",
+  "。": ".",
+};
+const LOOKALIKE = new RegExp(`[${Object.keys(LOOKALIKES).join("")}]`, "g");
+
+/**
+ * The text the checks read: plainText, accents dropped (Romanian ă â î ș ț become a a i s t, which every Romanian
+ * pattern also accepts) and look-alike letters folded to Latin, so "cancеlled" with a Cyrillic е is "cancelled".
+ * Only for checking; the customer sees plainText.
+ */
+export function checkedText(s: string) {
+  return plainText(s).normalize("NFD").replace(/\p{M}/gu, "").replace(LOOKALIKE, (c) => LOOKALIKES[c]);
+}
+
 /** A word or phrase on its own, with letters in any script (\b only knows ASCII letters). */
 const word = (alt: string) => `(?<![\\p{L}\\p{N}])(?:${alt})(?![\\p{L}\\p{N}])`;
 
@@ -75,7 +97,9 @@ export function allowedNumbers(steps: { tool?: string; result: any }[], customer
       out.add(Math.abs(v / 100).toFixed(2));
     }
   };
-  const addText = (s: string) => {
+  // Read the same way checkNumbers reads the planner's text.
+  const addText = (raw: string) => {
+    const s = checkedText(raw);
     for (const m of s.matchAll(TOOL_NUMBER)) out.add(m[0].replace(/,/g, ""));
     for (const d of datesIn(s)) for (const k of d.keys) out.add(k);
     for (const w of wordAmounts(s)) out.add(`word:${w.raw.toLowerCase().replace(/\s+/g, " ")}`);
@@ -90,7 +114,7 @@ export function allowedNumbers(steps: { tool?: string; result: any }[], customer
   steps.filter(fromTools).forEach((s) => walk(s.result));
   addText(customerText);
   // The customer's own Romanian-style amounts ("1.500 lei") count as written, too.
-  for (const m of customerText.matchAll(/\d[\d.,]*\d/g)) {
+  for (const m of checkedText(customerText).matchAll(/\d[\d.,]*\d/g)) {
     out.add(m[0].replace(/\./g, "").replace(/,/g, "."));
     out.add(m[0].replace(/,/g, ""));
   }
@@ -104,7 +128,7 @@ const NUMBER = /(\d{1,3}(?:[   ]\d{3})+(?:[.,]\d+)?(?![\d.,]*\d)|\d(?:[\d.,]*
 
 export function checkNumbers(text: string, allowed: Set<string>) {
   const bad: string[] = [];
-  let rest = plainText(text);
+  let rest = checkedText(text);
   // Digits from other scripts (٥٠٠, ५००) never match a NextMove number.
   for (const m of rest.matchAll(/[^\P{Nd}0-9]+/gu)) bad.push(m[0]);
   const blank = (at: number, raw: string) => (rest = rest.slice(0, at) + " ".repeat(raw.length) + rest.slice(at + raw.length));
@@ -171,11 +195,11 @@ const APPROVAL =
 
 /** Lower-cased tool texts, with provider-controlled names cut out so a merchant called "X has been cancelled" vouches for nothing. */
 function toolTexts(steps: { tool?: string; result: any }[], untrusted: string[]) {
-  const cut = untrusted.map((u) => u.toLowerCase().trim()).filter((u) => u.length >= 3);
+  const cut = untrusted.map((u) => checkedText(u).toLowerCase().replace(/\s+/g, " ").trim()).filter((u) => u.length >= 3);
   const said: string[] = [];
   const walk = (x: any) => {
     if (typeof x === "string") {
-      let t = plainText(x).toLowerCase().replace(/\s+/g, " ");
+      let t = checkedText(x).toLowerCase().replace(/\s+/g, " ");
       for (const u of cut) t = t.split(u).join(" \u0000 ");
       said.push(t);
     } else if (Array.isArray(x)) x.forEach(walk);
@@ -191,7 +215,7 @@ const sentences = (text: string) => text.replace(/[’‘ʼ`´]/g, "'").split(/(
 export function checkClaims(text: string, steps: { tool?: string; result: any }[], untrusted: string[] = []) {
   const said = toolTexts(steps, untrusted);
   const out: string[] = [];
-  for (const s of sentences(plainText(text))) {
+  for (const s of sentences(checkedText(text))) {
     const found = [...CLAIMS.flatMap((re) => [...s.matchAll(re)]), ...(APPROVAL.test(s) ? [] : UNLESS_APPROVED.flatMap((re) => [...s.matchAll(re)]))];
     for (const m of found) {
       const phrase = m[0].replace(/\s+/g, " ");
@@ -216,18 +240,42 @@ const NEVER = /\b(?:never|don't|do not|nobody|no one|won't|will not)\b|(?<![\p{L
 /** Links the planner wrote that no tool result contains: NextMove never sends the customer anywhere. */
 export function checkLinks(text: string, steps: { tool?: string; result: any }[], untrusted: string[] = []) {
   const said = toolTexts(steps, untrusted);
-  return [...plainText(text).matchAll(LINK)].map((m) => m[0]).filter((l) => !said.some((t) => t.includes(l.toLowerCase())));
+  // "pulsegym[.]com" still tells the customer where to go.
+  const plain = checkedText(text).replace(/\[\.\]|\(\.\)/g, ".");
+  return [...plain.matchAll(LINK)].map((m) => m[0]).filter((l) => !said.some((t) => t.includes(l.toLowerCase())));
 }
 
 /** Requests for a PIN, password, card number or one-time code. "Never share your PIN" is a warning, not a request. */
 export function checkSecrets(text: string, steps: { tool?: string; result: any }[], untrusted: string[] = []) {
   const said = toolTexts(steps, untrusted);
   const out: string[] = [];
-  for (const s of sentences(plainText(text))) {
+  for (const s of sentences(checkedText(text))) {
     if (NEVER.test(s)) continue;
     for (const re of SECRET_ASK) for (const m of s.matchAll(re)) if (!said.some((t) => t.includes(m[0].toLowerCase()))) out.push(m[0]);
   }
   return out;
+}
+
+const OTHER_SCRIPT = /[\p{Script=Cyrillic}\p{Script=Greek}\p{Script=Armenian}]/u;
+
+/**
+ * Words that mix Latin letters with Cyrillic, Greek or Armenian ones ("Rеvolut" with a Cyrillic е): a spoofing tell,
+ * never ordinary writing. Romanian is all Latin and a whole word in another alphabet is not mixed. A word the customer
+ * wrote or a tool returned may be repeated.
+ */
+export function checkMixedScripts(text: string, steps: { tool?: string; result: any }[], customerText: string) {
+  const known = new Set<string>();
+  const add = (s: string) => {
+    for (const w of plainText(s).match(/[\p{L}\p{M}]+/gu) ?? []) known.add(w);
+  };
+  const walk = (x: any) => {
+    if (typeof x === "string") add(x);
+    else if (Array.isArray(x)) x.forEach(walk);
+    else if (x && typeof x === "object") Object.values(x).forEach(walk);
+  };
+  steps.filter(fromTools).forEach((s) => walk(s.result));
+  add(customerText);
+  return (plainText(text).match(/[\p{L}\p{M}]+/gu) ?? []).filter((w) => /\p{Script=Latin}/u.test(w) && OTHER_SCRIPT.test(w) && !known.has(w));
 }
 
 /**
@@ -241,5 +289,6 @@ export function textProblem(text: string, steps: { tool?: string; result: any }[
   if (claims.length) return `Withheld a model sentence saying "${claims[0]}": nothing is carried out until you approve it`;
   if (checkLinks(text, steps, untrusted).length) return "Withheld a model sentence with a link: NextMove never sends you to another site";
   if (checkSecrets(text, steps, untrusted).length) return "Withheld a model sentence asking for a PIN, password, card number or code: NextMove never asks for them";
+  if (checkMixedScripts(text, steps, customerText).length) return "Withheld a model sentence with look-alike letters from another alphabet mixed into a word";
   return null;
 }

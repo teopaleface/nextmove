@@ -115,5 +115,24 @@ describe("route planner (O6)", () => {
     expect(roadblocksFromText("A 900 RON dental bill just came in. Am I still on track for the home?")).toEqual(["dental"]);
     expect(roadblocksFromText("rent,income")).toEqual(["rent", "income"]);
     expect(roadblocksFromText("Am I on track?")).toEqual([]);
+    expect(roadblocksFromText("What if my rent goes up and my income drops?")).toEqual(["rent", "income"]);
+    expect(roadblocksFromText("I forgot to cancel a tool")).toEqual(["tool"]);
+  });
+
+  it("matches whole words, and a rent or income roadblock only when the customer names a change", () => {
+    for (const t of [
+      "What is my current balance?", // rent in current
+      "My parents are visiting", // rent in parents
+      "toothpaste and stool", // tooth, tool
+      "Am I on track given my rent?",
+      "my income",
+      "When does my salary arrive?",
+      "Is my salary enough to stay on track for the home?",
+      "my toolbox and the dentistry exam",
+    ])
+      expect(roadblocksFromText(t), t).toEqual([]);
+    expect(roadblocksFromText("Rent,Income")).toEqual(["rent", "income"]);
+    expect(roadblocksFromText("my dentist sent a bill")).toEqual(["dental"]);
+    expect(roadblocksFromText("Chiria a crescut? No: my rent rose by 100")).toEqual(["rent"]);
   });
 });

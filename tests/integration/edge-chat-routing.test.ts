@@ -235,3 +235,139 @@ describe("Alex's demo suggestions keep their flows", () => {
     expect(v.blocks.map((b: any) => b.key)).toContain(`simulation:${kind}`);
   });
 });
+
+describe("several requests in one message", () => {
+  it("“cancel FitFlow and check whether rent clears” → both analysed, one proposal, the other said to be only analysed", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "Cancel FitFlow and check whether rent clears");
+    expect(analysed(v)).toEqual(["T2", "O7"]);
+    expect(tools(v).filter((t: string) => t === "prepare_proposal")).toHaveLength(1);
+    expect(proposalsOf(v.task.id)).toHaveLength(1);
+    expect(v.task.state).toBe("NEEDS_APPROVAL");
+    const text = answerOf(v).text;
+    expect(text).toMatch(/I prepared \d+ actions? for your review: .*Nothing happens until you approve\./);
+    expect(text).toMatch(/Only analysed, nothing prepared: .+\. Ask me to prepare it next\./);
+    expect(answerOf(v).provenance).toBe("All numbers come from NextMove calculations");
+  });
+
+  it("“pause Streamly, also how much do I spend on food” → both parts analysed, never two proposals", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "Pause Streamly, also how much do I spend on food delivery?");
+    expect(analysed(v)).toEqual(["A6", "A15"]);
+    expect(proposalsOf(v.task.id).length).toBeLessThanOrEqual(1);
+    expect(answerOf(v).text).toMatch(/Only analysed, nothing prepared: /);
+  });
+
+  it("three parts: all three analysed, exactly one proposal, the other two named as only analysed", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "Cancel the FitFlow trial, pause Streamly and stop PulseGym");
+    expect(analysed(v)).toEqual(["T2", "A6", "A17"]);
+    expect(proposalsOf(v.task.id)).toHaveLength(1);
+    expect(answerOf(v).text).toMatch(/Only analysed, nothing prepared: [^.]+; [^.]+\. Ask me to prepare one of them next\./);
+  });
+
+  it("a what-would-happen part is analysed but never prepared", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "What would happen if I cancelled FitFlow? And am I paying twice for cloud storage?");
+    expect(analysed(v)).toEqual(["T2", "A1"]);
+    const p = v.steps.filter((s: any) => s.tool === "prepare_proposal");
+    expect(p.every((s: any) => s.capabilityId !== "T2")).toBe(true);
+    expect(answerOf(v).text).toMatch(/You asked what would happen for .*FitFlow|You asked what would happen for /);
+  });
+
+  it("a negated part prepares nothing for it", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "Don't cancel FitFlow, and am I paying twice for cloud storage?");
+    expect(analysed(v)).toEqual(["A1"]);
+    expect(v.steps.some((s: any) => s.tool === "prepare_proposal" && s.capabilityId === "T2")).toBe(false);
+  });
+});
+
+describe("a stop or cancel with nothing named asks what to stop", () => {
+  it.each(["Cancel everything", "stop", "Anulează"])("%s → a question listing what can be stopped, nothing prepared", async (text) => {
+    const a = await stack.login("alex");
+    const v = await run(a, text);
+    expect(tools(v)).toEqual(["ask_user"]);
+    expect(v.task.state).toBe("WAITING_USER");
+    expect(proposalsOf(v.task.id)).toHaveLength(0);
+    const q = v.questions[0];
+    expect(q.text).toBe("What should I stop? I prepare one at a time, and nothing happens until you approve.");
+    expect(q.options).toContain("FitFlow trial");
+    expect(q.options.at(-1)).toBe("None of these");
+    expect(q.options.length).toBeLessThanOrEqual(6);
+  });
+
+  it("answering with one subscription analyses and prepares that one only", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "Cancel everything");
+    await a.ok(`/api/tasks/${v.task.id}/answer`, { questionId: v.questions[0].id, answer: "FitFlow trial" });
+    const w = await waitFor(async () => {
+      const x = await a.json(`/api/tasks/${v.task.id}`);
+      return ["DONE", "NEEDS_APPROVAL", "FAILED"].includes(x.task.state) ? x : null;
+    }, { timeout: 30_000, label: "answered task settled" });
+    expect(analysed(w)).toEqual(["T2"]);
+    expect(proposalsOf(v.task.id)).toHaveLength(1);
+    expect(w.task.state).toBe("NEEDS_APPROVAL");
+  });
+
+  it("“None of these” prepares nothing", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "stop everything");
+    await a.ok(`/api/tasks/${v.task.id}/answer`, { questionId: v.questions[0].id, answer: "None of these" });
+    const w = await waitFor(async () => {
+      const x = await a.json(`/api/tasks/${v.task.id}`);
+      return ["DONE", "NEEDS_APPROVAL", "FAILED"].includes(x.task.state) ? x : null;
+    }, { timeout: 30_000, label: "answered task settled" });
+    expect(w.task.state).toBe("DONE");
+    expect(proposalsOf(v.task.id)).toHaveLength(0);
+    expect(answerOf(w).text).toMatch(/^Nothing is prepared and nothing has changed\./);
+  });
+
+  it("Laziz has nothing NextMove can stop: the overview says so", async () => {
+    const l = await stack.login("laziz");
+    const v = await run(l, "cancel everything");
+    expect(tools(v)).toEqual(["overview", "final_answer"]);
+    expect(answerOf(v).text).toMatch(/^NextMove found nothing here it can stop for you, so nothing is prepared\. Here is /);
+    expect(proposalsOf(v.task.id)).toHaveLength(0);
+  });
+});
+
+describe("requests this demo cannot do", () => {
+  it.each([
+    ["block my card", "block, freeze or cancel a card"],
+    ["I forgot my password", "help with passwords or signing in"],
+    ["change my PIN", "show or change a card PIN"],
+    ["close my account", "close an account"],
+    ["open a new account", "open an account"],
+  ])("%s → says the demo can't, shows the overview, prepares nothing", async (text, what) => {
+    const a = await stack.login("alex");
+    const v = await run(a, text);
+    expect(tools(v)).toEqual(["overview", "final_answer"]);
+    expect(answerOf(v).text.startsWith(`This demo can't ${what}; nothing is prepared. Here is `)).toBe(true);
+    expect(proposalsOf(v.task.id)).toHaveLength(0);
+  });
+});
+
+describe("phrases that used to land on an unrelated capability", () => {
+  it("Laziz “we are moving house” → the overview, not moving a business cost", async () => {
+    const l = await stack.login("laziz");
+    expect(tools(await run(l, "We are moving house next month"))).toEqual(["overview", "final_answer"]);
+  });
+
+  it("“PayPal paid me back” → the overview, not the bill vault", async () => {
+    const a = await stack.login("alex");
+    expect(tools(await run(a, "PayPal paid me back"))).toEqual(["overview", "final_answer"]);
+  });
+
+  it("“schedule of payments” → the bill vault, not the streaming shows", async () => {
+    const a = await stack.login("alex");
+    expect(analysed(await run(a, "Show me my schedule of payments"))).toEqual(["O7"]);
+  });
+
+  it("“my income” alone opens no income what-if", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "my income");
+    expect(tools(v)).not.toContain("show_simulation");
+    expect(tools(v)).toEqual(["overview", "final_answer"]);
+  });
+});

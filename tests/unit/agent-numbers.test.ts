@@ -32,6 +32,11 @@ describe("checkNumbers", () => {
     for (const t of ["on 2026-12-24", "on December 3", "15.12.2026", "pe 3 mai"]) expect(checkNumbers(t, ok), t).not.toEqual([]);
   });
 
+  it("amounts in words with look-alike letters are still amounts; Romanian ones the customer wrote still count", () => {
+    for (const t of ["save fiv\u0435 hundr\u0435d lei", "a tw\u0435nty percent cut"]) expect(checkNumbers(t, allowed), t).not.toEqual([]);
+    expect(checkNumbers("Ai spus dou\u0103 sute lei.", allowedNumbers([], "Pot pune deoparte dou\u0103 sute lei"))).toEqual([]);
+  });
+
   it("the customer's own Romanian amounts count as written", () => {
     expect(checkNumbers("You said 1.500 lei.", allowedNumbers([], "Am 1.500 lei"))).toEqual([]);
   });

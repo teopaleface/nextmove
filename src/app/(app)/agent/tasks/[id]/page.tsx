@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { use, useState } from "react";
+import { use, useRef, useState } from "react";
 import { api, useApi } from "@/ui/api";
 import { useSession } from "@/ui/session";
 import { ActionStatus, Empty, ErrorBox, Group, Loading, Notice, PageHead, Row, Section, TaskStatus, useAction } from "@/ui/kit";
@@ -21,6 +21,8 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
   const { run, busy, error: actError } = useAction();
   // One draft per open question: two free-text questions must not share a box.
   const [free, setFree] = useState<Record<string, string>>({});
+  // The answered question disappears; move focus to the task's status instead of letting it fall to the page body.
+  const statusRef = useRef<HTMLDivElement>(null);
   if (!data && error?.status === 404)
     return (
       <>
@@ -43,6 +45,7 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
       await api(`/tasks/${t.id}/answer`, { body: { questionId, answer: value } });
       setFree((f) => ({ ...f, [questionId]: "" }));
       await reload();
+      statusRef.current?.focus();
     });
   const stop = () =>
     run(async () => {
@@ -56,7 +59,7 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
       <div className="group pad">
         <div className="caption">You asked</div>
         <div style={{ marginTop: 2 }}>{t.request || t.title || "No text"}</div>
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px 12px", marginTop: 10 }}>
+        <div ref={statusRef} tabIndex={-1} aria-live="polite" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px 12px", marginTop: 10, outline: "none" }}>
           <TaskStatus state={t.state} />
           <span className="caption">{plannerText(t.plannerMode, t.model)}</span>
         </div>
@@ -114,12 +117,19 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
       {answer ? (
         <Section>
           <div className="opportunity">
-            <AgentSig label={answer.by === "LIVE_MODEL" ? `Answer by ${t.model ?? "the live model"}` : "Answer by the simulated planner"} />
+            <AgentSig label={answer.by === "LIVE_MODEL" ? `Answer by ${t.model ?? "the live model"}` : answer.by === "NEXTMOVE" ? "Written by NextMove" : "Answer by the simulated planner"} />
             <p style={{ margin: "10px 0 0", color: "var(--ink)", whiteSpace: "pre-line" }}>{answer.text}</p>
             <p className="caption" style={{ margin: "8px 0 0" }}>
               {answer.provenance}
             </p>
           </div>
+          {answer.stepBudget ? (
+            <div style={{ marginTop: 12 }}>
+              <Notice tone="info" title="Step budget reached">
+                NextMove stopped after {answer.stepBudget} planning steps. The activity below shows what it checked; ask again with more detail to continue.
+              </Notice>
+            </div>
+          ) : null}
           {simulations.length ? (
             <div className="stack" style={{ marginTop: 12 }}>
               {simulations.map((b: any) => (

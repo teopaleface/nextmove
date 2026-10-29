@@ -467,8 +467,8 @@ function labsRefund({ db, session, body }: { db: DatabaseSync; session: any; bod
   });
 }
 
-const E7H: CapabilityDef = { id: "E7H", title: "Move a business cost off the household", short: "Household side of repaying a cost the business uses", group: "Business", customer: "laziz", contextKind: "PERSONAL", keywords: ["business", "expense", "move", "repay", "vat", "pixelforge", "household", "company"], analyze: analyzeHousehold };
-const E7: CapabilityDef = { id: "E7", title: "Repay the household for business costs", short: "Business side, with a note for your accountant", group: "Business", customer: "laziz", contextKind: "BUSINESS", keywords: ["business", "expense", "move", "repay", "vat", "accountant", "household", "reimburse"], analyze: analyzeBusiness };
+const E7H: CapabilityDef = { id: "E7H", title: "Move a business cost off the household", short: "Household side of repaying a cost the business uses", group: "Business", customer: "laziz", contextKind: "PERSONAL", keywords: ["business", "expense", "move a cost", "move the cost", "move costs", "business cost", "repay", "vat", "pixelforge", "household", "company"], analyze: analyzeHousehold };
+const E7: CapabilityDef = { id: "E7", title: "Repay the household for business costs", short: "Business side, with a note for your accountant", group: "Business", customer: "laziz", contextKind: "BUSINESS", keywords: ["business", "expense", "move a cost", "move the cost", "move costs", "business cost", "repay", "vat", "accountant", "household", "reimburse"], analyze: analyzeBusiness };
 
 export const businessMove: ExtensionModule = {
   key: "business-move",
