@@ -461,3 +461,20 @@ The stale dev cache came back after a plain restart: pages reloaded about 650 ti
 Still open: there is no dark mode. Lookalike letters outside the folding table (for example Cherokee) are not caught. For Alex, "moving house" goes to O1, because house is part of his home goal.
 
 **Checks:** `npx tsc --noEmit`: pass. `npm test`: **677 tests passed in 55 files**. `extensions` `npm run check`: **310 passed**. `git diff --check`: clean.
+
+### Phone E2E suite run in full, evidence index (2026-10-29)
+
+The phone E2E suite (`tests/e2e`) had never been run end to end. It was run against a second stack on ports 3290/3291, which had its own data folder (`NEXTMOVE_DATA_DIR`) and its own build folder (`NEXTMOVE_NEXT_DIST_DIR`, new), so the demo stack on 3210 was left alone.
+
+- **First run: 23 of 26 passed.** All three failures were test problems, not product problems:
+  - **A1.** The test pressed Labs "finish file copy now" about 100 ms after approval, before the worker had started the copy. Labs then finished nothing, and the stop correctly kept waiting for the copy. The test now waits for the copy to start.
+  - **A8.** The test looked for the TechBits question by merchant name, but the question never named the merchant. The product now names it ("Did you place only one order with TechBits?", "Were these two separate UrbanRide purchases?"). The page asks two such questions, so the merchant name tells them apart.
+  - **O1, A10.** Two headlines had been reworded with the same numbers. The tests now match the current wording.
+- **Clean full run: 26 of 26 passed** in 142 s, including the four live-model tests (image reading, a hostile invoice, the student ID and the agent).
+- **`npm run evidence:manifest`** now exists (`scripts/evidence-manifest.ts`). It turns the last run into `evidence/MANIFEST.md` and `evidence/manifest.json`: per scenario, the result, the test file and line, a reproduce command and the per-feature video timestamps. The videos are copied to `evidence/recordings/`, which Git ignores.
+- **README:**
+  - a ten-minute path for reviewers;
+  - how to run a second copy;
+  - current test counts;
+  - the stale worktree paragraph removed.
+- **`extensions/README.md`:** says the modules are wired into the app (they have been since `5399b33`) and gives the current test count, 310.

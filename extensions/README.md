@@ -1,13 +1,13 @@
 # NextMove extensions
 
-Ten features, written as pure TypeScript domain modules that the app can call. They are not wired into the app yet. None of them reads the clock, the database or the network. Each takes plain data plus `now` and returns a decision, a new state, and a list of **effects** for the app's durable worker to run. Every external effect follows ADR 0003 (persist the attempt, then dispatch, then reconcile an unknown outcome before any retry). Every money or merchant change carries an exact `ApprovalGrant` bound to a manifest digest. The model never approves anything.
+Ten features, written as pure TypeScript domain modules that the app can call. The app wires them in through `src/server/extensions/` (one adapter per module in `modules/`, registered in `registry.ts`), which supplies the clock, storage and dispatch. None of the modules reads the clock, the database or the network. Each takes plain data plus `now` and returns a decision, a new state, and a list of **effects** for the app's durable worker to run. Every external effect follows ADR 0003 (persist the attempt, then dispatch, then reconcile an unknown outcome before any retry). Every money or merchant change carries an exact `ApprovalGrant` bound to a manifest digest. The model never approves anything.
 
 The modules import nothing from the app, and the app imports nothing from them. Each one adds something the app does not already do. Where an app capability is close, its section says how the two differ.
 
 ```bash
 cd extensions
 npm ci
-npm run check        # tsc --noEmit + node --test (304 tests)
+npm run check        # tsc --noEmit + node --test (310 tests)
 ```
 
 Needs Node ≥ 24.8, which runs `.ts` natively, and has no runtime dependencies. `node:sqlite` prints an ExperimentalWarning during `schema.test.ts`. That warning is expected.

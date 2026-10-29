@@ -19,6 +19,8 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // A second stack (other ports and NEXTMOVE_DATA_DIR) needs its own build folder: two `next dev` servers cannot share one.
+  distDir: process.env.NEXTMOVE_NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
   poweredByHeader: false,
   devIndicators: false,

@@ -2,7 +2,7 @@ import { candidate, approve, expect, expectDone, openCapability, review, signIn,
 
 test("O1 and A10: home goal with and without the phone, true cost, saved plan", async ({ page, mark, capture }) => {
   await signIn(page, "alex");
-  await openCapability(page, "O1", /Home ready after/);
+  await openCapability(page, "O1", /Home ready (in|after)/);
   mark("O1 dated home readiness with each phone");
   await capture("o1");
   await page.getByLabel("Monthly saving").fill("7000");
@@ -15,7 +15,7 @@ test("O1 and A10: home goal with and without the phone, true cost, saved plan", 
   await expect(page.getByText(/input revision 2/)).toBeVisible();
   mark("Saved decision with its input revision");
 
-  await openCapability(page, "A10", /costs 2,560.00 RON less/);
+  await openCapability(page, "A10", /2,560.00 RON less than/);
   mark("A10 two-year cost of each phone");
 });
 

@@ -279,11 +279,11 @@ export function classifyPossibleDuplicates(txns: TxnLite[], windowHours = 48) {
     } else if (pending.length === 0 && sameRef) {
       classification = "POSSIBLE_SETTLED_DUPLICATE";
       reason = `Two posted payments share order reference ${a.orderRef}, ${Math.round(Math.abs(toMs(b.bookedAt) - toMs(a.bookedAt)) / 60000)} minutes apart.`;
-      question = "Did you place only one order?";
+      question = `Did you place only one order with ${a.merchantName}?`;
     } else {
       classification = "LIKELY_TWO_PURCHASES";
       reason = "Same merchant and amount, but different references and times. These look like two separate purchases.";
-      question = "Were these two separate purchases?";
+      question = `Were these two separate ${a.merchantName} purchases?`;
     }
     groups.push({ key: pair.map((t) => t.id).sort().join("+"), transactions: pair, classification, reason, claimable: classification === "POSSIBLE_SETTLED_DUPLICATE", question });
   }

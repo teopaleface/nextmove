@@ -71,7 +71,7 @@ function newestMtime(dir: string): number {
 }
 
 function needsBuild() {
-  const id = path.join(ROOT, ".next", "BUILD_ID");
+  const id = path.join(ROOT, process.env.NEXTMOVE_NEXT_DIST_DIR || ".next", "BUILD_ID");
   if (forceBuild || !fs.existsSync(id)) return true;
   const built = fs.statSync(id).mtimeMs;
   return [path.join(ROOT, "src"), path.join(ROOT, "next.config.ts")].some((p) => (fs.statSync(p).isDirectory() ? newestMtime(p) : fs.statSync(p).mtimeMs) > built);

@@ -32,6 +32,8 @@ test("A1: copy CloudBox files first, then stop the duplicate storage", async ({ 
   await approve(page);
   await expect(page.getByText(/2 approved actions/)).toBeVisible();
   const plan = page.url();
+  // The copy must have started before Labs can finish it; pressing too early finishes nothing.
+  await expect(page.getByText(/^Confirmed by /)).toHaveCount(1, { timeout: 60_000 });
   mark("The stop waits until the file copy is verified");
   await openCapability(page, "A1");
   await labs(page, /finish file copy now/);

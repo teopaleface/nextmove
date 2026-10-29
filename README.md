@@ -4,6 +4,22 @@ A fictional mobile bank with a financial AI agent for personal and business deci
 
 NextMove has its own yellow/ink/white identity inspired by the supplied banking references. It claims no Raiffeisen affiliation. This repository does not establish production banking readiness, legal certification or live merchant coverage, and no production deployment is authorized.
 
+## For reviewers: check it in about ten minutes
+
+1. `npm install && npx playwright install chromium`, then `npm run demo`, and open http://127.0.0.1:3210.
+2. **Core workflow (T2):** sign in as Alex with "Start a separate copy" ticked. Home flags the FitFlow trial before it charges. Then:
+   - **Review my options:** a deterministic comparison (upcoming charges 242.00 → 163.00 RON).
+   - **Review and approve:** an exact approval showing the operation, the route, the money and a 10-minute window.
+   - **The provider page:** NextMove works on the simulated provider's own page in an isolated browser.
+   - **The receipt:** read back independently, with the balance unchanged and 79.00 RON avoided.
+3. **The agent:** on the Agent tab, ask in your own words, for example "Am I paying twice for cloud storage?" or "Cancel FitFlow and check whether rent clears". Each task shows which planner answered (the live model, or the labelled simulated planner), the typed tools it called, the deterministic calculations and an activity trail with an evidence level for every step. Nothing moves without your approval.
+4. **Unexpected input:**
+   - "cancel everything" asks what to stop;
+   - "don't cancel anything, just show my balance" is read as a negation;
+   - "block my card" gets an honest "this demo can't";
+   - an invoice image containing instructions is treated as data.
+5. **Tests:** `npm test` (unit and integration) and, with the stack running, `npm run test:e2e` then `npm run evidence:manifest`, which writes [evidence/MANIFEST.md](evidence/MANIFEST.md).
+
 ## Start here
 
 - [Implementation brief](docs/IMPLEMENTATION-BRIEF.md) and [implementation status](docs/IMPLEMENTATION-STATUS.md)
@@ -22,14 +38,6 @@ The approved follow-up also adds [Simple mode (Bunic Mode)](docs/features/bunic-
 
 [Financial Airbag](docs/features/financial-airbag.md) is on Alex Home. All services initially stay unchanged. Choose a supported pause or renewal-off, recalculate and review the exact selected actions before approval. Essential bills and data/student-tool dependencies stay protected. Confirmed future charges avoided do not increase current cash.
 
-The combined review branch is `wave2/approved-features`, in `/Users/teo/.t3/worktrees/nextmove-wave2-combined`. To run it alongside the original local demo, from this checkout:
-
-```sh
-NEXTMOVE_BANK_PORT=3290 NEXTMOVE_MERCHANT_PORT=3291 npm run demo
-```
-
-Open [the separate local demo](http://localhost:3290). This host also keeps its browser session separate from the original demo on `127.0.0.1:3210`. Unit/integration tests pass: **182 tests in 21 files**. Production build and targeted 360/390px browser checks pass. Full recordings, the evidence manifest and long live-model E2E remain postponed.
-
 ## Requirements
 
 - Node >= 24 (developed on Node 26). Storage uses the built-in `node:sqlite`.
@@ -47,6 +55,14 @@ Open [the separate local demo](http://localhost:3290). This host also keeps its 
 
 Open http://127.0.0.1:3210. Health is at `/api/health`; merchant health is at http://127.0.0.1:3211/health.
 
+To run a second copy alongside (for example, for E2E runs while you use the first), give it its own ports, data folder and build folder:
+
+```sh
+NEXTMOVE_BANK_PORT=3290 NEXTMOVE_MERCHANT_PORT=3291 NEXTMOVE_DATA_DIR=.data-2 NEXTMOVE_NEXT_DIST_DIR=.next-2 npm run demo
+```
+
+Then point the E2E suite at it with `NEXTMOVE_BANK_URL=http://127.0.0.1:3290`.
+
 On the sign-in screen, choose Alex (personal) or Laziz (business plus household). "Start a separate copy" gives you an isolated tenant. Labs controls (demo clock, provider simulations, reset) are under Profile and on each capability page.
 
 ## Configuration
@@ -58,7 +74,8 @@ Copy values from [`.env.example`](.env.example) as needed. It defines:
 - `NEXTMOVE_MODE`: `labs` or `bank-demo`. In `bank-demo`, execution is refused on both the server and the worker.
 - `NEXTMOVE_CLAUDE_BIN`, `NEXTMOVE_MODEL_TIMEOUT_MS`, `NEXTMOVE_MODEL_MAX_BUDGET_USD`: CLI adapter path, per-call timeout and spend bound.
 - `NEXTMOVE_BANK_PORT`, `NEXTMOVE_MERCHANT_PORT`, `NEXTMOVE_BANK_BASE_URL`, `NEXTMOVE_MERCHANT_BASE_URL`: loopback ports and origins.
-- `NEXTMOVE_DATA_DIR`: runtime data directory, default `.data`.
+- `NEXTMOVE_DATA_DIR`: runtime data directory, default `.data`. `NEXTMOVE_NEXT_DIST_DIR`: Next.js build folder, default `.next`; a second copy needs its own.
+- `NEXTMOVE_CLAUDE_CONFIG_DIR`: the Claude Code config folder the CLI signs in from, when it isn't the default `~/.claude`. Put it in `.env.local`, which Git ignores.
 
 No API key is needed. `npm run smoke:model` runs one live text call and one live vision call against the configured model.
 
@@ -67,12 +84,14 @@ No API key is needed. `npm run smoke:model` runs one live text call and one live
 | Command | Notes |
 | --- | --- |
 | `npm run typecheck` | `tsc --noEmit`. |
-| `npm test` | Vitest unit and integration tests (about 60 s). The integration suite starts its own isolated stack on random loopback ports. |
-| `npm run test:live` | Live-model tests; sets `NEXTMOVE_LIVE_TESTS=1` and needs the CLI. `tests/live` is empty, so live tests are not written yet. |
-| `npm run test:e2e` | Playwright phone E2E in `tests/e2e`, against an already running stack. Runs at 390x844, plus 360 and 430 for tests tagged `@layout`. |
+| `npm test` | Vitest unit and integration tests: 677 tests in 55 files, about 60 s. The integration suite starts its own isolated stack on random loopback ports. |
+| `npm run test:live` | Reserved for live-model Vitest tests (`tests/live`, not written yet). The live model is exercised by `tests/e2e/05-live-model.spec.ts` instead. |
+| `npm run test:e2e` | Playwright phone E2E in `tests/e2e` (26 scenarios, about 2.5 min), against an already running stack. Runs at 390x844, plus 360 and 430 for tests tagged `@layout`. Records a video of every test. |
+| `npm run evidence:manifest` | Turns the last E2E run into [evidence/MANIFEST.md](evidence/MANIFEST.md): each scenario's result, test, reproduce command and video timestamps. Copies the videos to `evidence/recordings/` (ignored by Git). |
+| `cd extensions && npm run check` | The extension domain modules: typecheck plus 310 tests. |
 | `node --import tsx scripts/qa-screens.ts --widths=360,390,430` | Screenshots every phone route into `.data/qa/` and reports horizontal overflow, console errors, broken links and small tap targets. |
 
-Full E2E runs, recordings and the evidence manifest are postponed to a later pass: the E2E suite exists but has not been run end to end yet. The `evidence:manifest` script points at `scripts/evidence-manifest.ts`, which does not exist yet.
+The last full E2E run passed all 26 scenarios, live-model tests included; see the [evidence index](evidence/MANIFEST.md). E2E tests that use the live model need an authenticated Claude Code CLI.
 
 ## Layout
 

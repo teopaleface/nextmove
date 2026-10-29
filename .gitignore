@@ -26,3 +26,13 @@ next-env.d.ts
 *.tsbuildinfo
 evidence/tmp/
 /test-results/
+
+# Demo film (demo-video/): renders, raw captures and cut footage are rebuilt locally; see demo-video/README.md
+demo-video/out/
+demo-video/captures/
+demo-video/assets/media/
+demo-video/.hyperframes/
+
+# A second local stack (E2E runs on other ports): its own data and build folders.
+.data-*/
+.next-*/

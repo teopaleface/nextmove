@@ -228,7 +228,7 @@ const A8: CapabilityDef = {
             key: "claim-duplicate",
             defaultSelected: true,
             available: confirmed,
-            unavailableReason: confirmed ? undefined : "Answer the question first: did you place only one order?",
+            unavailableReason: confirmed ? undefined : `Answer the question first: did you place only one order with ${g.transactions[0].merchantName}?`,
             spec: spec({
               operation: "SUBMIT_CLAIM",
               route: "PARTNER_API",
