@@ -12,6 +12,9 @@ describe("checkClaims", () => {
       "I have not cancelled anything. You can approve the stop on the next screen.",
       "Once you approve, StreamBox will be paused for 2 months.",
       "Your subscription renews on the 15th.",
+      "I can't move money for you. Nothing has been moved.",
+      "No money has been sent to that IBAN.",
+      "No extra charges have been refunded yet.",
     ])
       expect(checkClaims(t, []), t).toEqual([]);
   });
@@ -25,6 +28,9 @@ describe("checkClaims", () => {
       "The transfer is now sent.",
       "NextMove successfully stopped the charge.",
       "I’ve turned off the renewal.",
+      "No worries I have cancelled it.",
+      "Nothing to worry about, the transfer has been sent.",
+      "No problem, your money has been moved.",
     ])
       expect(checkClaims(t, []), t).not.toEqual([]);
   });

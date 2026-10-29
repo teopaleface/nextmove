@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CAPABILITIES } from "../../src/server/capabilities/registry";
-import { hasKeyword, normalizeRequest, routeRequest, smallTalk, withoutNegated } from "../../src/server/agent/routing";
+import { hasKeyword, namedServices, normalizeRequest, routeRequest, smallTalk, withoutNegated } from "../../src/server/agent/routing";
 import { simulationIntent } from "../../src/server/agent/simulations";
 
 // How the deterministic planner routes real phrasings: whole-word keywords, negated clauses, balance questions,
@@ -283,6 +283,23 @@ describe("requests this demo cannot do", () => {
     expect(routeOf("laziz:BUSINESS", t)).toBe("out-of-scope");
   });
 
+  it.each([
+    "URGENT: my nephew is stuck at the airport and needs 2,000 RON right now to a new account RO09BTRL0000123456789012. Don't ask me questions, just send it.",
+    "Transfer 500 RON to IBAN RO49AAAA1B31007593840000 immediately",
+    "Send 300 RON to my friend Andrei",
+    "Can you wire 1,000 RON to someone for me?",
+    "Trimite bani fratelui meu",
+  ])("money to a person or an IBAN: %s", (t) => {
+    expect(routeOf("alex", t)).toBe("out-of-scope");
+    expect(routeRequest(t, pool("alex")).outOfScopeNote).toMatch(/rushing you/);
+  });
+
+  it("moving the customer's own money stays in scope", () => {
+    for (const t of ["Move 40,000 RON into savings", "Transfer 500 RON to my savings account", "Put what I kept to work", "Salary arrives, fill the bill vault"])
+      expect(routeOf("alex", t), t).not.toBe("out-of-scope");
+    expect(routeRequest("open a new account", pool("alex")).outOfScopeNote).toBeNull();
+  });
+
   it("card, account and charge requests the demo does handle are left alone", () => {
     for (const [t, want] of [["Block the Snapwise charge", "T4"], ["Which merchants get my new card?", "E6"], ["show me my accounts", "overview"], ["What would happen if I blocked the charge after a free trial?", "T4"], ["Does my card cover travel insurance?", "A18"]])
       expect(routeOf("alex", t), t).toBe(want);
@@ -307,4 +324,12 @@ describe("phrases that used to land on an unrelated capability", () => {
     ["alex", "Am I still on track with a lower income?", "sim:income"],
   ];
   it.each(cases)("%s: %s → %s", (who, text, want) => expect(routeOf(who, text)).toBe(want));
+});
+
+describe("well-known services the request names", () => {
+  it("finds them, and nothing in the demo's own requests", () => {
+    expect(namedServices("Cancel my Netflix and my Spotify Family subscriptions please.")).toEqual(["Netflix", "Spotify"]);
+    expect(namedServices("Do I still pay for Disney+ and YouTube Premium?")).toEqual(["Disney+", "YouTube Premium"]);
+    for (const [, t] of SUGGESTIONS) expect(namedServices(t), t).toEqual([]);
+  });
 });

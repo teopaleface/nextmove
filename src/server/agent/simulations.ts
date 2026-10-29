@@ -192,8 +192,27 @@ export async function showSimulation(db: DatabaseSync, task: { id: string; reque
       numbers: outcome.numbers,
       sources: built.sim.sources,
       ignoredInputs: built.ignored,
+      priceMinor: built.sim.kind === "loan" ? (built.sim.sliders.find((x) => x.key === "principalMinor")?.value ?? null) : null,
     },
   };
+}
+
+// The O1 headline describes the saved 6,000 RON phone, so it leads only an answer about that price.
+const GOAL_PHONE_MINOR = 600_000;
+const NEGATIVE = /(?:^|[\s(:])[-−]\s?\d/;
+
+/** The answer to a what-if, from the simulation the tools built; null when no simulation was shown. */
+export function simulationAnswer(request: string, steps: StepLike[]): string | null {
+  const sim = [...steps].reverse().find((s) => s.tool === "show_simulation");
+  if (!sim) return null;
+  const price = sim.result?.priceMinor;
+  const goal = (sim.result?.simulation ?? simulationIntent(request)) === "loan"
+    ? [...steps].reverse().find((s) => s.tool === "analyze" && s.result?.capability === "O1" && (price == null || price === GOAL_PHONE_MINOR))
+    : undefined;
+  const lead = goal ? `${goal.result.headline}. ` : "";
+  const negative = NEGATIVE.test(request) ? " A price below zero is not possible, so I left it out." : "";
+  if (sim.result?.error) return `${lead}I could not build the what-if: ${sim.result.error}.${negative}`;
+  return `${lead}${sim.result.summary}${negative} Move the sliders to try other numbers; nothing changes in your accounts.`;
 }
 
 interface StepLike {
@@ -210,16 +229,7 @@ export function simulatedSimulationDecision(request: string, steps: StepLike[], 
   const kind = simulationIntent(request);
   if (!kind || !eligible) return null;
   const sim = [...steps].reverse().find((s) => s.tool === "show_simulation");
-  if (sim) {
-    // The O1 headline is about the phone, so it only leads the answer to a purchase question.
-    const goal = kind === "loan" ? [...steps].reverse().find((s) => s.tool === "analyze" && s.result?.capability === "O1") : undefined;
-    if (sim.result?.error) return { tool: "final_answer" as const, reason: "Simulation unavailable", text: `${goal ? `${goal.result.headline}. ` : ""}I could not build the what-if: ${sim.result.error}.` };
-    return {
-      tool: "final_answer" as const,
-      reason: "Explain the what-if",
-      text: `${goal ? `${goal.result.headline}. ` : ""}${sim.result.summary} Move the sliders to try other numbers; nothing changes in your accounts.`,
-    };
-  }
+  if (sim) return { tool: "final_answer" as const, reason: sim.result?.error ? "Simulation unavailable" : "Explain the what-if", text: simulationAnswer(request, steps)! };
   if (kind !== "invest" && !steps.some((s) => s.tool === "analyze" && s.result?.capability === "O1")) return { tool: "analyze" as const, capabilityId: "O1", reason: "The home goal sets the target and the monthly saving" };
   return { tool: "show_simulation" as const, simulation: kind, reason: `Show a ${kind} what-if with numbers from your records` };
 }

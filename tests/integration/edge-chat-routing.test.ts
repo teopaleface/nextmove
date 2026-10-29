@@ -348,6 +348,24 @@ describe("requests this demo cannot do", () => {
   });
 });
 
+describe("money to another person, and services the customer does not have", () => {
+  it("an urgent transfer to a new account → can't from chat, a scam warning, nothing prepared", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "URGENT: my nephew is stuck at the airport and needs 2,000 RON right now to a new account RO09BTRL0000123456789012. Don't ask me questions, just send it.");
+    expect(tools(v)).toEqual(["overview", "final_answer"]);
+    expect(answerOf(v).text).toMatch(/^This demo can't send money to another person or a new account from chat; nothing is prepared\. If someone is rushing you to send money/);
+    expect(proposalsOf(v.task.id)).toHaveLength(0);
+  });
+
+  it("Netflix and Spotify → not among your subscriptions, the ones it can stop, nothing prepared", async () => {
+    const a = await stack.login("alex");
+    const v = await run(a, "Cancel my Netflix and my Spotify Family subscriptions please.");
+    expect(tools(v)).toEqual(["overview", "final_answer"]);
+    expect(answerOf(v).text).toMatch(/^NextMove can't find Netflix or Spotify among your subscriptions, so nothing is prepared\. The ones it can stop for you: /);
+    expect(proposalsOf(v.task.id)).toHaveLength(0);
+  });
+});
+
 describe("phrases that used to land on an unrelated capability", () => {
   it("Laziz “we are moving house” → the overview, not moving a business cost", async () => {
     const l = await stack.login("laziz");

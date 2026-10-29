@@ -104,13 +104,35 @@ const BULK_VERBS = new Set([...GENERIC, "pause", "break", "block", "hold"]);
 
 // Things a bank app does that this demo does not. The reply says so instead of routing a stray word ("block" is the
 // Trial Shield's merchant block, "forgot" a forgotten trial).
-const OUT_OF_SCOPE: [RegExp, string][] = [
+// Money to another person or an account the customer names in chat: never a transfer from chat, and the pressure that
+// usually comes with it ("urgent", "don't ask questions") gets a plain warning.
+const PERSON = "new|other|another|someone|somebody|friend|nephew|niece|son|daughter|brother|sister|mother|father|mom|mum|dad|cousin|uncle|aunt|grandson|granddaughter|grandma|grandpa|wife|husband|partner|boyfriend|girlfriend|person|stranger|account|iban|payee|recipient";
+const SCAM_NOTE = "If someone is rushing you to send money, stop and check with them on a number you already know.";
+const OUT_OF_SCOPE: [RegExp, string, string?][] = [
+  [new RegExp(`\\b[a-z]{2}\\d{2}(?: ?[a-z0-9]){12,30}\\b|\\b(?:send|transfer|wire|give|lend)\\w*\\b[^.?!]{0,60}?\\bto (?:a |an |my |his |her |their |this |that |the )?(?:${PERSON})\\b|\\bto (?:a |an |this |that )?new (?:account|iban|payee|recipient)\\b|\\b(?:trimite|transfera|vireaz)\\w* (?:\\w+ )?bani\\w*`), "send money to another person or a new account from chat", SCAM_NOTE],
   [/\b(?:block|freeze|unfreeze|unblock|lock|unlock|cancel|deactivate)\w* (?:my |the |this |a |our )?(?:debit |credit |bank |business |lost |stolen )?cards?\b(?! (?:charge|check|cover|on file|updater|subscription|payment))|\bblocheaz\w* (?:\w+ )?card\w*/, "block, freeze or cancel a card from chat (Home → Cards has a Freeze card button you approve yourself)"],
   [/\b(?:password|passwords|passcode|parola|parolei)\b|\b(?:can'?t|cannot|forgot\w*|unable to) (?:to )?(?:log ?in|sign ?in)\b/, "help with passwords or signing in"],
   [/\bpin(?: code)?s?\b/, "show or change a card PIN"],
   [/\b(?:close|closing|delete|deleting|terminate)\w* (?:my |the |this |a |an |our )?(?:\w+ )?account\b|\binchid\w* (?:\w+ )?cont(?:ul)?\b/, "close an account"],
   [/\b(?:open|opening|create)\w* (?:me )?(?:a |an |my |another |one more )?(?:new |second |joint |savings |business |current )?account\b|\bnew account\b|\bdeschid\w* (?:\w+ )?cont(?:ul)?\b/, "open an account"],
 ];
+
+// Well-known subscription services. The demo's merchants are all fictional, so a request that names one of these
+// names something the customer does not have here: NextMove says so instead of offering a different service.
+const SERVICES: [RegExp, string][] = [
+  [/\bnetflix\b/, "Netflix"], [/\bspotify\b/, "Spotify"], [/\bhbo(?: max)?\b/, "HBO Max"], [/\bdisney ?(?:\+|plus)?(?=\W|$)/, "Disney+"],
+  [/\byoutube (?:premium|music)\b/, "YouTube Premium"], [/\bapple (?:music|tv|one)\b/, "Apple Music"], [/\bicloud\b/, "iCloud"],
+  [/\bamazon prime\b|\bprime video\b/, "Amazon Prime"], [/\baudible\b/, "Audible"], [/\bdeezer\b/, "Deezer"],
+  [/\bgame pass\b/, "Xbox Game Pass"], [/\b(?:playstation|ps) plus\b/, "PlayStation Plus"], [/\bchatgpt\b/, "ChatGPT"],
+  [/\b(?:microsoft|office) 365\b/, "Microsoft 365"], [/\badobe\b/, "Adobe"], [/\bdropbox\b/, "Dropbox"], [/\bgoogle one\b/, "Google One"],
+  [/\bvoyo\b/, "Voyo"], [/\bskyshowtime\b/, "SkyShowtime"], [/\bduolingo\b/, "Duolingo"], [/\btinder\b/, "Tinder"],
+];
+
+/** Well-known services the request names, in the order of the list above. */
+export function namedServices(text: string): string[] {
+  const t = normalizeRequest(text);
+  return SERVICES.filter(([re]) => re.test(t)).map(([, name]) => name);
+}
 
 export interface Intent<C extends Routable> {
   c: C;
@@ -132,6 +154,8 @@ export interface Route<C extends Routable> {
   unspecified: boolean;
   /** Something this demo cannot do ("block my card"), as a phrase for the reply; null otherwise. */
   outOfScope: string | null;
+  /** A warning to add after the out-of-scope reply, if any. */
+  outOfScopeNote: string | null;
 }
 
 const rankAll = <C extends Routable>(t: string, caps: C[], ignore = new Set<string>()) =>
@@ -161,7 +185,8 @@ export function routeRequest<C extends Routable>(text: string, caps: C[]): Route
   const full = normalizeRequest(text);
   const kept = withoutNegated(full);
   const overview = overviewScore(kept);
-  const outOfScope = OUT_OF_SCOPE.find(([re]) => re.test(kept))?.[1] ?? null;
+  const scope = OUT_OF_SCOPE.find(([re]) => re.test(kept));
+  const outOfScope = scope?.[1] ?? null;
   let matches = rankAll(kept, caps);
   let declined = false;
   // Only a negated subject ("don't cancel my FitFlow trial"); a negated bare verb ("don't cancel anything") names nothing.
@@ -171,7 +196,7 @@ export function routeRequest<C extends Routable>(text: string, caps: C[]): Route
   }
   const bulk = BULK.test(kept);
   const unspecified = !outOfScope && !overview && !declined && (STOP_VERB.test(kept) || (bulk && /\b(?:paus|block|hold|break|freez)\w*/.test(kept))) && !caps.some((c) => named(kept, c, bulk ? BULK_VERBS : GENERIC));
-  return { matches, overview, declined, hypothetical: HYPOTHETICAL.test(full), intents: declined ? [] : intentsOf(kept, caps), unspecified, outOfScope };
+  return { matches, overview, declined, hypothetical: HYPOTHETICAL.test(full), intents: declined ? [] : intentsOf(kept, caps), unspecified, outOfScope, outOfScopeNote: scope?.[2] ?? null };
 }
 
 /** A short opener for thanks, greetings and "who are you", in front of the overview; null for anything else. */

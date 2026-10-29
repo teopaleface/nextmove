@@ -13,7 +13,7 @@ import {
   makeLoanSimulation,
   monthLabel,
 } from "../../src/shared/simulations";
-import { ensureSimulation, numbersIn, simulatedSimulationDecision, simulationIntent, valuesFromText } from "../../src/server/agent/simulations";
+import { ensureSimulation, numbersIn, simulatedSimulationDecision, simulationAnswer, simulationIntent, valuesFromText } from "../../src/server/agent/simulations";
 
 const p = cases.phoneAndHome;
 const ASOF = "2026-10-28T07:41:00.000Z";
@@ -179,5 +179,26 @@ describe("planner routing for what-if questions", () => {
     expect([...numbersIn("12,50 lei")]).toEqual([12.5]);
     expect(valuesFromText("a 5 000 RON phone").amountRon).toBe(5000);
     expect(valuesFromText("un telefon de 1.500,50 lei").amountRon).toBe(1500.5);
+  });
+});
+
+describe("the answer to a what-if follows the price the customer asked about", () => {
+  const goal = { tool: "analyze", result: { capability: "O1", headline: "Home ready in February 2027 after 4 monthly contributions; paying 6,000 RON upfront for the phone pushes it back 1 month" } };
+  const sim = (priceMinor: number) => ({ tool: "show_simulation", result: { simulation: "loan", priceMinor, summary: "Summary for this price." } });
+
+  it("leads with the saved phone goal only for its own price", () => {
+    expect(simulationAnswer("Can I buy a 6,000 RON phone and still reach my home goal?", [goal, sim(600_000)])).toMatch(/^Home ready in February 2027.*Summary for this price\./);
+    const big = simulationAnswer("Can I buy a 6,000,000 RON phone and still reach my home goal?", [goal, sim(600_000_000)])!;
+    expect(big).not.toMatch(/6,000 RON upfront/);
+    expect(big).toMatch(/^Summary for this price\./);
+  });
+
+  it("says a negative price was left out", () => {
+    expect(simulationAnswer("What if I buy one that costs -6000 RON?", [goal, sim(600_000)])).toMatch(/below zero is not possible/);
+    expect(simulationAnswer("Can I buy a 6,000 RON phone?", [goal, sim(600_000)])).not.toMatch(/below zero/);
+  });
+
+  it("is null without a simulation", () => {
+    expect(simulationAnswer("Can I buy a phone?", [goal])).toBeNull();
   });
 });

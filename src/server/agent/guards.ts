@@ -175,10 +175,13 @@ const RO_ACT = "anul|plăt|plat|achit|opr|suspend|îngheț|inghet|transfer|vir|t
 const NOT_RO = "(?<![\\p{L}])(?<!\\bnu\\s+)(?<!\\bn-)";
 const ro = (aux: string, verbs: string) => new RegExp(`${NOT_RO}(?:${aux})\\s+(?:(?:deja|acum|cu\\s+succes|și|si)\\s+){0,2}(?:${verbs})\\p{L}*`, "giu");
 
+// A negated subject ("Nothing has been moved", "No money has been sent") denies the outcome instead of claiming it.
+const DENIED = "(?<!\\b(?:nothing|none|no\\s+(?:[a-z]+\\s+)?(?:money|funds|cash|payments?|transfers?|charges?|actions?|changes?|refunds?|subscriptions?|services?))\\s+)";
+
 /** Always a claim. */
 const CLAIMS = [
-  new RegExp(`\\b(?:(?:i|we|nextmove)(?:'ve|'d|\\s+have|\\s+has|\\s+had)?|(?:has|have)\\s+been|(?:is|are)\\s+now)\\s+${ADVERBS}(?:${OUTCOME})\\b`, "gi"),
-  new RegExp(`\\b(?:was|were|got|has\\s+been|have\\s+been)\\s+${ADVERBS}(?:${STATE})\\b`, "gi"),
+  new RegExp(`${DENIED}\\b(?:(?:i|we|nextmove)(?:'ve|'d|\\s+have|\\s+has|\\s+had)?|(?:has|have)\\s+been|(?:is|are)\\s+now)\\s+${ADVERBS}(?:${OUTCOME})\\b`, "gi"),
+  new RegExp(`${DENIED}\\b(?:was|were|got|has\\s+been|have\\s+been)\\s+${ADVERBS}(?:${STATE})\\b`, "gi"),
   new RegExp(`\\bsuccessfully\\s+(?:${OUTCOME})\\b`, "gi"),
   ro("am|amu|a\\s+fost|au\\s+fost|s-a|s-au|s-au\\s+fost", RO),
 ];
