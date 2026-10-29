@@ -32,15 +32,16 @@
     .pill { display: inline-flex; align-items: center; gap: 14px; padding: 12px 24px; border-radius: 999px; background: #ffffff; border: 1.5px solid #e4e5df; font-size: 30px; font-weight: 600; letter-spacing: -0.01em; color: #151515; }
     .pill i { width: 14px; height: 14px; border-radius: 50%; background: #fee600; box-shadow: 0 0 0 1.5px #151515 inset; }
 
-    #c8-sum .row { display: flex; align-items: baseline; gap: 28px; }
-    #c8-sum .h1 { font-variant-numeric: tabular-nums; }
-    #c8-sum .h3 { color: #60605a; }
+    #c8-sum .row { display: grid; grid-template-columns: 1060px 560px; column-gap: 40px; align-items: baseline; }
+    #c8-sum .row + .row { margin-top: 18px; }
+    #c8-sum .h1 { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    #c8-sum .h3 { color: #60605a; white-space: nowrap; font-size: 64px; }
     #c8-batch .h0 { font-size: 260px; }
     .mt .cap { position: absolute; left: 1000px; top: 0; bottom: 0; width: 820px; display: flex; flex-direction: column; justify-content: center; }
     .mt .name { font-size: 40px; font-weight: 640; letter-spacing: -0.015em; color: #60605a; margin-bottom: 18px; }
   </style>
   <div id="root" data-composition-id="c8" data-width="1920" data-height="1080">
-    <div class="shot" id="c8-sum"><div class="left" style="width: 1600px">
+    <div class="shot" id="c8-sum"><div class="left" style="width: 1660px">
       <div class="row k" id="c8-s1"><span class="h1">79 RON</span><span class="h3">kept · FitFlow</span></div>
       <div class="row k" id="c8-s2"><span class="h1">358.99 RON</span><span class="h3">less due · Airbag</span></div>
       <div class="row k" id="c8-s3"><span class="h1"><span class="mark">1 yes</span></span><span class="h3">each</span></div>
